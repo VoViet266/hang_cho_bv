@@ -85,8 +85,8 @@ jobs:
             # Chạy container và inject các biến môi trường cấu hình (DB, PORT, ...)
             docker run -d \
               --name $CONTAINER_NAME \
-              -p $PORT:3002 \
-              -e PORT=3002 \
+              -p $PORT:$PORT \
+              -e PORT=$PORT \
               -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               --restart unless-stopped \
               $IMAGE_NAME:latest
