@@ -58,13 +58,13 @@
         <table class="w-full text-left border-collapse">
             <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300">
                 <tr>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-slate-700">STT</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-slate-700">Mã BN</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-slate-700">Họ và Tên</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-slate-700">Giới tính</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-slate-700">Ngày Sinh</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-slate-700">Giờ Đăng Ký</th>
-                    <th class="py-4 px-6 font-bold text-2xl  text-slate-700 text-center">Trạng Thái</th>
+                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">STT</th>
+                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Mã BN</th>
+                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Họ và Tên</th>
+                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Giới tính</th>
+                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Ngày Sinh</th>
+                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Giờ Đăng Ký</th>
+                    <th class="py-4 px-6 font-bold text-2xl  text-blue-900 text-center">Trạng Thái</th>
                 </tr>
             </thead>
             <tbody class="divide-y-1 divide-slate-200">
@@ -106,12 +106,12 @@
                         }
                 %>
                     <tr class="transition-colors <%= isNear ? 'bg-red-50 hover:bg-red-100 text-danger font-bold' : 'hover:bg-blue-50 cursor-pointer font-medium' %>">
-                        <td class="py-4 px-6 text-xl text-center"><%= index + 1 %></td>
-                        <td class="py-4 px-6 text-2xl text-center"><%= patient.mabn || patient.makb %></td>
-                        <td class="py-4 px-6 <%= isNear ? 'text-3xl' : 'text-2xl font-bold text-slate-900' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
-                        <td class="py-4 px-6 text-2xl text-center"><%= gender %></td>
-                        <td class="py-4 px-6 text-2xl text-center"><%= dobStr %></td>
-                        <td class="py-4 px-6 text-2xl text-center"><%= timeStr %></td>
+                        <td class="py-4 px-6 text-xl text-center text-blue-900"><%= index + 1 %></td>
+                        <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= patient.mabn || patient.makb %></td>
+                        <td class="py-4 px-6 <%= isNear ? 'text-3xl' : 'text-2xl font-bold text-blue-900' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
+                        <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= gender %></td>
+                        <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= dobStr %></td>
+                        <td class="py-4 px-6 text-2xl text-center text-blue-900"><%= timeStr %></td>
                         <td class="py-4 px-6 text-center">
                             <% if (isNear) { %>
                                 <span class="inline-block bg-red-100 text-danger px-4 py-2 rounded-full text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp tới lượt khám</span>
