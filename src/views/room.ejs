@@ -22,25 +22,31 @@
         }
     </script>
 </head>
-<body class="bg-slate-100 text-slate-900 font-sans p-2 flex flex-col h-screen overflow-hidden">
+<body class="bg-slate-100 text-slate-900 font-sans px-2 flex flex-col h-screen overflow-hidden">
     <!-- Top Bar -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 border-2 border-slate-300 rounded-lg mb-4 shadow-sm gap-4 md:gap-0">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-2 border-2 border-slate-300 rounded-lg mb-4 shadow-sm gap-4 md:gap-0">
         <div class="flex flex-col">
-            <div class="text-brand text-2xl md:text-3xl font-extrabold uppercase tracking-wide mb-1">
+            <div class="text-brand text-3xl md:text-4xl font-extrabold uppercase tracking-wide mb-1">
              <%= room.tenphong || room.maphong %>
             </div>
             <a href="/" class="text-slate-500 font-semibold text-base hover:text-brand transition-colors inline-block">
                 <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách phòng
             </a>
         </div>
-        
+        <!-- Đồng hồ -->
+            <div class="flex justify-center items-center bg-white  mb-4 ">
+        <div class="text-center text-danger font-black tabular-nums tracking-wider">
+            <div id="date-str" class="text-2xl text-slate-500 font-bold mb-2 uppercase tracking-widest"></div>
+            <div id="time-str" class="text-[4rem] leading-none"></div>
+        </div>
+    </div>
         <div class="flex gap-4">
-            <div class="bg-white px-5 py-3 border-2 border-blue-300 rounded-lg text-center min-w-[140px] shadow-sm">
+            <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
                 <span class="block text-brand font-bold text-base mb-1 uppercase tracking-wide">Tổng Đăng Ký</span>
                 <span class="block text-brand font-black text-3xl tabular-nums"><%= room.totalRegistered %></span>
             </div>
-           
-            <div class="bg-white px-5 py-3 border-2 border-red-300 rounded-lg text-center min-w-[140px] shadow-sm">
+       
+            <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
                 <span class="block text-danger font-bold text-base mb-1 uppercase tracking-wide">Đang chờ</span>
                 <span class="block text-danger font-black text-3xl tabular-nums"><%= room.totalWaiting %></span>
             </div>
@@ -101,11 +107,11 @@
                 %>
                     <tr class="transition-colors <%= isNear ? 'bg-red-50 hover:bg-red-100 text-danger font-bold' : 'hover:bg-blue-50 cursor-pointer font-medium' %>">
                         <td class="py-4 px-6 text-xl text-center"><%= index + 1 %></td>
-                        <td class="py-4 px-6 text-xl text-center"><%= patient.mabn || patient.makb %></td>
+                        <td class="py-4 px-6 text-2xl text-center"><%= patient.mabn || patient.makb %></td>
                         <td class="py-4 px-6 <%= isNear ? 'text-3xl' : 'text-2xl font-bold text-slate-900' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
-                        <td class="py-4 px-6 text-xl text-center"><%= gender %></td>
-                        <td class="py-4 px-6 text-xl text-center"><%= dobStr %></td>
-                        <td class="py-4 px-6 text-xl text-center"><%= timeStr %></td>
+                        <td class="py-4 px-6 text-2xl text-center"><%= gender %></td>
+                        <td class="py-4 px-6 text-2xl text-center"><%= dobStr %></td>
+                        <td class="py-4 px-6 text-2xl text-center"><%= timeStr %></td>
                         <td class="py-4 px-6 text-center">
                             <% if (isNear) { %>
                                 <span class="inline-block bg-red-100 text-danger px-4 py-2 rounded-full text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp tới lượt khám</span>
@@ -124,6 +130,21 @@
         setTimeout(() => {
             window.location.reload();
         }, 30000);
+
+        function updateTime() {
+            const now = new Date();
+            const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            
+            const dateStrEl = document.getElementById('date-str');
+            const timeStrEl = document.getElementById('time-str');
+            if (dateStrEl && timeStrEl) {
+                dateStrEl.textContent = now.toLocaleDateString('en-GB', dateOpts);
+                timeStrEl.textContent = now.toLocaleTimeString('en-GB', timeOpts);
+            }
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
     </script>
 </body>
 </html>
