@@ -108,8 +108,8 @@
                     <tr class="transition-colors <%= isNear ? 'bg-red-50 hover:bg-red-100 text-danger font-bold' : 'hover:bg-blue-50 cursor-pointer font-medium' %>">
                         <td class="py-4 px-6 text-xl text-center text-blue-900"><%= index + 1 %></td>
                         <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= patient.mabn || patient.makb %></td>
-                        <td class="py-4 px-6 <%= isNear ? 'text-3xl' : 'text-2xl font-bold text-blue-900' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
-                        <td class="py-4 px-6 text-2xl text-center "><%= gender %></td>
+                        <td class="py-4 px-6 text-blue-900 <%= isNear ? 'text-3xl' : 'text-2xl font-bold' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
+                        <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= gender %></td>
                         <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= dobStr %></td>
                         <td class="py-4 px-6 text-2xl text-center text-blue-900"><%= timeStr %></td>
                         <td class="py-4 px-6 text-center">
