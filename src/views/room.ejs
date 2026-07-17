@@ -109,14 +109,14 @@
                         <td class="py-4 px-6 text-xl text-center text-blue-900"><%= index + 1 %></td>
                         <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= patient.mabn || patient.makb %></td>
                         <td class="py-4 px-6 <%= isNear ? 'text-3xl' : 'text-2xl font-bold text-blue-900' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
-                        <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= gender %></td>
+                        <td class="py-4 px-6 text-2xl text-center "><%= gender %></td>
                         <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= dobStr %></td>
                         <td class="py-4 px-6 text-2xl text-center text-blue-900"><%= timeStr %></td>
                         <td class="py-4 px-6 text-center">
                             <% if (isNear) { %>
-                                <span class="inline-block bg-red-100 text-danger px-4 py-2 rounded-full text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp tới lượt khám</span>
+                                <span class="inline-block bg-red-100 text-danger px-4 py-2 rounded-md text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp tới lượt khám</span>
                             <% } else { %>
-                                <span class="inline-block bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-lg font-semibold border border-slate-200">Đang chờ</span>
+                                <span class="inline-block bg-slate-100 text-slate-600 px-3 py-1 rounded-md text-lg font-semibold border border-slate-200">Đang chờ</span>
                             <% } %>
                         </td>
                     </tr>
