@@ -34,7 +34,6 @@ model psdangky {
   tuoi       Int?
   ngaydk     DateTime?
   maphong    String?
-
   dmphong    dmphong?    @relation(fields: [maphong], references: [maphong])
   dmbenhnhan dmbenhnhan? @relation(fields: [mabn], references: [mabn])
 
@@ -46,9 +45,7 @@ model khambenh {
   mabn       String?
   maphong    String?
   dakham     Decimal? ///0: Chua khám (default) 1: đã khám
-
   xoa        Decimal?
-
   dmphong    dmphong?    @relation(fields: [maphong], references: [maphong])
   dmbenhnhan dmbenhnhan? @relation(fields: [mabn], references: [mabn])
 
@@ -70,7 +67,6 @@ model dmbenhnhan {
   gioitinh   Decimal?
   ngaysinh   DateTime?    @db.Date
   xoa        Decimal?
-  
   psdangky   psdangky[]
   khambenh   khambenh[]
 

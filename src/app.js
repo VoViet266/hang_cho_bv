@@ -31,7 +31,7 @@ app.get('/', async (req, res) => {
         res.render('index', { data: stats });
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error loading dashboard');
+        res.status(500).send('Error loading dashboard: ' + (error.message || String(error)));
     }
 });
 
@@ -45,7 +45,7 @@ app.get('/room/:id', async (req, res) => {
         res.render('room', { room: room });
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error loading room details');
+        res.status(500).send('Error loading room details: ' + (error.message || String(error)));
     }
 });
 
