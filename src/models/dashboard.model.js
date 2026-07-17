@@ -9,13 +9,13 @@ const getDashboardData = async () => {
             COALESCE(kb.maphong, dk.maphong) AS maphong,
             p.tenphong,
             kb.makb,
-            dk.ngaydk,
-            kb.ngaykcb,
+            TO_CHAR(dk.ngaydk, 'YYYY-MM-DD HH24:MI:SS') as ngaydk,
+            TO_CHAR(kb.ngaykcb, 'YYYY-MM-DD HH24:MI:SS') as ngaykcb,
             dk.maphong AS registered_maphong,
             bn.mabn,
             bn.holot,
             bn.ten,
-            bn.ngaysinh,
+            TO_CHAR(bn.ngaysinh, 'YYYY-MM-DD HH24:MI:SS') as ngaysinh,
             bn.gioitinh,
             COALESCE(kb.dakham, 0) as dakham
         FROM "current".psdangky dk

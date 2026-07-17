@@ -55,9 +55,7 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
         const actualNgayDk = normalizePatientDate(row.ngaydk);
         const actualNgayKcb = normalizePatientDate(row.ngaykcb) || actualNgayDk;
 
-        if (!isExamined && actualNgayKcb && actualNgayKcb.getHours() < hr) {
-            return;
-        }
+        const isStale = !isExamined && actualNgayKcb && actualNgayKcb.getHours() < hr;
 
         const patientData = {
             makb: row.makb,
@@ -73,7 +71,7 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
 
         if (isExamined) {
             room.examinedList.push(patientData);
-        } else {
+        } else if (!isStale) {
             room.totalWaiting += 1;
             room.waitingList.push(patientData);
         }
