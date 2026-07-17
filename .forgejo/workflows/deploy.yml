@@ -15,7 +15,6 @@ jobs:
   build:
     name: Build & Push to Internal Registry
     runs-on: build
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -28,12 +27,11 @@ jobs:
         run: |
           echo "Tiến hành tạo file biến môi trường..."
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env.production
-          echo "Tạo biến "
 
       - name: Build and Push Docker Image
         run: |
           IMAGE_LATEST="${{ env.IMAGE_NAME }}:latest"
-          IMAGE_SHA="${{ env.IMAGE_NAME }}:${{ forgejo.sha }}"
+          IMAGE_SHA="${{ env.IMAGE_NAME }}:${{ github.sha }}"
 
           docker buildx build \
             --platform linux/amd64 \
@@ -46,24 +44,19 @@ jobs:
     name: Deploy via SSH Key
     needs: build
     runs-on: deploy
-
     steps:
       - name: Setup SSH agent and Deploy
         run: |
-
           eval "$(ssh-agent -s)"
-
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
-
 
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           ssh-keyscan -p "${{ secrets.SSH_PORT || '22' }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-
           ssh -o BatchMode=yes -p "${{ secrets.SSH_PORT || '22' }}" "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" << 'EOF'
-            set -e # Dừng ngay lập tức nếu bất kỳ lệnh nào bên dưới bị lỗi
+            set -e 
 
             echo "Đăng nhập Internal Registry..."
             if [ -z "${{ secrets.REGISTRY_TOKEN }}" ]; then
@@ -83,7 +76,6 @@ jobs:
             echo "Khởi động lại container bằng Docker CLI..."
             docker rm -f $CONTAINER_NAME || true
 
-            # Chạy container và inject các biến môi trường cấu hình (DB, PORT, ...)
             docker run -d \
               --name $CONTAINER_NAME \
               -p $PORT:$PORT \
@@ -92,13 +84,11 @@ jobs:
               --restart unless-stopped \
               $IMAGE_NAME:latest
 
-            # Dọn dẹp các dangling images cũ để tránh đầy ổ cứng server
             docker image prune -f
 
             echo "Đợi 10s để service khởi động..."
             sleep 10
 
-            # Health check kiểm tra API port hoạt động
             if curl -s -I http://localhost:$PORT > /dev/null 2>&1; then
               echo "Health check thành công (server đang lắng nghe)!"
             else
