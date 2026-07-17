@@ -27,16 +27,7 @@ model dmphong {
 
   @@schema("current")
 }
-model chuyenphong {
-  mabn  String?
-  makb  String?
-  mapc  String?
-  mapn  String?
-  ngaychuyen DateTime?
-  ketthuc  Decimal?
 
-  @@schema("current")
-}
 
 model psdangky {
   makb       String      @id
