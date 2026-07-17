@@ -58,6 +58,7 @@
                     <th class="py-4 px-6 font-bold text-2xl text-slate-700">Giới tính</th>
                     <th class="py-4 px-6 font-bold text-2xl text-slate-700">Ngày Sinh</th>
                     <th class="py-4 px-6 font-bold text-2xl text-slate-700">Giờ Đăng Ký</th>
+                    <th class="py-4 px-6 font-bold text-2xl text-slate-700 text-center">Trạng Thái</th>
                 </tr>
             </thead>
             <tbody class="divide-y-1 divide-slate-200">
@@ -67,7 +68,7 @@
 
                 if (allPatients.length === 0) { 
                 %>
-                    <tr><td colspan="6" class="text-center p-10 text-slate-500 text-xl font-medium">Phòng trống, không có bệnh nhân.</td></tr>
+                    <tr><td colspan="7" class="text-center p-10 text-slate-500 text-xl font-medium">Phòng trống, không có bệnh nhân.</td></tr>
                 <% } else { 
                     let waitCounter = 0; 
                     
@@ -101,10 +102,17 @@
                     <tr class="transition-colors <%= isNear ? 'bg-red-50 hover:bg-red-100 text-danger font-bold' : 'hover:bg-blue-50 cursor-pointer font-medium' %>">
                         <td class="py-4 px-6 text-xl"><%= index + 1 %></td>
                         <td class="py-4 px-6 text-xl"><%= patient.mabn || patient.makb %></td>
-                        <td class="py-4 px-6 <%= isNear ? 'text-3xl' : 'text-2xl font-bold text-slate-900' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim() || 'Chưa cập nhật' %></td>
+                        <td class="py-4 px-6 <%= isNear ? 'text-3xl' : 'text-2xl font-bold text-slate-900' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
                         <td class="py-4 px-6 text-xl"><%= gender %></td>
                         <td class="py-4 px-6 text-xl"><%= dobStr %></td>
                         <td class="py-4 px-6 text-xl"><%= timeStr %></td>
+                        <td class="py-4 px-6 text-center">
+                            <% if (isNear) { %>
+                                <span class="inline-block bg-red-100 text-danger px-4 py-2 rounded-full text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp tới lượt khám</span>
+                            <% } else { %>
+                                <span class="inline-block bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-lg font-semibold border border-slate-200">Đang chờ</span>
+                            <% } %>
+                        </td>
                     </tr>
                 <%  }); 
                 } %>
