@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Số lượng chờ</title>
-    <meta http-equiv="refresh" content="10">
+    <meta http-equiv="refresh" content="60">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -21,8 +22,9 @@
         }
     </script>
 </head>
+
 <body class="bg-slate-100 text-slate-900 font-sans p-2 flex flex-col h-screen overflow-hidden">
-    
+
     <div class="flex justify-center items-center bg-white p-4 border-2 border-slate-300 rounded-lg mb-4 shadow-sm">
         <div class="text-center text-danger font-black tabular-nums tracking-wider">
             <div id="date-str" class="text-5xl text-slate-500 font-bold mb-2 uppercase tracking-widest"></div>
@@ -34,41 +36,60 @@
         <table class="w-full text-left border-collapse">
             <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300">
                 <tr>
-                    <th class="py-4 px-6 font-bold text-2xl text-slate-700 text-left w-2/5 cursor-pointer hover:bg-slate-300 transition-colors">
+                    <th
+                        class="py-4 px-6 font-bold text-2xl text-slate-700 text-left w-2/5 cursor-pointer hover:bg-slate-300 transition-colors">
                         Phòng
                     </th>
-                    <th class="py-4 px-6 font-bold text-2xl text-slate-700 text-center w-1/5 cursor-pointer hover:bg-slate-300 transition-colors">
+                    <th
+                        class="py-4 px-6 font-bold text-2xl text-slate-700 text-center w-1/5 cursor-pointer hover:bg-slate-300 transition-colors">
                         ĐK
                     </th>
-                    <th class="py-4 px-6 font-bold text-2xl text-slate-700 text-center w-1/5 cursor-pointer hover:bg-slate-300 transition-colors">
+                    <th
+                        class="py-4 px-6 font-bold text-2xl text-slate-700 text-center w-1/5 cursor-pointer hover:bg-slate-300 transition-colors">
                         ĐK+
                     </th>
-                    <th class="py-4 px-6 font-bold text-2xl text-slate-700 text-center w-1/5 cursor-pointer hover:bg-slate-300 transition-colors">
+                    <th
+                        class="py-4 px-6 font-bold text-2xl text-slate-700 text-center w-1/5 cursor-pointer hover:bg-slate-300 transition-colors">
                         Đang Chờ
                     </th>
                 </tr>
             </thead>
             <tbody id="roomList" class="divide-y-1 divide-slate-200">
                 <% data.rooms.forEach(function(r) { %>
-                    <tr class="hover:bg-blue-50 transition-colors cursor-pointer" onclick="window.location.href='/room/<%= r.maphong %>'">
-                        <td class="py-5 px-6 text-3xl font-bold text-brand"><%= r.tenphong || r.maphong %></td>
-                        <td class="py-5 px-6 text-3xl font-semibold text-center tabular-nums text-slate-700"><%= r.totalRegistered %></td>
-                        <td class="py-5 px-6 text-3xl font-semibold text-center tabular-nums text-slate-700"><%= r.totalDKPlus %></td>
-                        <td class="py-5 px-6 text-4xl font-black text-danger text-center tabular-nums bg-red-50/50"><%= r.totalWaiting %></td>
+                    <tr class="hover:bg-blue-50 transition-colors cursor-pointer"
+                        onclick="window.location.href='/room/<%= r.maphong %>'">
+                        <td class="py-5 px-6 text-3xl font-bold text-brand">
+                            <%= r.tenphong || r.maphong %>
+                        </td>
+                        <td class="py-5 px-6 text-3xl font-semibold text-center tabular-nums text-slate-700">
+                            <%= r.totalRegistered %>
+                        </td>
+                        <td class="py-5 px-6 text-3xl font-semibold text-center tabular-nums text-slate-700">
+                            <%= r.totalDKPlus %>
+                        </td>
+                        <td class="py-5 px-6 text-4xl font-black text-danger text-center tabular-nums bg-red-50/50">
+                            <%= r.totalWaiting %>
+                        </td>
                     </tr>
-                <% }); %>
+                    <% }); %>
             </tbody>
         </table>
     </div>
 
     <div class="grid grid-cols-2 gap-3 mt-3">
-        <div class="bg-white border-2 border-blue-300 p-5 rounded-lg text-brand text-3xl font-extrabold flex justify-between items-center">
+        <div
+            class="bg-white border-2 border-blue-300 p-5 rounded-lg text-brand text-3xl font-extrabold flex justify-between items-center">
             <span>TỔNG ĐĂNG KÝ:</span>
-            <span class="text-4xl tabular-nums"><%= data.overview.totalRegistered %></span>
+            <span class="text-4xl tabular-nums">
+                <%= data.overview.totalRegistered %>
+            </span>
         </div>
-        <div class="bg-white border-2 border-red-300 p-5 rounded-lg text-danger text-3xl font-extrabold flex justify-between items-center">
+        <div
+            class="bg-white border-2 border-red-300 p-5 rounded-lg text-danger text-3xl font-extrabold flex justify-between items-center">
             <span>TỔNG CHỜ KHÁM:</span>
-            <span class="text-4xl tabular-nums"><%= data.overview.totalWaiting %></span>
+            <span class="text-4xl tabular-nums">
+                <%= data.overview.totalWaiting %>
+            </span>
         </div>
     </div>
 
@@ -77,14 +98,17 @@
             const now = new Date();
             const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
             const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-            
-            document.getElementById('date-str').textContent = now.toLocaleDateString('en-GB', dateOpts);
-            document.getElementById('time-str').textContent = now.toLocaleTimeString('en-GB', timeOpts);
-        }
-        setInterval(updateTime, 10000);
-        updateTime();
+            const dateStrEl = document.getElementById('date-str');
+            const timeStrEl = document.getElementById('time-str');
 
-        // Giữ lại 1 cơ chế reload (meta refresh ở trên đã có 10s, bỏ bớt setTimeout dư thừa này để tránh xung đột reload liên tục)
+            if (dateStrEl && timeStrEl) {
+                dateStrEl.textContent = now.toLocaleDateString('en-GB', dateOpts);
+                timeStrEl.textContent = now.toLocaleTimeString('en-GB', timeOpts);
+            }
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
     </script>
 </body>
+
 </html>
