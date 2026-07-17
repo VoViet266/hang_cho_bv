@@ -1,14 +1,17 @@
 const prisma = require('../config/db');
 
 const getDashboardData = async () => {
-    // Sử dụng Raw SQL để Join các bảng lại một cách tối ưu
-    // Mục tiêu: Lấy danh sách bệnh nhân khám tại từng phòng (kể cả chuyển phòng - ĐK+)
+    // Lấy bệnh nhân theo phòng hiện tại của khambenh để thống kê ĐK+, chờ và danh sách phòng.
+    // Nếu bệnh nhân đã đổi phòng thì maphong trong khambenh sẽ phản ánh phòng mới ngay lập tức.
     const rows = await prisma.$queryRaw`
-        SELECT DISTINCT ON (kb.maphong, kb.makb)
-            p.maphong, 
+        SELECT
+            COALESCE(kb.maphong, dk.maphong) AS effective_maphong,
+            COALESCE(kb.maphong, dk.maphong) AS maphong,
             p.tenphong,
             kb.makb,
             dk.ngaydk,
+            kb.ngaykcb,
+            dk.maphong AS registered_maphong,
             bn.mabn,
             bn.holot,
             bn.ten,
@@ -17,7 +20,7 @@ const getDashboardData = async () => {
             COALESCE(kb.dakham, 0) as dakham
         FROM "current".psdangky dk
         INNER JOIN "current".khambenh kb ON dk.makb = kb.makb
-        INNER JOIN "current".dmphong p ON kb.maphong = p.maphong 
+        INNER JOIN "current".dmphong p ON kb.maphong = p.maphong
         LEFT JOIN "current".dmbenhnhan bn ON kb.mabn = bn.mabn AND (bn.xoa IS NULL OR bn.xoa = 0)
         WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
           AND (kb.xoa IS NULL OR kb.xoa = 0)
@@ -34,7 +37,7 @@ const getDashboardData = async () => {
 
 const getInitialRegistrations = async () => {
     return await prisma.$queryRaw`
-        SELECT dk.maphong, COUNT(DISTINCT dk.makb)::int as count_dk 
+        SELECT dk.maphong, COUNT(DISTINCT dk.makb)::int AS count_dk
         FROM "current".psdangky dk
         INNER JOIN "current".dmphong p ON dk.maphong = p.maphong
         WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
