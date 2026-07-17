@@ -100,12 +100,12 @@
                         }
                 %>
                     <tr class="transition-colors <%= isNear ? 'bg-red-50 hover:bg-red-100 text-danger font-bold' : 'hover:bg-blue-50 cursor-pointer font-medium' %>">
-                        <td class="py-4 px-6 text-xl"><%= index + 1 %></td>
-                        <td class="py-4 px-6 text-xl"><%= patient.mabn || patient.makb %></td>
+                        <td class="py-4 px-6 text-xl text-center"><%= index + 1 %></td>
+                        <td class="py-4 px-6 text-xl text-center"><%= patient.mabn || patient.makb %></td>
                         <td class="py-4 px-6 <%= isNear ? 'text-3xl' : 'text-2xl font-bold text-slate-900' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
-                        <td class="py-4 px-6 text-xl"><%= gender %></td>
-                        <td class="py-4 px-6 text-xl"><%= dobStr %></td>
-                        <td class="py-4 px-6 text-xl"><%= timeStr %></td>
+                        <td class="py-4 px-6 text-xl text-center"><%= gender %></td>
+                        <td class="py-4 px-6 text-xl text-center"><%= dobStr %></td>
+                        <td class="py-4 px-6 text-xl text-center"><%= timeStr %></td>
                         <td class="py-4 px-6 text-center">
                             <% if (isNear) { %>
                                 <span class="inline-block bg-red-100 text-danger px-4 py-2 rounded-full text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp tới lượt khám</span>
@@ -123,7 +123,7 @@
     <script>
         setTimeout(() => {
             window.location.reload();
-        }, 10000);
+        }, 30000);
     </script>
 </body>
 </html>

@@ -80,7 +80,10 @@ jobs:
               --name $CONTAINER_NAME \
               -p $PORT:$PORT \
               -e PORT=$PORT \
+              -e TZ="Asia/Ho_Chi_Minh" \
               -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -v /etc/localtime:/etc/localtime:ro \
+              -v /etc/timezone:/etc/timezone:ro \
               --restart unless-stopped \
               $IMAGE_NAME:latest
 

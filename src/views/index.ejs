@@ -81,7 +81,7 @@
             document.getElementById('date-str').textContent = now.toLocaleDateString('en-GB', dateOpts);
             document.getElementById('time-str').textContent = now.toLocaleTimeString('en-GB', timeOpts);
         }
-        setInterval(updateTime, 1000);
+        setInterval(updateTime, 10000);
         updateTime();
 
         // Giữ lại 1 cơ chế reload (meta refresh ở trên đã có 10s, bỏ bớt setTimeout dư thừa này để tránh xung đột reload liên tục)
