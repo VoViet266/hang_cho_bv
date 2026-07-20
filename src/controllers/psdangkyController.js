@@ -1,19 +1,11 @@
 const psdangkyService = require('../services/psdangkyService');
+const { serializeForJson } = require('../utils/response');
+const { normalizeRoomId } = require('../utils/roomValidation');
 
 const listPsdangkys = async (req, res) => {
     try {
         const data = await psdangkyService.getPsdangkys();
-        
-       
-        const serializeData = (obj) => {
-            return JSON.parse(
-                JSON.stringify(obj, (key, value) =>
-                    typeof value === 'bigint' ? value.toString() : value
-                )
-            );
-        };
-        
-        res.json(serializeData(data));
+        res.json(serializeForJson(data));
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Could not fetch psdangky list' });
@@ -23,21 +15,12 @@ const listPsdangkys = async (req, res) => {
 const listPsdangkysByRoomId = async (req, res) => {
     try {
         const { maphong } = req.params;
-        const data = await psdangkyService.getPsdangkysByRoomId(maphong);
-        
-       
-        const serializeData = (obj) => {
-            return JSON.parse(
-                JSON.stringify(obj, (key, value) =>
-                    typeof value === 'bigint' ? value.toString() : value
-                )
-            );
-        };
-        
-        res.json(serializeData(data));
+        const normalizedRoomId = normalizeRoomId(maphong);
+        const data = await psdangkyService.getPsdangkysByRoomId(normalizedRoomId);
+        res.json(serializeForJson(data));
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Could not fetch psdangky list' });
+        res.status(400).json({ error: 'Invalid room id' });
     }
 };
 

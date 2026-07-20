@@ -22,7 +22,8 @@ const getDashboardData = async () => {
         INNER JOIN "current".khambenh kb ON dk.makb = kb.makb
         INNER JOIN "current".dmphong p ON kb.maphong = p.maphong
         LEFT JOIN "current".dmbenhnhan bn ON kb.mabn = bn.mabn AND (bn.xoa IS NULL OR bn.xoa = 0)
-        WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
+        WHERE dk.ngaydk >= CURRENT_DATE
+          AND dk.ngaydk < CURRENT_DATE + INTERVAL '1 day'
           AND (kb.xoa IS NULL OR kb.xoa = 0)
           AND (dk.xoa IS NULL OR dk.xoa = 0)
           AND (p.xoa IS NULL OR p.xoa = 0)
@@ -40,7 +41,8 @@ const getInitialRegistrations = async () => {
         SELECT dk.maphong, COUNT(DISTINCT dk.makb)::int AS count_dk
         FROM "current".psdangky dk
         INNER JOIN "current".dmphong p ON dk.maphong = p.maphong
-        WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
+        WHERE dk.ngaydk >= CURRENT_DATE
+          AND dk.ngaydk < CURRENT_DATE + INTERVAL '1 day'
           AND (dk.xoa IS NULL OR dk.xoa = 0)
           AND (p.xoa IS NULL OR p.xoa = 0)
           AND p.khoakb = 1

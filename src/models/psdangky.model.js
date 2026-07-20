@@ -1,12 +1,10 @@
 const prisma = require('../config/db');
 
 const getWaitingListByRoom = async () => {
-    // Sử dụng $queryRaw thay cho Prisma ORM để tối ưu tốc độ, tương tự dashboard.model.js
-    // Lọc dk.ngaydk theo khoảng thời gian để tận dụng Index
     const rows = await prisma.$queryRaw`
-        SELECT 
-            p.maphong, 
-            p.tenphong, 
+        SELECT
+            p.maphong,
+            p.tenphong,
             json_agg(
                 json_build_object(
                     'makb', dk.makb,
@@ -21,12 +19,15 @@ const getWaitingListByRoom = async () => {
                         )
                     ELSE NULL END
                 ) ORDER BY dk.ngaydk ASC
-            ) as psdangky
+            ) AS psdangky
         FROM "current".dmphong p
         INNER JOIN "current".psdangky dk ON p.maphong = dk.maphong
         LEFT JOIN "current".dmbenhnhan bn ON dk.mabn = bn.mabn
-        WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
+        WHERE dk.ngaydk >= CURRENT_DATE
+          AND dk.ngaydk < CURRENT_DATE + INTERVAL '1 day'
           AND (p.tenphong NOT ILIKE '%CLS%' OR p.tenphong IS NULL)
+          AND (p.xoa IS NULL OR p.xoa = 0)
+          AND p.maphong NOT IN ('CLS', 'SL')
         GROUP BY p.maphong, p.tenphong
     `;
 
@@ -35,9 +36,9 @@ const getWaitingListByRoom = async () => {
 
 const getWaitingListByRoomId = async (maphong) => {
     const rows = await prisma.$queryRaw`
-        SELECT 
-            p.maphong, 
-            p.tenphong, 
+        SELECT
+            p.maphong,
+            p.tenphong,
             json_agg(
                 json_build_object(
                     'makb', dk.makb,
@@ -52,12 +53,14 @@ const getWaitingListByRoomId = async (maphong) => {
                         )
                     ELSE NULL END
                 ) ORDER BY dk.ngaydk ASC
-            ) as psdangky
+            ) AS psdangky
         FROM "current".dmphong p
         INNER JOIN "current".psdangky dk ON p.maphong = dk.maphong
         LEFT JOIN "current".dmbenhnhan bn ON dk.mabn = bn.mabn
-        WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
+        WHERE dk.ngaydk >= CURRENT_DATE
+          AND dk.ngaydk < CURRENT_DATE + INTERVAL '1 day'
           AND p.maphong = ${maphong}
+          AND (p.xoa IS NULL OR p.xoa = 0)
           AND p.maphong NOT IN ('CLS', 'SL')
         GROUP BY p.maphong, p.tenphong
     `;
@@ -67,5 +70,5 @@ const getWaitingListByRoomId = async (maphong) => {
 
 module.exports = {
     getWaitingListByRoom,
-    getWaitingListByRoomId
+    getWaitingListByRoomId,
 };

@@ -129,9 +129,11 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
 };
 
 const getDashboardStats = async () => {
-    const rows = await dashboardModel.getDashboardData();
-    const roomsFromDB = await dashboardModel.getAllRooms();
-    const initialRegs = await dashboardModel.getInitialRegistrations();
+    const [rows, roomsFromDB, initialRegs] = await Promise.all([
+        dashboardModel.getDashboardData(),
+        dashboardModel.getAllRooms(),
+        dashboardModel.getInitialRegistrations(),
+    ]);
 
     return buildDashboardState({ roomsFromDB, initialRegs, rows });
 };
