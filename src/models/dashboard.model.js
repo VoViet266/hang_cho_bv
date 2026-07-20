@@ -9,13 +9,13 @@ const getDashboardData = async () => {
             COALESCE(kb.maphong, dk.maphong) AS maphong,
             p.tenphong,
             kb.makb,
-            TO_CHAR(dk.ngaydk, 'YYYY-MM-DD HH24:MI:SS') as ngaydk,
-            TO_CHAR(kb.ngaykcb, 'YYYY-MM-DD HH24:MI:SS') as ngaykcb,
+            dk.ngaydk,
+            kb.ngaykcb,
             dk.maphong AS registered_maphong,
             bn.mabn,
             bn.holot,
             bn.ten,
-            TO_CHAR(bn.ngaysinh, 'YYYY-MM-DD HH24:MI:SS') as ngaysinh,
+            bn.ngaysinh,
             bn.gioitinh,
             COALESCE(kb.dakham, 0) as dakham
         FROM "current".psdangky dk
@@ -38,7 +38,7 @@ const getDashboardData = async () => {
 
 const getInitialRegistrations = async () => {
     return await prisma.$queryRaw`
-        SELECT dk.maphong, COUNT(DISTINCT dk.makb)::int AS count_dk
+        SELECT dk.maphong, COUNT(*)::int AS count_dk
         FROM "current".psdangky dk
         INNER JOIN "current".dmphong p ON dk.maphong = p.maphong
         WHERE dk.ngaydk >= CURRENT_DATE

@@ -5,6 +5,7 @@ const logger = require('./config/logger');
 
 const app = express();
 
+app.disable('x-powered-by');
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
