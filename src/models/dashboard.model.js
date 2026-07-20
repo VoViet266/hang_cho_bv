@@ -9,21 +9,20 @@ const getDashboardData = async () => {
             COALESCE(kb.maphong, dk.maphong) AS maphong,
             p.tenphong,
             kb.makb,
-            dk.ngaydk,
-            kb.ngaykcb,
+            TO_CHAR(dk.ngaydk, 'YYYY-MM-DD HH24:MI:SS') as ngaydk,
+            TO_CHAR(kb.ngaykcb, 'YYYY-MM-DD HH24:MI:SS') as ngaykcb,
             dk.maphong AS registered_maphong,
             bn.mabn,
             bn.holot,
             bn.ten,
-            bn.ngaysinh,
+            TO_CHAR(bn.ngaysinh, 'YYYY-MM-DD HH24:MI:SS') as ngaysinh,
             bn.gioitinh,
             COALESCE(kb.dakham, 0) as dakham
         FROM "current".psdangky dk
         INNER JOIN "current".khambenh kb ON dk.makb = kb.makb
         INNER JOIN "current".dmphong p ON kb.maphong = p.maphong
         LEFT JOIN "current".dmbenhnhan bn ON kb.mabn = bn.mabn AND (bn.xoa IS NULL OR bn.xoa = 0)
-        WHERE dk.ngaydk >= CURRENT_DATE
-          AND dk.ngaydk < CURRENT_DATE + INTERVAL '1 day'
+        WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
           AND (kb.xoa IS NULL OR kb.xoa = 0)
           AND (dk.xoa IS NULL OR dk.xoa = 0)
           AND (p.xoa IS NULL OR p.xoa = 0)
@@ -38,11 +37,10 @@ const getDashboardData = async () => {
 
 const getInitialRegistrations = async () => {
     return await prisma.$queryRaw`
-        SELECT dk.maphong, COUNT(*)::int AS count_dk
+        SELECT dk.maphong, COUNT(DISTINCT dk.makb)::int AS count_dk
         FROM "current".psdangky dk
         INNER JOIN "current".dmphong p ON dk.maphong = p.maphong
-        WHERE dk.ngaydk >= CURRENT_DATE
-          AND dk.ngaydk < CURRENT_DATE + INTERVAL '1 day'
+        WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
           AND (dk.xoa IS NULL OR dk.xoa = 0)
           AND (p.xoa IS NULL OR p.xoa = 0)
           AND p.khoakb = 1

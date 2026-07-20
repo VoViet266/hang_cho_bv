@@ -35,9 +35,8 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
         }
     });
 
-    const now = new Date();
-    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-    const fortyFiveMinsAgo = new Date(now.getTime() - 45 * 60 * 1000);
+    const currentHour = new Date().getHours();
+    const hr = currentHour - 2;
 
     rows.forEach((row) => {
         const isExamined = Number(row.dakham || 0) !== 0;
@@ -56,8 +55,7 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
         const actualNgayDk = normalizePatientDate(row.ngaydk);
         const actualNgayKcb = normalizePatientDate(row.ngaykcb) || actualNgayDk;
 
-        const isDashboardStale = !isExamined && actualNgayKcb && actualNgayKcb < twoHoursAgo;
-        const isRoomStale = !isExamined && actualNgayKcb && actualNgayKcb < fortyFiveMinsAgo;
+        const isStale = !isExamined && actualNgayKcb && actualNgayKcb.getHours() < hr;
 
         const patientData = {
             makb: row.makb,
@@ -73,13 +71,9 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
 
         if (isExamined) {
             room.examinedList.push(patientData);
-        } else {
-            if (!isDashboardStale) {
-                room.totalWaiting += 1;
-            }
-            if (!isRoomStale) {
-                room.waitingList.push(patientData);
-            }
+        } else if (!isStale) {
+            room.totalWaiting += 1;
+            room.waitingList.push(patientData);
         }
 
         if (isTransferIn) {
@@ -129,11 +123,9 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
 };
 
 const getDashboardStats = async () => {
-    const [rows, roomsFromDB, initialRegs] = await Promise.all([
-        dashboardModel.getDashboardData(),
-        dashboardModel.getAllRooms(),
-        dashboardModel.getInitialRegistrations(),
-    ]);
+    const rows = await dashboardModel.getDashboardData();
+    const roomsFromDB = await dashboardModel.getAllRooms();
+    const initialRegs = await dashboardModel.getInitialRegistrations();
 
     return buildDashboardState({ roomsFromDB, initialRegs, rows });
 };

@@ -48,9 +48,9 @@
                 <span class="block text-brand font-black text-3xl tabular-nums"><%= room.totalDKPlus %></span>
             </div>
        
-            <div class="stat-card px-6 py-3 rounded-2xl text-center min-w-[150px] border border-slate-100">
-                <span class="block text-slate-500 font-bold text-xs mb-1 uppercase tracking-wider">Đang chờ</span>
-                <span class="block text-danger font-black text-4xl tabular-nums leading-none"><%= room.waitingList.length %></span>
+            <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
+                <span class="block text-danger font-bold text-base mb-1 uppercase tracking-wide">Đang chờ</span>
+                <span class="block text-danger font-black text-3xl tabular-nums"><%= room.totalWaiting %></span>
             </div>
         </div>
     </div>

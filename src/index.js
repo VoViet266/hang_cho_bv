@@ -1,13 +1,31 @@
-const app = require('./app');
-const env = require('./config/env');
-const logger = require('./config/logger');
+const express = require('express');
+const dotenv = require('dotenv');
+const userRoutes = require('./routes/userRoutes');
+const userService = require('./services/userService');
 
-const port = env.PORT;
+dotenv.config();
 
-if (require.main === module) {
-    app.listen(port, () => {
-        logger.info(`Server running on http://localhost:${port}`);
-    });
-}
+const app = express();
+const port = process.env.PORT || 8080;
 
-module.exports = app;
+app.use(express.json());
+
+app.get('/', (req, res) => {
+    res.json({ message: 'API is running' });
+});
+
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+});
+
+(async () => {
+    try {
+        await userService.ensureConnection();
+        app.listen(port, () => {
+            console.log(`Server running on http://localhost:${port}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server', error);
+        process.exit(1);
+    }
+})();
