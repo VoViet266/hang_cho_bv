@@ -36,7 +36,6 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
     });
 
     const currentHour = new Date().getHours();
-    const hr = currentHour - 2;
 
     rows.forEach((row) => {
         const isExamined = Number(row.dakham || 0) !== 0;
@@ -55,7 +54,14 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
         const actualNgayDk = normalizePatientDate(row.ngaydk);
         const actualNgayKcb = normalizePatientDate(row.ngaykcb) || actualNgayDk;
 
-        const isStale = !isExamined && actualNgayKcb && actualNgayKcb.getHours() < hr;
+        let isStale = false;
+        if (!isExamined && actualNgayDk) {
+            const expireBase = actualNgayDk.getHours() < 7 ? 
+                new Date(actualNgayDk.getFullYear(), actualNgayDk.getMonth(), actualNgayDk.getDate(), 7, 0, 0) : 
+                new Date(actualNgayDk.getTime());
+            const expireTime = new Date(expireBase.getTime() + 45 * 60000);
+            isStale = new Date() >= expireTime;
+        }
 
         const patientData = {
             makb: row.makb,

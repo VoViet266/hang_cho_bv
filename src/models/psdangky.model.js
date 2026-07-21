@@ -20,16 +20,17 @@ const getWaitingListByRoom = async () => {
                             'gioitinh', bn.gioitinh
                         )
                     ELSE NULL END
-                ) ORDER BY dk.ngaydk ASC
+                ) ORDER BY CASE WHEN bn.ngaysinh <= current_date - interval '75 years' THEN 0 ELSE 1 END ASC, dk.ngaydk ASC
             ) as psdangky
         FROM "current".dmphong p
         INNER JOIN "current".psdangky dk ON p.maphong = dk.maphong
         LEFT JOIN "current".dmbenhnhan bn ON dk.mabn = bn.mabn
         WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
           AND (p.tenphong NOT ILIKE '%CLS%' OR p.tenphong IS NULL)
+          AND NOW() <= GREATEST(dk.ngaydk, current_date + interval '7 hours') + interval '45 minutes'
         GROUP BY p.maphong, p.tenphong
     `;
-
+    console.log(rows)
     return rows;
 };
 
@@ -51,7 +52,7 @@ const getWaitingListByRoomId = async (maphong) => {
                             'gioitinh', bn.gioitinh
                         )
                     ELSE NULL END
-                ) ORDER BY dk.ngaydk ASC
+                ) ORDER BY CASE WHEN bn.ngaysinh <= current_date - interval '75 years' THEN 0 ELSE 1 END ASC, dk.ngaydk ASC
             ) as psdangky
         FROM "current".dmphong p
         INNER JOIN "current".psdangky dk ON p.maphong = dk.maphong
@@ -59,9 +60,10 @@ const getWaitingListByRoomId = async (maphong) => {
         WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
           AND p.maphong = ${maphong}
           AND p.maphong NOT IN ('CLS', 'SL')
+          AND NOW() <= GREATEST(dk.ngaydk, current_date + interval '7 hours') + interval '45 minutes'
         GROUP BY p.maphong, p.tenphong
     `;
-
+   
     return rows;
 };
 

@@ -72,7 +72,19 @@
             <tbody class="divide-y-1 divide-slate-200">
                 <% 
                 const allPatients = [...room.waitingList];
-                allPatients.sort((a, b) => new Date(a.ngaydk) - new Date(b.ngaydk));
+                const seventyFiveYearsAgo = new Date();
+                seventyFiveYearsAgo.setFullYear(seventyFiveYearsAgo.getFullYear() - 75);
+                
+                allPatients.sort((a, b) => {
+                    const isAElderly = a.ngaysinh && new Date(a.ngaysinh) <= seventyFiveYearsAgo;
+                    const isBElderly = b.ngaysinh && new Date(b.ngaysinh) <= seventyFiveYearsAgo;
+                    
+                    if (isAElderly && !isBElderly) return -1;
+                    if (!isAElderly && isBElderly) return 1;
+                    return new Date(a.ngaydk) - new Date(b.ngaydk);
+                });
+                
+              
 
                 if (allPatients.length === 0) { 
                 %>
