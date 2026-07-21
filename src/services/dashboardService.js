@@ -122,12 +122,41 @@ const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
     };
 };
 
-const getDashboardStats = async () => {
+let cachedStats = null;
+let lastFetchTime = 0;
+let fetchPromise = null;
+const CACHE_TTL = 10000; // Cache 10 giây
+
+const fetchDashboardStats = async () => {
     const rows = await dashboardModel.getDashboardData();
     const roomsFromDB = await dashboardModel.getAllRooms();
     const initialRegs = await dashboardModel.getInitialRegistrations();
 
     return buildDashboardState({ roomsFromDB, initialRegs, rows });
+};
+
+const getDashboardStats = async () => {
+    const now = Date.now();
+    
+    // 1. Trả về cache nếu còn hạn
+    if (cachedStats && (now - lastFetchTime < CACHE_TTL)) {
+        return cachedStats;
+    }
+
+    // 2. Chống Cache Stampede: Nếu có request đang query thì các request khác cùng chờ
+    if (!fetchPromise) {
+        fetchPromise = fetchDashboardStats().then(stats => {
+            cachedStats = stats;
+            lastFetchTime = Date.now();
+            fetchPromise = null;
+            return stats;
+        }).catch(err => {
+            fetchPromise = null;
+            throw err;
+        });
+    }
+
+    return fetchPromise;
 };
 
 module.exports = {
