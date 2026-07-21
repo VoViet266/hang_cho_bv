@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -72,11 +72,17 @@ jobs:
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
           PORT: ${{ env.PORT }}
         run: |
-          eval "$(ssh-agent -s)"
-          printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
+
+          cat > ~/.ssh/deploy_key <<'EOF'
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+          chmod 600 ~/.ssh/deploy_key
+
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/deploy_key
+
           ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
@@ -92,7 +98,7 @@ jobs:
             fi
             printf '%s' "$REGISTRY_TOKEN" | docker login 10.10.20.49:3000 -u "$REGISTRY_USERNAME" --password-stdin
 
-            # Lưu lại ID của image hiện hành để rollback nếu cần
+         
             PREVIOUS_IMAGE_ID=$(docker inspect --format='{{.Image}}' "$CONTAINER_NAME" 2>/dev/null || echo "")
 
             echo "Pulling image mới nhất..."
@@ -135,11 +141,11 @@ jobs:
 
               echo "Bắt đầu rollback quá trình deploy..."
               docker rm -f "$CONTAINER_NAME" || true
-              
+
               if [ -n "$PREVIOUS_IMAGE_ID" ]; then
                 echo "Khôi phục lại container từ image cũ ($PREVIOUS_IMAGE_ID)..."
                 start_container "$PREVIOUS_IMAGE_ID"
-                
+
                 echo "Chờ service cũ khởi động lại..."
                 sleep 5
                 if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1; then
@@ -150,7 +156,7 @@ jobs:
               else
                 echo "Không tìm thấy phiên bản cũ để rollback."
               fi
-              
+
               exit 1
             fi
           EOF
