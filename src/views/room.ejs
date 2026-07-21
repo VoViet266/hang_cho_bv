@@ -119,10 +119,15 @@
                         }
 
                         const dateObj = new Date(patient.ngaydk);
-                        const timeStr = dateObj.toLocaleString('vi-VN', {
+                        let timeStr = dateObj.toLocaleString('vi-VN', {
                             day: '2-digit', month: '2-digit', year: 'numeric',
                             hour: '2-digit', minute: '2-digit', hour12: false
                         });
+
+                        const isElderly = patient.ngaysinh && new Date(patient.ngaysinh) <= seventyFiveYearsAgo;
+                        if (isElderly) {
+                            timeStr = '<span class="text-danger font-bold uppercase">Ưu tiên</span>';
+                        }
 
                         let isNear = false;
                         if (patient.dakham == 0) {
@@ -138,7 +143,7 @@
                         <td class="py-4 px-6 text-blue-900 <%= isNear ? 'text-3xl' : 'text-2xl font-bold' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
                         <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= gender %></td>
                         <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= dobStr %></td>
-                        <td class="py-4 px-6 text-2xl text-center text-blue-900"><%= timeStr %></td>
+                        <td class="py-4 px-6 text-2xl text-center text-blue-900"><%- timeStr %></td>
                         <td class="py-4 px-6 text-center">
                             <% if (isNear) { %>
                                 <span class="inline-block bg-red-100 text-danger px-4 py-2 rounded-md text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp tới lượt khám</span>
