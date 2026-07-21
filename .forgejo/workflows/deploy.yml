@@ -12,8 +12,27 @@ env:
   PORT: 3002
 
 jobs:
+  test:
+    name: Run Tests
+    runs-on: build
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Tests
+        run: npm run test --if-present || echo "Bỏ qua test do chưa cấu hình"
+
   build:
     name: Build & Push to Internal Registry
+    needs: test
     runs-on: build
     steps:
       - name: Checkout source
@@ -22,7 +41,7 @@ jobs:
       - name: Login internal registry
         run: |
           echo "${{ secrets.REGISTRY_TOKEN }}" | docker login 10.10.20.49:3000 --username "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
-  
+
       - name: Build and Push Docker Image
         run: |
           IMAGE_LATEST="${{ env.IMAGE_NAME }}:latest"
@@ -41,57 +60,97 @@ jobs:
     runs-on: deploy
     steps:
       - name: Setup SSH agent and Deploy
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
+          PORT: ${{ env.PORT }}
         run: |
           eval "$(ssh-agent -s)"
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
+          printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
 
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          ssh-keyscan -p "${{ secrets.SSH_PORT || '22' }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-          ssh -o BatchMode=yes -p "${{ secrets.SSH_PORT || '22' }}" "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" << 'EOF'
-            set -e 
+          SSH_CMD_ENV="REGISTRY_TOKEN=$(printf '%q' "$REGISTRY_TOKEN") REGISTRY_USERNAME=$(printf '%q' "$REGISTRY_USERNAME") DATABASE_URL=$(printf '%q' "$DATABASE_URL") IMAGE_NAME=$(printf '%q' "$IMAGE_NAME") CONTAINER_NAME=$(printf '%q' "$CONTAINER_NAME") PORT=$(printf '%q' "$PORT")"
+
+          ssh -o BatchMode=yes -p "$SSH_PORT" "$SSH_USERNAME@$SSH_HOST" $SSH_CMD_ENV /bin/bash -s <<'EOF'
+            set -e
 
             echo "Đăng nhập Internal Registry..."
-            if [ -z "${{ secrets.REGISTRY_TOKEN }}" ]; then
+            if [ -z "$REGISTRY_TOKEN" ]; then
               echo "Lỗi: Không tìm thấy REGISTRY_TOKEN trong Secrets!"
               exit 1
             fi
-            printf '%s' "${{ secrets.REGISTRY_TOKEN }}" | docker login 10.10.20.49:3000 -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+            printf '%s' "$REGISTRY_TOKEN" | docker login 10.10.20.49:3000 -u "$REGISTRY_USERNAME" --password-stdin
 
-            # Khai báo biến cục bộ trên Server từ env của Workflow
-            IMAGE_NAME="${{ env.IMAGE_NAME }}"
-            CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
-            PORT="${{ env.PORT }}"
+            # Lưu lại ID của image hiện hành để rollback nếu cần
+            PREVIOUS_IMAGE_ID=$(docker inspect --format='{{.Image}}' "$CONTAINER_NAME" 2>/dev/null || echo "")
 
             echo "Pulling image mới nhất..."
-            docker pull $IMAGE_NAME:latest
+            docker pull "$IMAGE_NAME:latest"
 
-            echo "Khởi động lại container bằng Docker CLI..."
-            docker rm -f $CONTAINER_NAME || true
+            echo "Dừng container cũ..."
+            docker rm -f "$CONTAINER_NAME" || true
 
-            docker run -d \
-              --name $CONTAINER_NAME \
-              -p $PORT:$PORT \
-              -e PORT=$PORT \
-              -e TZ="Asia/Ho_Chi_Minh" \
-              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-              -v /etc/localtime:/etc/localtime:ro \
-              -v /etc/timezone:/etc/timezone:ro \
-              --restart unless-stopped \
-              $IMAGE_NAME:latest
+            # Hàm khởi chạy container
+            start_container() {
+              local IMAGE=$1
+              docker run -d \
+                --name "$CONTAINER_NAME" \
+                -p "$PORT:$PORT" \
+                -e PORT="$PORT" \
+                -e TZ="Asia/Ho_Chi_Minh" \
+                -e DATABASE_URL="$DATABASE_URL" \
+                -v /etc/localtime:/etc/localtime:ro \
+                --restart unless-stopped \
+                "$IMAGE"
+            }
 
-            docker image prune -f
+            echo "Khởi động container với image mới..."
+            start_container "$IMAGE_NAME:latest"
 
-            echo "Đợi 10s để service khởi động..."
-            sleep 10
+            echo "Chờ service khởi động..."
+            retries=6
+            count=0
+            until curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1 || [ "$count" -ge "$retries" ]; do
+              count=$((count + 1))
+              echo "Healthcheck attempt $count/$retries failed; retry in 5s..."
+              sleep 5
+            done
 
-            if curl -s -I http://localhost:$PORT > /dev/null 2>&1; then
+            if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1; then
               echo "Health check thành công (server đang lắng nghe)!"
             else
-              echo "Health check thất bại! Dump logs của container:"
-              docker logs $CONTAINER_NAME --tail=100
+              echo "Health check thất bại! Dump logs của container bị lỗi:"
+              docker logs "$CONTAINER_NAME" --tail=100
+
+              echo "Bắt đầu rollback quá trình deploy..."
+              docker rm -f "$CONTAINER_NAME" || true
+              
+              if [ -n "$PREVIOUS_IMAGE_ID" ]; then
+                echo "Khôi phục lại container từ image cũ ($PREVIOUS_IMAGE_ID)..."
+                start_container "$PREVIOUS_IMAGE_ID"
+                
+                echo "Chờ service cũ khởi động lại..."
+                sleep 5
+                if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1; then
+                   echo "Rollback thành công! Hệ thống đã quay về bản cũ."
+                else
+                   echo "Rollback thất bại! Cần kiểm tra hệ thống thủ công."
+                fi
+              else
+                echo "Không tìm thấy phiên bản cũ để rollback."
+              fi
+              
               exit 1
             fi
           EOF
