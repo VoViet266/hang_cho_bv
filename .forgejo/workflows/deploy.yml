@@ -23,16 +23,6 @@ jobs:
         run: |
           echo "${{ secrets.REGISTRY_TOKEN }}" | docker login 10.10.20.49:3000 --username "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
   
-      - name: Dọn dẹp cache Docker cũ trước khi build
-        run: |
-          echo "Dọn dẹp cache Docker cũ hơn ${{ env.CACHE_TTL_HOURS }} giờ trước khi build..."
-          docker builder prune --filter "until=${{ env.CACHE_TTL_HOURS }}h" -f || true
-
-      - name: Khởi tạo file .env.production
-        run: |
-          echo "Tiến hành tạo file biến môi trường..."
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env.production
-
       - name: Build and Push Docker Image
         run: |
           IMAGE_LATEST="${{ env.IMAGE_NAME }}:latest"

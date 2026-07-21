@@ -1,5 +1,5 @@
 const express = require('express');
-const routes = require('./routes');
+
 const errorMiddleware = require('./middlewares/error.middleware');
 const logger = require('./config/logger');
 
@@ -19,8 +19,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.static(path.join(__dirname, '../public')));
 
-// API Routes
-app.use('/api', routes);
+
 
 // View Routes
 const dashboardService = require('./services/dashboardService');
