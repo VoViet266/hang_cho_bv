@@ -71,7 +71,7 @@ jobs:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
           PORT: ${{ env.PORT }}
-          LOGS_VOLUME: ${{ secrets.LOGS_VOLUME || '/home/vqviet/logs/application' }}
+          LOGS_VOLUME: ${{ secrets.LOGS_VOLUME || '' }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
