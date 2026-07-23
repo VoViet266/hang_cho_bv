@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install dependencies
         run: npm install
@@ -71,6 +71,7 @@ jobs:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
           PORT: ${{ env.PORT }}
+          LOGS_VOLUME: ${{ secrets.LOGS_VOLUME || '/home/vqviet/logs/application' }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
@@ -86,7 +87,7 @@ jobs:
           ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-          SSH_CMD_ENV="REGISTRY_TOKEN=$(printf '%q' "$REGISTRY_TOKEN") REGISTRY_USERNAME=$(printf '%q' "$REGISTRY_USERNAME") DATABASE_URL=$(printf '%q' "$DATABASE_URL") IMAGE_NAME=$(printf '%q' "$IMAGE_NAME") CONTAINER_NAME=$(printf '%q' "$CONTAINER_NAME") PORT=$(printf '%q' "$PORT")"
+          SSH_CMD_ENV="REGISTRY_TOKEN=$(printf '%q' "$REGISTRY_TOKEN") REGISTRY_USERNAME=$(printf '%q' "$REGISTRY_USERNAME") DATABASE_URL=$(printf '%q' "$DATABASE_URL") IMAGE_NAME=$(printf '%q' "$IMAGE_NAME") CONTAINER_NAME=$(printf '%q' "$CONTAINER_NAME") PORT=$(printf '%q' "$PORT") LOGS_VOLUME=$(printf '%q' "$LOGS_VOLUME")"
 
           ssh -o BatchMode=yes -p "$SSH_PORT" "$SSH_USERNAME@$SSH_HOST" $SSH_CMD_ENV /bin/bash -s <<'EOF'
             set -e
@@ -98,7 +99,7 @@ jobs:
             fi
             printf '%s' "$REGISTRY_TOKEN" | docker login 10.10.20.49:3000 -u "$REGISTRY_USERNAME" --password-stdin
 
-         
+
             PREVIOUS_IMAGE_ID=$(docker inspect --format='{{.Image}}' "$CONTAINER_NAME" 2>/dev/null || echo "")
 
             echo "Pulling image mới nhất..."
@@ -106,6 +107,9 @@ jobs:
 
             echo "Dừng container cũ..."
             docker rm -f "$CONTAINER_NAME" || true
+
+            mkdir -p "$LOGS_VOLUME"
+            chmod 755 "$LOGS_VOLUME"
 
             # Hàm khởi chạy container
             start_container() {
@@ -117,6 +121,7 @@ jobs:
                 -e TZ="Asia/Ho_Chi_Minh" \
                 -e DATABASE_URL="$DATABASE_URL" \
                 -v /etc/localtime:/etc/localtime:ro \
+                -v "$LOGS_VOLUME":/app/logs/Applications/Hangcho \
                 --restart unless-stopped \
                 "$IMAGE"
             }

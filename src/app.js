@@ -8,7 +8,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
-    logger.info(`${req.method} ${req.url}`);
+    const start = process.hrtime();
+    res.on('finish', () => {
+        const diff = process.hrtime(start);
+        const time = (diff[0] * 1e3 + diff[1] * 1e-6).toFixed(4); // Đổi ra mili-giây
+        logger.info(`HTTP ${req.method} ${req.url} responded ${res.statusCode} in ${time} ms`);
+    });
     next();
 });
 
