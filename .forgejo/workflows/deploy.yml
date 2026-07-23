@@ -114,7 +114,7 @@ jobs:
             docker rm -f "$CONTAINER_NAME" || true
 
             mkdir -p "$LOGS_VOLUME"
-            chmod 755 "$LOGS_VOLUME"
+            chmod 755 "$LOGS_VOLUME" || true
 
             # Hàm khởi chạy container
             start_container() {
