@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phòng Khám - <%= room.tenphong || room.maphong %></title>
+    <title>Phòng Khám - <%= room.tenphong || room.maphong %>
+    </title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -24,154 +27,151 @@
         }
     </script>
 </head>
+
 <body class="bg-slate-100 text-slate-900 font-sans p-2 flex flex-col h-screen overflow-hidden">
-    <%
-        const now = new Date();
-        room.waitingList = room.waitingList.filter(patient => {
-            if (!patient.ngaydk) return true;
-            const ngaydk = new Date(patient.ngaydk);
-            const expireBase = ngaydk.getHours() < 7 ? 
-                new Date(ngaydk.getFullYear(), ngaydk.getMonth(), ngaydk.getDate(), 7, 0, 0) : 
-                new Date(ngaydk.getTime());
-            const expireTime = new Date(expireBase.getTime() + 45 * 60000);
-            return now < expireTime;
-        });
-        room.totalWaiting = room.waitingList.length;
-    %>
-    <!-- Top Bar -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-2 border-2 border-slate-300 rounded-lg mb-4 shadow-sm gap-4 md:gap-0">
-        <div class="flex flex-col">
-            <div class="text-brand text-3xl md:text-4xl font-extrabold uppercase tracking-wide mb-1">
-             <%= room.tenphong || room.maphong %>
+    <% const now=new Date(); room.waitingList=room.waitingList.filter(patient=> {
+        if (!patient.ngaydk) return true;
+        const ngaydk = new Date(patient.ngaydk);
+        const expireBase = ngaydk.getHours() < 7 ? new Date(ngaydk.getFullYear(), ngaydk.getMonth(), ngaydk.getDate(),
+            7, 0, 0) : new Date(ngaydk.getTime()); const expireTime=new Date(expireBase.getTime() + 45 * 60000); return
+            now < expireTime; }); room.totalWaiting=room.waitingList.length; %>
+            <!-- Top Bar -->
+            <div
+                class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-2 border-2 border-slate-300 rounded-lg mb-4 shadow-sm gap-4 md:gap-0">
+                <div class="flex flex-col">
+                    <div class="text-brand text-3xl md:text-4xl font-extrabold uppercase tracking-wide mb-1">
+                        <%= room.tenphong || room.maphong %>
+                    </div>
+                    <a href="/"
+                        class="text-slate-500 font-semibold text-base hover:text-brand transition-colors inline-block">
+                        <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách phòng
+                    </a>
+                </div>
+                <!-- Đồng hồ -->
+                <div class="flex justify-center items-center bg-white  mb-4 ">
+                    <div>
+                        <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-24 w-auto mr-4">
+                    </div>
+                    <div class="text-center text-danger font-black tabular-nums tracking-wider">
+                        <div id="date-str" class="text-2xl text-slate-500 font-bold mb-2 uppercase tracking-widest">
+                        </div>
+                        <div id="time-str" class="text-[3rem] leading-none"></div>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
+                        <span class="block text-brand font-bold text-base mb-1 uppercase tracking-wide">Tổng Đăng
+                            Ký</span>
+                        <span class="block text-brand font-black text-3xl tabular-nums">
+                            <%= room.totalDKPlus %>
+                        </span>
+                    </div>
+
+                    <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
+                        <span class="block text-danger font-bold text-base mb-1 uppercase tracking-wide">Đang chờ</span>
+                        <span class="block text-danger font-black text-3xl tabular-nums">
+                            <%= room.totalWaiting %>
+                        </span>
+                    </div>
+                </div>
             </div>
-            <a href="/" class="text-slate-500 font-semibold text-base hover:text-brand transition-colors inline-block">
-                <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách phòng
-            </a>
-        </div>
-        <!-- Đồng hồ -->
-            <div class="flex justify-center items-center bg-white  mb-4 ">
-        <div class="text-center text-danger font-black tabular-nums tracking-wider">
-            <div id="date-str" class="text-2xl text-slate-500 font-bold mb-2 uppercase tracking-widest"></div>
-            <div id="time-str" class="text-[4rem] leading-none"></div>
-        </div>
-    </div>
-        <div class="flex gap-4">
-            <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
-                <span class="block text-brand font-bold text-base mb-1 uppercase tracking-wide">Tổng Đăng Ký</span>
-                <span class="block text-brand font-black text-3xl tabular-nums"><%= room.totalDKPlus %></span>
+
+            <!-- Table Container -->
+            <div class="flex-grow overflow-y-auto bg-white border-2 border-slate-300 rounded-lg">
+                <table class="w-full text-left border-collapse">
+                    <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300">
+                        <tr>
+                            <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">STT</th>
+                            <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Mã BN</th>
+                            <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Họ và Tên</th>
+                            <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Giới tính</th>
+                            <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Ngày Sinh</th>
+                            <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Ghi Chú</th>
+                            <th class="py-4 px-6 font-bold text-2xl  text-blue-900 text-center">Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y-1 divide-slate-200">
+                        <% const allPatients=[...room.waitingList]; const seventyFiveYearsAgo=new Date();
+                            seventyFiveYearsAgo.setFullYear(seventyFiveYearsAgo.getFullYear() - 75);
+                            allPatients.sort((a, b)=> {
+                            const isAElderly = a.ngaysinh && new Date(a.ngaysinh) <= seventyFiveYearsAgo; const
+                                isBElderly=b.ngaysinh && new Date(b.ngaysinh) <=seventyFiveYearsAgo; if (isAElderly &&
+                                !isBElderly) return -1; if (!isAElderly && isBElderly) return 1; return new
+                                Date(a.ngaydk) - new Date(b.ngaydk); }); if (allPatients.length===0) { %>
+                                <tr>
+                                    <td colspan="7" class="text-center p-10 text-slate-500 text-xl font-medium">Phòng
+                                        trống, không có bệnh nhân.</td>
+                                </tr>
+                                <% } else { let waitCounter=0; allPatients.forEach(function(patient, index) { let
+                                    gender=(patient.gioitinh==1) ? 'Nam' : ((patient.gioitinh==2 || patient.gioitinh==0)
+                                    ? 'Nữ' : 'Khác' ); let dobStr=patient.ngaysinh ? patient.ngaysinh : 'Chưa cập nhật'
+                                    ; if (patient.ngaysinh instanceof Date) {
+                                    dobStr=patient.ngaysinh.toLocaleDateString('vi-VN', { day: '2-digit' ,
+                                    month: '2-digit' , year: 'numeric' }); } else if (typeof patient.ngaysinh==='string'
+                                    && patient.ngaysinh.includes('-')) { const d=new Date(patient.ngaysinh); if
+                                    (!isNaN(d.getTime())) { dobStr=d.toLocaleDateString('vi-VN', { day: '2-digit' ,
+                                    month: '2-digit' , year: 'numeric' }); } } let timeStr='' ; const
+                                    isElderly=patient.ngaysinh && new Date(patient.ngaysinh) <=seventyFiveYearsAgo; if
+                                    (isElderly) { timeStr='<span class="text-danger font-bold uppercase">Ưu tiên</span>'
+                                    ; } let isNear=false; if (patient.dakham==0) { waitCounter++; if (waitCounter===1) {
+                                    isNear=true; } } %>
+                                    <tr
+                                        class="transition-colors <%= isNear ? 'bg-red-50 hover:bg-red-100 text-danger font-bold' : 'hover:bg-blue-50 cursor-pointer font-medium' %>">
+                                        <td class="py-4 px-6 text-xl text-center text-blue-900">
+                                            <%= index + 1 %>
+                                        </td>
+                                        <td class="py-4 px-6 text-2xl text-center text-blue-900 ">
+                                            <%= patient.mabn || patient.makb %>
+                                        </td>
+                                        <td
+                                            class="py-4 px-6 text-blue-900 <%= isNear ? 'text-3xl' : 'text-2xl font-bold' %>">
+                                            <%= `${patient.holot || '' } ${patient.ten || '' }`.trim().toUpperCase()
+                                                || 'Chưa cập nhật' %>
+                                        </td>
+                                        <td class="py-4 px-6 text-2xl text-center text-blue-900 ">
+                                            <%= gender %>
+                                        </td>
+                                        <td class="py-4 px-6 text-2xl text-center text-blue-900 ">
+                                            <%= dobStr %>
+                                        </td>
+                                        <td class="py-4 px-6 text-2xl text-center text-blue-900"><%- timeStr %></td>
+                                        <td class="py-4 px-6 text-center">
+                                            <% if (isNear) { %>
+                                                <span
+                                                    class="inline-block bg-red-100 text-danger px-4 py-2 rounded-md text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp
+                                                    tới lượt khám</span>
+                                                <% } else { %>
+                                                    <span
+                                                        class="inline-block bg-slate-100 text-slate-600 px-3 py-1 rounded-md text-lg font-semibold border border-slate-200">Đang
+                                                        chờ</span>
+                                                    <% } %>
+                                        </td>
+                                    </tr>
+                                    <% }); } %>
+                    </tbody>
+                </table>
             </div>
-       
-            <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
-                <span class="block text-danger font-bold text-base mb-1 uppercase tracking-wide">Đang chờ</span>
-                <span class="block text-danger font-black text-3xl tabular-nums"><%= room.totalWaiting %></span>
-            </div>
-        </div>
-    </div>
 
-    <!-- Table Container -->
-    <div class="flex-grow overflow-y-auto bg-white border-2 border-slate-300 rounded-lg">
-        <table class="w-full text-left border-collapse">
-            <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300">
-                <tr>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">STT</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Mã BN</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Họ và Tên</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Giới tính</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Ngày Sinh</th>
-                    <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Ghi Chú</th>
-                    <th class="py-4 px-6 font-bold text-2xl  text-blue-900 text-center">Trạng Thái</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y-1 divide-slate-200">
-                <% 
-                const allPatients = [...room.waitingList];
-                const seventyFiveYearsAgo = new Date();
-                seventyFiveYearsAgo.setFullYear(seventyFiveYearsAgo.getFullYear() - 75);
-                
-                allPatients.sort((a, b) => {
-                    const isAElderly = a.ngaysinh && new Date(a.ngaysinh) <= seventyFiveYearsAgo;
-                    const isBElderly = b.ngaysinh && new Date(b.ngaysinh) <= seventyFiveYearsAgo;
-                    
-                    if (isAElderly && !isBElderly) return -1;
-                    if (!isAElderly && isBElderly) return 1;
-                    return new Date(a.ngaydk) - new Date(b.ngaydk);
-                });
-                
-              
+            <script>
+                setTimeout(() => {
+                    window.location.reload();
+                }, 30000);
 
-                if (allPatients.length === 0) { 
-                %>
-                    <tr><td colspan="7" class="text-center p-10 text-slate-500 text-xl font-medium">Phòng trống, không có bệnh nhân.</td></tr>
-                <% } else { 
-                    let waitCounter = 0; 
-                    
-                    allPatients.forEach(function(patient, index) { 
-                        let gender = (patient.gioitinh == 1) ? 'Nam' : ((patient.gioitinh == 2 || patient.gioitinh == 0) ? 'Nữ' : 'Khác');
-                        
-                        let dobStr = patient.ngaysinh ? patient.ngaysinh : 'Chưa cập nhật';
-                        if (patient.ngaysinh instanceof Date) {
-                            dobStr = patient.ngaysinh.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        } else if (typeof patient.ngaysinh === 'string' && patient.ngaysinh.includes('-')) {
-                            const d = new Date(patient.ngaysinh);
-                            if (!isNaN(d.getTime())) {
-                                dobStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                            }
-                        }
+                function updateTime() {
+                    const now = new Date();
+                    const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                    const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
 
-                        let timeStr = '';
-                        const isElderly = patient.ngaysinh && new Date(patient.ngaysinh) <= seventyFiveYearsAgo;
-                        if (isElderly) {
-                            timeStr = '<span class="text-danger font-bold uppercase">Ưu tiên</span>';
-                        }
-
-                        let isNear = false;
-                        if (patient.dakham == 0) {
-                            waitCounter++;
-                            if (waitCounter === 1) {
-                                isNear = true;
-                            }
-                        }
-                %>
-                    <tr class="transition-colors <%= isNear ? 'bg-red-50 hover:bg-red-100 text-danger font-bold' : 'hover:bg-blue-50 cursor-pointer font-medium' %>">
-                        <td class="py-4 px-6 text-xl text-center text-blue-900"><%= index + 1 %></td>
-                        <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= patient.mabn || patient.makb %></td>
-                        <td class="py-4 px-6 text-blue-900 <%= isNear ? 'text-3xl' : 'text-2xl font-bold' %>"><%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %></td>
-                        <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= gender %></td>
-                        <td class="py-4 px-6 text-2xl text-center text-blue-900 "><%= dobStr %></td>
-                        <td class="py-4 px-6 text-2xl text-center text-blue-900"><%- timeStr %></td>
-                        <td class="py-4 px-6 text-center">
-                            <% if (isNear) { %>
-                                <span class="inline-block bg-red-100 text-danger px-4 py-2 rounded-md text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp tới lượt khám</span>
-                            <% } else { %>
-                                <span class="inline-block bg-slate-100 text-slate-600 px-3 py-1 rounded-md text-lg font-semibold border border-slate-200">Đang chờ</span>
-                            <% } %>
-                        </td>
-                    </tr>
-                <%  }); 
-                } %>
-            </tbody>
-        </table>
-    </div>
-
-    <script>
-        setTimeout(() => {
-            window.location.reload();
-        }, 30000);
-
-        function updateTime() {
-            const now = new Date();
-            const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
-            const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-            
-            const dateStrEl = document.getElementById('date-str');
-            const timeStrEl = document.getElementById('time-str');
-            if (dateStrEl && timeStrEl) {
-                dateStrEl.textContent = now.toLocaleDateString('en-GB', dateOpts);
-                timeStrEl.textContent = now.toLocaleTimeString('en-GB', timeOpts);
-            }
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
-    </script>
+                    const dateStrEl = document.getElementById('date-str');
+                    const timeStrEl = document.getElementById('time-str');
+                    if (dateStrEl && timeStrEl) {
+                        dateStrEl.textContent = now.toLocaleDateString('en-GB', dateOpts);
+                        timeStrEl.textContent = now.toLocaleTimeString('en-GB', timeOpts);
+                    }
+                }
+                setInterval(updateTime, 1000);
+                updateTime();
+            </script>
 </body>
+
 </html>

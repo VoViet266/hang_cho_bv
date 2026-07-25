@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\vovie\\Desktop\\danhsachcho\\logs\\Applications\\Hangcho\\.cbcc1c7823ea85f1258455425af4128a134e944d-audit.json",
+    "files": [
+        {
+            "date": 1784950632734,
+            "name": "C:\\Users\\vovie\\Desktop\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-07-25.log",
+            "hash": "b58d15ce647d33bb95b4ba7cce8929b148d7fe4ac1ea47b6477ab914caf4ce9d"
+        }
+    ],
+    "hashType": "sha256"
+}
