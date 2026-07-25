@@ -38,25 +38,28 @@
             <!-- Top Bar -->
             <div
                 class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-2 border-2 border-slate-300 rounded-lg mb-4 shadow-sm gap-4 md:gap-0">
-                <div class="flex flex-col">
-                    <div class="text-brand text-3xl md:text-4xl font-extrabold uppercase tracking-wide mb-1">
-                        <%= room.tenphong || room.maphong %>
-                    </div>
-                    <a href="/"
-                        class="text-slate-500 font-semibold text-base hover:text-brand transition-colors inline-block">
-                        <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách phòng
-                    </a>
-                </div>
+
                 <!-- Đồng hồ -->
                 <div class="flex justify-center items-center bg-white  mb-4 ">
                     <div>
                         <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-24 w-auto mr-4">
                     </div>
-                    <div class="text-center text-danger font-black tabular-nums tracking-wider">
+                    <div class="text-center text-brand font-black tabular-nums tracking-wider">
                         <div id="date-str" class="text-2xl text-slate-500 font-bold mb-2 uppercase tracking-widest">
                         </div>
-                        <div id="time-str" class="text-[3rem] leading-none"></div>
+                        <div id="time-str" class="text-[2.5rem] leading-none"></div>
+                        <a href="/"
+                            class="text-slate-500 font-semibold text-base hover:text-danger transition-colors inline-block">
+                            <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách phòng
+                        </a>
                     </div>
+
+                </div>
+                <div class="flex flex-col">
+                    <div class="text-danger text-[3rem] md:text-[4rem] font-extrabold uppercase tracking-wide mb-1">
+                        <%= room.tenphong || room.maphong %>
+                    </div>
+
                 </div>
                 <div class="flex gap-4">
                     <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
