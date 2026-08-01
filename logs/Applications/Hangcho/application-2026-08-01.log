@@ -1,0 +1,302 @@
+[16:08:28 INF] Server running on http://localhost:3000 
+[16:08:42 INF] Server running on http://localhost:3000 
+[16:08:48 INF] Server running on http://localhost:3000 
+[16:08:49 INF] Server running on http://localhost:3000 
+[16:08:56 INF] Server running on http://localhost:3000 
+[16:09:00 INF] Server running on http://localhost:3000 
+[16:09:00 INF] Server running on http://localhost:3000 
+[16:09:03 INF] Server running on http://localhost:3000 
+[16:09:11 INF] Server running on http://localhost:3000 
+[16:09:46 INF] Server running on http://localhost:3000 
+[16:10:18 INF] Server running on http://localhost:3000 
+[16:10:21 INF] Server running on http://localhost:3000 
+[16:10:24 INF] Server running on http://localhost:3000 
+[16:10:28 INF] HTTP GET / responded 200 in 693.6604 ms 
+[16:10:28 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.3284 ms 
+[16:10:29 INF] HTTP GET /favicon.ico responded 404 in 2.1278 ms 
+[16:10:32 INF] HTTP GET /room/B15 responded 500 in 2.4162 ms 
+[16:10:39 INF] Server running on http://localhost:3000 
+[16:10:40 INF] Server running on http://localhost:3000 
+[16:10:46 INF] Server running on http://localhost:3000 
+[16:11:04 INF] Server running on http://localhost:3000 
+[16:11:07 INF] Server running on http://localhost:3000 
+[16:11:12 INF] HTTP GET /room/B15 responded 200 in 418.9999 ms 
+[16:11:12 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.0400 ms 
+[16:11:15 INF] Server running on http://localhost:3000 
+[16:11:20 INF] HTTP GET /room/B15 responded 304 in 294.7730 ms 
+[16:11:20 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.4852 ms 
+[16:11:50 INF] HTTP GET /room/B15 responded 304 in 234.0767 ms 
+[16:11:50 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9562 ms 
+[16:11:54 INF] HTTP GET /room/B15 responded 304 in 194.0676 ms 
+[16:11:54 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8300 ms 
+[16:11:57 INF] HTTP GET /room/B20 responded 404 in 190.7071 ms 
+[16:11:59 INF] HTTP GET /room/B20 responded 404 in 254.6576 ms 
+[16:12:01 INF] HTTP GET /room/B20 responded 404 in 190.8557 ms 
+[16:12:27 INF] HTTP GET /room/B8 responded 200 in 201.7056 ms 
+[16:12:27 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.2703 ms 
+[16:12:56 INF] Server running on http://localhost:3000 
+[16:12:58 INF] HTTP GET /room/B8 responded 304 in 334.7188 ms 
+[16:12:58 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.0888 ms 
+[16:14:03 INF] HTTP GET / responded 500 in 2.9213 ms 
+[16:14:08 INF] HTTP GET / responded 500 in 1.5553 ms 
+[16:14:10 INF] HTTP GET / responded 500 in 1.4266 ms 
+[16:14:10 INF] HTTP GET / responded 500 in 1.2413 ms 
+[16:14:34 INF] Server running on http://localhost:3000 
+[16:14:43 INF] Server running on http://localhost:3000 
+[16:14:45 INF] HTTP GET / responded 500 in 292.4974 ms 
+[16:14:51 INF] Server running on http://localhost:3000 
+[16:14:53 INF] HTTP GET / responded 500 in 298.4436 ms 
+[16:14:57 INF] Server running on http://localhost:3000 
+[16:14:59 INF] Server running on http://localhost:3000 
+[16:16:13 INF] HTTP GET / responded 500 in 6.0097 ms 
+[16:16:21 INF] Server running on http://localhost:3000 
+[16:16:23 INF] HTTP GET / responded 200 in 348.8243 ms 
+[16:16:23 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.2541 ms 
+[16:16:50 INF] Server running on http://localhost:3000 
+[16:17:04 INF] Server running on http://localhost:3000 
+[16:17:10 INF] HTTP GET / responded 500 in 5.5896 ms 
+[16:17:24 INF] HTTP GET / responded 500 in 1.7332 ms 
+[16:17:25 INF] HTTP GET / responded 500 in 1.5791 ms 
+[16:17:59 INF] HTTP GET / responded 500 in 1.5407 ms 
+[16:18:16 INF] Server running on http://localhost:3000 
+[16:18:18 INF] HTTP GET / responded 200 in 693.9586 ms 
+[16:18:18 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.5706 ms 
+[16:18:20 INF] Server running on http://localhost:3000 
+[16:18:21 INF] HTTP GET /room/B15 responded 304 in 320.2693 ms 
+[16:18:21 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.5800 ms 
+[16:18:23 INF] HTTP GET /room/B20 responded 404 in 249.1295 ms 
+[16:18:25 INF] HTTP GET /room/B20 responded 404 in 234.3370 ms 
+[16:18:37 INF] HTTP GET /room/B8 responded 304 in 230.4000 ms 
+[16:18:37 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8335 ms 
+[16:18:43 INF] HTTP GET /room/B5 responded 404 in 239.0452 ms 
+[16:19:03 INF] Server running on http://localhost:3000 
+[16:19:05 INF] Server running on http://localhost:3000 
+[16:19:07 INF] HTTP GET /room/B5 responded 500 in 318.0531 ms 
+[16:19:09 INF] HTTP GET /room/B5 responded 500 in 239.1985 ms 
+[16:19:50 INF] Server running on http://localhost:3000 
+[16:20:01 INF] HTTP GET /room/B5 responded 500 in 281.9900 ms 
+[16:20:01 INF] Server running on http://localhost:3000 
+[16:20:03 INF] HTTP GET / responded 304 in 537.6159 ms 
+[16:20:03 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.1412 ms 
+[16:20:05 INF] HTTP GET /room/A12 responded 200 in 248.4372 ms 
+[16:20:05 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6570 ms 
+[16:20:18 INF] HTTP GET / responded 304 in 381.1625 ms 
+[16:20:18 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8490 ms 
+[16:20:38 INF] HTTP GET /room/B20 responded 200 in 198.8476 ms 
+[16:20:38 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9292 ms 
+[16:20:43 INF] HTTP GET /room/B8 responded 304 in 206.1336 ms 
+[16:20:43 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8186 ms 
+[16:21:14 INF] HTTP GET /room/B8 responded 304 in 176.0372 ms 
+[16:21:14 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8749 ms 
+[16:21:45 INF] HTTP GET /room/B8 responded 304 in 192.5494 ms 
+[16:21:45 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5723 ms 
+[16:22:16 INF] HTTP GET /room/B8 responded 304 in 193.8592 ms 
+[16:22:16 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9237 ms 
+[16:22:31 INF] Server running on http://localhost:3000 
+[16:22:32 INF] Server running on http://localhost:3000 
+[16:22:36 INF] Server running on http://localhost:3000 
+[16:22:36 INF] Server running on http://localhost:3000 
+[16:22:41 INF] Server running on http://localhost:3000 
+[16:22:41 INF] HTTP GET / responded 500 in 5.4305 ms 
+[16:22:54 INF] Server running on http://localhost:3000 
+[16:23:08 INF] HTTP GET / responded 200 in 572.6673 ms 
+[16:23:08 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.7484 ms 
+[16:23:14 INF] HTTP GET /room/B15 responded 200 in 239.9755 ms 
+[16:23:14 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7643 ms 
+[16:23:18 INF] HTTP GET /room/B20 responded 304 in 215.0960 ms 
+[16:23:18 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8970 ms 
+[16:23:21 INF] HTTP GET /room/B8 responded 304 in 202.6842 ms 
+[16:23:21 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9958 ms 
+[16:24:54 INF] Server running on http://localhost:3000 
+[16:24:57 INF] HTTP GET / responded 304 in 514.1602 ms 
+[16:24:57 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.1836 ms 
+[16:25:00 INF] HTTP GET /room/B15 responded 304 in 230.5594 ms 
+[16:25:00 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7675 ms 
+[16:25:02 INF] HTTP GET /room/B20 responded 304 in 214.4013 ms 
+[16:25:02 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8511 ms 
+[16:25:05 INF] HTTP GET /room/B8 responded 304 in 229.4860 ms 
+[16:25:05 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5851 ms 
+[16:25:11 INF] Server running on http://localhost:3000 
+[16:25:35 INF] Server running on http://localhost:3000 
+[16:25:38 INF] HTTP GET / responded 304 in 511.9650 ms 
+[16:25:38 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.8399 ms 
+[16:25:53 INF] HTTP GET /room/B8 responded 304 in 250.1247 ms 
+[16:25:53 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.0077 ms 
+[16:26:24 INF] HTTP GET /room/B8 responded 304 in 209.3050 ms 
+[16:26:24 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.0228 ms 
+[16:26:55 INF] HTTP GET /room/B8 responded 304 in 193.2066 ms 
+[16:26:55 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.0179 ms 
+[16:26:57 INF] Server running on http://localhost:3000 
+[16:27:14 INF] Server running on http://localhost:3000 
+[16:27:32 INF] Server running on http://localhost:3000 
+[16:27:34 INF] HTTP GET /room/B8 responded 304 in 324.3581 ms 
+[16:27:34 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.2545 ms 
+[16:27:39 INF] Server running on http://localhost:3000 
+[16:27:55 INF] Server running on http://localhost:3000 
+[16:27:57 INF] Server running on http://localhost:3000 
+[16:27:58 INF] HTTP GET /room/B8 responded 304 in 311.2841 ms 
+[16:27:58 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.2278 ms 
+[16:28:10 INF] Server running on http://localhost:3000 
+[16:28:15 INF] Server running on http://localhost:3000 
+[16:28:17 INF] HTTP GET / responded 500 in 465.0598 ms 
+[16:28:27 INF] Server running on http://localhost:3000 
+[16:28:30 INF] HTTP GET / responded 200 in 463.6779 ms 
+[16:28:30 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.3663 ms 
+[16:28:38 INF] HTTP GET / responded 200 in 312.2295 ms 
+[16:28:38 INF] HTTP GET /logo_tam-minh-duc.png responded 200 in 2.8069 ms 
+[16:28:39 INF] HTTP GET /favicon.ico responded 404 in 1.5468 ms 
+[16:28:58 INF] HTTP GET /room/B15 responded 304 in 182.7443 ms 
+[16:28:58 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6886 ms 
+[16:29:02 INF] HTTP GET /room/B16 responded 200 in 202.1007 ms 
+[16:29:02 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.2558 ms 
+[16:29:03 INF] HTTP GET /room/B17 responded 200 in 187.3831 ms 
+[16:29:03 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6891 ms 
+[16:29:06 INF] HTTP GET /room/B20 responded 304 in 193.4540 ms 
+[16:29:06 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6293 ms 
+[16:29:09 INF] HTTP GET /room/B8 responded 304 in 226.5945 ms 
+[16:29:09 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5314 ms 
+[16:29:33 INF] Server running on http://localhost:3000 
+[16:29:38 INF] Server running on http://localhost:3000 
+[16:29:42 INF] Server running on http://localhost:3000 
+[16:29:44 INF] Server running on http://localhost:3000 
+[16:29:45 INF] HTTP GET / responded 304 in 391.4802 ms 
+[16:29:46 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.8564 ms 
+[16:29:50 INF] Server running on http://localhost:3000 
+[16:31:03 INF] Server running on http://localhost:3000 
+[16:31:04 INF] HTTP GET / responded 304 in 459.8875 ms 
+[16:31:04 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.1438 ms 
+[16:31:06 INF] HTTP GET /room/B15 responded 304 in 219.3595 ms 
+[16:31:06 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7640 ms 
+[16:31:08 INF] HTTP GET /room/B20 responded 304 in 196.0643 ms 
+[16:31:08 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8219 ms 
+[16:31:15 INF] HTTP GET /room/B8 responded 200 in 216.7724 ms 
+[16:31:15 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8701 ms 
+[16:31:20 INF] HTTP GET /room/B15 responded 304 in 193.7159 ms 
+[16:31:20 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8390 ms 
+[16:31:34 INF] Server running on http://localhost:3000 
+[16:31:47 INF] Server running on http://localhost:3000 
+[16:32:31 INF] Server running on http://localhost:3000 
+[16:35:15 INF] Server running on http://localhost:3000 
+[16:35:48 INF] Server running on http://localhost:3000 
+[16:36:11 INF] Server running on http://localhost:3000 
+[16:36:20 INF] Server running on http://localhost:3000 
+[16:36:35 INF] Server running on http://localhost:3000 
+[16:36:43 INF] Server running on http://localhost:3000 
+[16:36:48 INF] Server running on http://localhost:3000 
+[16:36:56 INF] Server running on http://localhost:3000 
+[16:37:02 INF] Server running on http://localhost:3000 
+[16:37:07 INF] Server running on http://localhost:3000 
+[16:37:08 INF] Server running on http://localhost:3000 
+[16:37:10 INF] HTTP GET / responded 200 in 443.1147 ms 
+[16:37:10 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.6301 ms 
+[16:37:43 INF] HTTP GET / responded 200 in 376.9156 ms 
+[16:37:43 INF] HTTP GET /logo_tam-minh-duc.png responded 200 in 3.3258 ms 
+[16:38:20 INF] HTTP GET / responded 200 in 427.7362 ms 
+[16:38:20 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8149 ms 
+[16:38:37 INF] HTTP GET /room/A202 responded 500 in 2.4692 ms 
+[16:38:55 INF] Server running on http://localhost:3000 
+[16:39:00 INF] HTTP GET /room/A202 responded 200 in 303.5288 ms 
+[16:39:00 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.1194 ms 
+[16:39:31 INF] HTTP GET /room/A202 responded 200 in 219.8139 ms 
+[16:39:31 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9142 ms 
+[16:39:39 INF] HTTP GET /room/A202 responded 200 in 192.7455 ms 
+[16:39:39 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6683 ms 
+[16:40:10 INF] HTTP GET /room/A202 responded 304 in 194.6988 ms 
+[16:40:10 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8805 ms 
+[16:40:11 INF] Server running on http://localhost:3000 
+[16:40:13 INF] Server running on http://localhost:3000 
+[16:40:26 INF] Server running on http://localhost:3000 
+[16:40:31 INF] Server running on http://localhost:3000 
+[16:40:35 INF] Server running on http://localhost:3000 
+[16:40:38 INF] Server running on http://localhost:3000 
+[16:40:40 INF] Server running on http://localhost:3000 
+[16:40:41 INF] HTTP GET /room/A202 responded 304 in 331.7223 ms 
+[16:40:41 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.2318 ms 
+[16:40:42 INF] Server running on http://localhost:3000 
+[16:40:43 INF] Server running on http://localhost:3000 
+[16:41:02 INF] Server running on http://localhost:3000 
+[16:41:12 INF] HTTP GET /room/A202 responded 304 in 317.4422 ms 
+[16:41:12 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.7163 ms 
+[16:41:15 INF] Server running on http://localhost:3000 
+[16:41:18 INF] Server running on http://localhost:3000 
+[16:41:20 INF] Server running on http://localhost:3000 
+[16:41:22 INF] Server running on http://localhost:3000 
+[16:41:25 INF] Server running on http://localhost:3000 
+[16:41:27 INF] Server running on http://localhost:3000 
+[16:41:31 INF] Server running on http://localhost:3000 
+[16:41:43 INF] HTTP GET /room/A202 responded 304 in 281.1481 ms 
+[16:41:43 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.3370 ms 
+[16:42:10 INF] HTTP GET /room/A202 responded 304 in 201.1309 ms 
+[16:42:10 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7307 ms 
+[16:42:12 INF] HTTP GET / responded 200 in 355.4975 ms 
+[16:42:12 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8972 ms 
+[16:42:57 INF] Server running on http://localhost:3000 
+[16:43:11 INF] Server running on http://localhost:3000 
+[16:43:12 INF] HTTP GET / responded 200 in 417.5511 ms 
+[16:43:12 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.0450 ms 
+[16:43:13 INF] Server running on http://localhost:3000 
+[16:43:16 INF] HTTP GET / responded 200 in 449.8178 ms 
+[16:43:16 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.6455 ms 
+[16:43:18 INF] HTTP GET /room/A202 responded 304 in 158.4484 ms 
+[16:43:18 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8205 ms 
+[16:43:22 INF] HTTP GET /room/B15 responded 200 in 175.2170 ms 
+[16:43:22 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8303 ms 
+[16:43:24 INF] HTTP GET /room/B20 responded 200 in 231.6311 ms 
+[16:43:24 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7539 ms 
+[16:43:51 INF] HTTP GET / responded 304 in 522.2387 ms 
+[16:43:51 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9603 ms 
+[16:44:06 INF] HTTP GET /room/B14 responded 200 in 236.7610 ms 
+[16:44:06 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7114 ms 
+[16:44:08 INF] HTTP GET /room/B15 responded 200 in 123.3749 ms 
+[16:44:08 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6511 ms 
+[16:44:10 INF] HTTP GET /room/B20 responded 200 in 245.4915 ms 
+[16:44:10 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6140 ms 
+[16:44:13 INF] HTTP GET /room/B8 responded 200 in 188.6615 ms 
+[16:44:13 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7035 ms 
+[16:44:45 INF] HTTP GET / responded 200 in 426.6584 ms 
+[16:44:45 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.0144 ms 
+[16:45:05 INF] HTTP GET / responded 200 in 417.8825 ms 
+[16:45:05 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5866 ms 
+[16:45:20 INF] HTTP GET / responded 200 in 298.6130 ms 
+[16:45:20 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.0453 ms 
+[16:45:52 INF] HTTP GET / responded 200 in 500.2345 ms 
+[16:45:52 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9186 ms 
+[16:45:59 INF] HTTP GET / responded 200 in 370.6238 ms 
+[16:45:59 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6353 ms 
+[16:46:02 INF] HTTP GET / responded 304 in 316.8110 ms 
+[16:46:02 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5896 ms 
+[16:46:26 INF] HTTP GET / responded 200 in 350.4605 ms 
+[16:46:26 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6045 ms 
+[16:46:37 INF] HTTP GET / responded 200 in 374.6401 ms 
+[16:46:37 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7370 ms 
+[16:46:42 INF] HTTP GET / responded 200 in 309.1195 ms 
+[16:46:42 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5022 ms 
+[16:46:57 INF] HTTP GET / responded 200 in 475.0643 ms 
+[16:46:57 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6452 ms 
+[16:47:06 INF] HTTP GET / responded 200 in 369.3614 ms 
+[16:47:06 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6658 ms 
+[16:47:12 INF] HTTP GET / responded 200 in 235.7551 ms 
+[16:47:12 INF] HTTP GET /logo_tam-minh-duc.png responded 200 in 3.1547 ms 
+[16:47:12 INF] HTTP GET /.well-known/appspecific/com.chrome.devtools.json responded 404 in 1.1816 ms 
+[16:48:06 INF] HTTP GET / responded 304 in 441.3887 ms 
+[16:48:06 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6937 ms 
+[16:49:07 INF] HTTP GET / responded 304 in 536.6602 ms 
+[16:49:07 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6675 ms 
+[16:50:07 INF] HTTP GET / responded 304 in 374.7613 ms 
+[16:50:07 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7027 ms 
+[16:50:09 INF] HTTP GET / responded 304 in 353.9896 ms 
+[16:50:09 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5098 ms 
+[16:50:10 INF] HTTP GET /room/A1 responded 200 in 128.6317 ms 
+[16:50:10 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6725 ms 
+[16:50:13 INF] HTTP GET /room/A1 responded 304 in 122.6423 ms 
+[16:50:13 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6637 ms 
+[16:51:49 INF] HTTP GET /room/B20 responded 200 in 197.7637 ms 
+[16:51:49 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.0801 ms 
+[16:51:52 INF] HTTP GET /room/B8 responded 200 in 230.8128 ms 
+[16:51:52 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7458 ms 
+[16:52:06 INF] HTTP GET / responded 304 in 398.2326 ms 
+[16:52:06 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6045 ms 
+[16:52:24 INF] HTTP GET / responded 200 in 366.1971 ms 
+[16:52:24 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5209 ms 
+[16:52:45 INF] HTTP GET /room/B15 responded 200 in 213.9255 ms 
+[16:52:45 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5710 ms 

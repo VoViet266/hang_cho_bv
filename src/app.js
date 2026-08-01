@@ -28,10 +28,11 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // View Routes
 const dashboardService = require('./services/dashboardService');
+const psdangkyService = require('./services/psdangkyService');
 
 app.get('/', async (req, res) => {
     try {
-        const stats = await dashboardService.getDashboardStats();
+        const stats = await dashboardService.fetchDashboardStats();
         res.render('index', { data: stats });
     } catch (error) {
         console.error(error);
@@ -41,11 +42,8 @@ app.get('/', async (req, res) => {
 
 app.get('/room/:id', async (req, res) => {
     try {
-        const stats = await dashboardService.getDashboardStats();
-        const room = stats.rooms.find(r => r.maphong === req.params.id);
-        if (!room) {
-            return res.status(404).send('Không tìm thấy phòng');
-        }
+        const room = await psdangkyService.LayDanhSachBenhNhanChoCuaPhong(req.params.id);
+       
         res.render('room', { room: room });
     } catch (error) {
         console.error(error);

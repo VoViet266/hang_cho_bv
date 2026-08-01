@@ -1,165 +1,18 @@
 const dashboardModel = require('../models/dashboard.model');
 
-const createRoomSummary = (roomInfo = {}) => ({
-    maphong: roomInfo.maphong,
-    tenphong: roomInfo.tenphong,
-    mack: roomInfo.mack,
-    tenck: roomInfo.tenck || 'Chưa phân khoa',
-    totalRegistered: 0,
-    totalDKPlus: 0,
-    totalWaiting: 0,
-    waitingList: [],
-    examinedList: []
-});
-
-const normalizePatientDate = (value) => {
-    if (!value) return null;
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) {
-        return null;
-    }
-    return date;
-};
-
-const buildDashboardState = ({ roomsFromDB, initialRegs, rows }) => {
-    const roomsMap = {};
-
-    roomsFromDB.forEach((room) => {
-        roomsMap[room.maphong] = createRoomSummary(room);
-    });
-
-    initialRegs.forEach((reg) => {
-        if (roomsMap[reg.maphong]) {
-            roomsMap[reg.maphong].totalRegistered = Number(reg.count_dk || 0);
-            roomsMap[reg.maphong].totalDKPlus = Number(reg.count_dk || 0);
-        }
-    });
-
-    const currentHour = new Date().getHours();
-    const hr = currentHour - 2;
-
-    rows.forEach((row) => {
-        const isExamined = Number(row.dakham || 0) !== 0;
-        const effectiveRoom = row.effective_maphong || row.maphong;
-        const registeredRoom = row.registered_maphong || effectiveRoom;
-        const isTransferIn = registeredRoom && effectiveRoom && registeredRoom !== effectiveRoom;
-
-        if (!roomsMap[effectiveRoom]) {
-            roomsMap[effectiveRoom] = createRoomSummary({
-                maphong: effectiveRoom,
-                tenphong: row.tenphong,
-            });
-        }
-
-        const room = roomsMap[effectiveRoom];
-        const actualNgayDk = normalizePatientDate(row.ngaydk);
-        const actualNgayKcb = normalizePatientDate(row.ngaykcb) || actualNgayDk;
-
-        const isStale = !isExamined && actualNgayKcb && actualNgayKcb.getHours() < hr;
-
-        const patientData = {
-            makb: row.makb,
-            mabn: row.mabn,
-            holot: row.holot,
-            ten: row.ten,
-            ngaysinh: row.ngaysinh,
-            gioitinh: row.gioitinh,
-            ngaydk: actualNgayDk,
-            dakham: Number(row.dakham || 0),
-            maphong: effectiveRoom,
-        };
-
-        if (isExamined) {
-            room.examinedList.push(patientData);
-        } else if (!isStale) {
-            room.totalWaiting += 1;
-            room.waitingList.push(patientData);
-        }
-
-        if (isTransferIn) {
-            room.totalDKPlus += 1;
-        }
-    });
-
-    const totalRegistered = Object.values(roomsMap).reduce((sum, room) => sum + room.totalRegistered, 0);
-    const totalDKPlus = Object.values(roomsMap).reduce((sum, room) => sum + room.totalDKPlus, 0);
-    const totalWaiting = Object.values(roomsMap).reduce((sum, room) => sum + room.totalWaiting, 0);
-
-    const departments = {};
-    Object.values(roomsMap).forEach((room) => {
-        const firstChar = room.maphong.charAt(0).toUpperCase();
-        const isLetter = /^[A-Z]$/.test(firstChar);
-        const deptId = isLetter ? `Block ${firstChar}` : 'Khác';
-
-        if (!departments[deptId]) {
-            departments[deptId] = {
-                mack: deptId,
-                tenck: deptId,
-                rooms: []
-            };
-        }
-        departments[deptId].rooms.push(room);
-    });
-
-    const departmentsList = Object.values(departments).sort((a, b) => {
-        if (a.mack === 'Khác') return 1;
-        if (b.mack === 'Khác') return -1;
-        return a.tenck.localeCompare(b.tenck);
-    });
-
-    departmentsList.forEach((dept) => {
-        dept.rooms.sort((a, b) => a.maphong.localeCompare(b.maphong));
-    });
+const fetchDashboardStats = async () => {
+    const rooms = await dashboardModel.LayTongHopDashboard();
 
     return {
         overview: {
-            totalRegistered,
-            totalDKPlus,
-            totalWaiting,
+            tong_dangky: rooms.reduce((sum, r) => sum + Number(r.tong_dangky || 0), 0),
+            tong_chuyen_sang: rooms.reduce((sum, r) => sum + Number(r.tong_chuyen_sang || 0), 0),
+            tong_cho_kham: rooms.reduce((sum, r) => sum + Number(r.tong_cho_kham || 0), 0),
         },
-        departments: departmentsList,
-        rooms: Object.values(roomsMap),
+        rooms: rooms
     };
 };
 
-let cachedStats = null;
-let lastFetchTime = 0;
-let fetchPromise = null;
-const CACHE_TTL = 10000; // Cache 10 giây
-
-const fetchDashboardStats = async () => {
-    const rows = await dashboardModel.getDashboardData();
-    const roomsFromDB = await dashboardModel.getAllRooms();
-    const initialRegs = await dashboardModel.getInitialRegistrations();
-
-    return buildDashboardState({ roomsFromDB, initialRegs, rows });
-};
-
-const getDashboardStats = async () => {
-    const now = Date.now();
-    
-    // 1. Trả về cache nếu còn hạn
-    if (cachedStats && (now - lastFetchTime < CACHE_TTL)) {
-        return cachedStats;
-    }
-
-    // 2. Chống Cache Stampede: Nếu có request đang query thì các request khác cùng chờ
-    if (!fetchPromise) {
-        fetchPromise = fetchDashboardStats().then(stats => {
-            cachedStats = stats;
-            lastFetchTime = Date.now();
-            fetchPromise = null;
-            return stats;
-        }).catch(err => {
-            fetchPromise = null;
-            throw err;
-        });
-    }
-
-    return fetchPromise;
-};
-
 module.exports = {
-    getDashboardStats,
-    buildDashboardState,
+    fetchDashboardStats,
 };

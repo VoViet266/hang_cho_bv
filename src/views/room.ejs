@@ -80,7 +80,6 @@
                     <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300">
                         <tr>
                             <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">STT</th>
-                            <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Mã BN</th>
                             <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Họ và Tên</th>
                             <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Giới tính</th>
                             <th class="py-4 px-6 font-bold text-2xl text-center text-blue-900">Ngày Sinh</th>
@@ -89,63 +88,44 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y-1 divide-slate-200">
-                        <% const allPatients=[...room.waitingList]; const seventyFiveYearsAgo=new Date();
-                            seventyFiveYearsAgo.setFullYear(seventyFiveYearsAgo.getFullYear() - 75);
-                            allPatients.sort((a, b)=> {
-                            const isAElderly = a.ngaysinh && new Date(a.ngaysinh) <= seventyFiveYearsAgo; const
-                                isBElderly=b.ngaysinh && new Date(b.ngaysinh) <=seventyFiveYearsAgo; if (isAElderly &&
-                                !isBElderly) return -1; if (!isAElderly && isBElderly) return 1; return new
-                                Date(a.ngaydk) - new Date(b.ngaydk); }); if (allPatients.length===0) { %>
-                                <tr>
-                                    <td colspan="7" class="text-center p-10 text-slate-500 text-xl font-medium">Phòng
-                                        trống, không có bệnh nhân.</td>
+                        <% if (room.waitingList.length === 0) { %>
+                            <tr>
+                                <td colspan="7" class="text-center p-10 text-slate-500 text-xl font-medium">Phòng trống, không có bệnh nhân.</td>
+                            </tr>
+                        <% } else { 
+                            let waitCounter = 0; 
+                            room.waitingList.forEach(function(patient, index) { 
+                                let timeStr = '';
+                                if (patient.isPriority) { 
+                                    timeStr = '<span class="text-danger font-bold uppercase">Ưu tiên</span>';
+                                } 
+                                
+                                let isNear = false; 
+                                if (patient.dakham == 0) { 
+                                    waitCounter++; 
+                                    if (waitCounter === 1) {
+                                        isNear = true; 
+                                    } 
+                                } 
+                        %>
+                                <tr class="transition-colors <%= isNear ? 'bg-red-50 hover:bg-red-100 text-danger font-bold' : 'hover:bg-blue-50 cursor-pointer font-medium' %>">
+                                    <td class="py-4 px-6 text-xl text-center text-blue-900"><%= index + 1 %></td>
+                                    <td class="py-4 px-6 text-blue-900 <%= isNear ? 'text-3xl' : 'text-2xl font-bold' %>">
+                                        <%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %>
+                                    </td>
+                                    <td class="py-4 px-6 text-2xl text-center text-blue-900"><%= patient.genderStr %></td>
+                                    <td class="py-4 px-6 text-2xl text-center text-blue-900"><%= patient.dobStr %></td>
+                                    <td class="py-4 px-6 text-2xl text-center text-blue-900"><%- timeStr %></td>
+                                    <td class="py-4 px-6 text-center">
+                                        <% if (isNear) { %>
+                                            <span class="inline-block bg-red-100 text-danger px-4 py-2 rounded-md text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp tới lượt khám</span>
+                                        <% } else { %>
+                                            <span class="inline-block bg-slate-100 text-slate-600 px-3 py-1 rounded-md text-lg font-semibold border border-slate-200">Đang chờ</span>
+                                        <% } %>
+                                    </td>
                                 </tr>
-                                <% } else { let waitCounter=0; allPatients.forEach(function(patient, index) { let
-                                    gender=(patient.gioitinh==1) ? 'Nam' : ((patient.gioitinh==2 || patient.gioitinh==0)
-                                    ? 'Nữ' : 'Khác' ); let dobStr=patient.ngaysinh ? patient.ngaysinh : 'Chưa cập nhật'
-                                    ; if (patient.ngaysinh instanceof Date) {
-                                    dobStr=patient.ngaysinh.toLocaleDateString('vi-VN', { day: '2-digit' ,
-                                    month: '2-digit' , year: 'numeric' }); } else if (typeof patient.ngaysinh==='string'
-                                    && patient.ngaysinh.includes('-')) { const d=new Date(patient.ngaysinh); if
-                                    (!isNaN(d.getTime())) { dobStr=d.toLocaleDateString('vi-VN', { day: '2-digit' ,
-                                    month: '2-digit' , year: 'numeric' }); } } let timeStr='' ; const
-                                    isElderly=patient.ngaysinh && new Date(patient.ngaysinh) <=seventyFiveYearsAgo; if
-                                    (isElderly) { timeStr='<span class="text-danger font-bold uppercase">Ưu tiên</span>'
-                                    ; } let isNear=false; if (patient.dakham==0) { waitCounter++; if (waitCounter===1) {
-                                    isNear=true; } } %>
-                                    <tr
-                                        class="transition-colors <%= isNear ? 'bg-red-50 hover:bg-red-100 text-danger font-bold' : 'hover:bg-blue-50 cursor-pointer font-medium' %>">
-                                        <td class="py-4 px-6 text-xl text-center text-blue-900">
-                                            <%= index + 1 %>
-                                        </td>
-                                        <td class="py-4 px-6 text-2xl text-center text-blue-900 ">
-                                            <%= patient.mabn || patient.makb %>
-                                        </td>
-                                        <td
-                                            class="py-4 px-6 text-blue-900 <%= isNear ? 'text-3xl' : 'text-2xl font-bold' %>">
-                                            <%= `${patient.holot || '' } ${patient.ten || '' }`.trim().toUpperCase()
-                                                || 'Chưa cập nhật' %>
-                                        </td>
-                                        <td class="py-4 px-6 text-2xl text-center text-blue-900 ">
-                                            <%= gender %>
-                                        </td>
-                                        <td class="py-4 px-6 text-2xl text-center text-blue-900 ">
-                                            <%= dobStr %>
-                                        </td>
-                                        <td class="py-4 px-6 text-2xl text-center text-blue-900"><%- timeStr %></td>
-                                        <td class="py-4 px-6 text-center">
-                                            <% if (isNear) { %>
-                                                <span
-                                                    class="inline-block bg-red-100 text-danger px-4 py-2 rounded-md text-xl font-extrabold uppercase border border-red-300 shadow-sm animate-pulse">Sắp
-                                                    tới lượt khám</span>
-                                                <% } else { %>
-                                                    <span
-                                                        class="inline-block bg-slate-100 text-slate-600 px-3 py-1 rounded-md text-lg font-semibold border border-slate-200">Đang
-                                                        chờ</span>
-                                                    <% } %>
-                                        </td>
-                                    </tr>
-                                    <% }); } %>
+                        <%  }); 
+                           } %>
                     </tbody>
                 </table>
             </div>

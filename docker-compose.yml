@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: danhsachcho_app
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env
+    restart: unless-stopped
