@@ -40,6 +40,10 @@ const KiemTraUuTien = (ngaysinh, gioitinh) => {
 };
 
 const LayDanhSachBenhNhanChoCuaPhong = async (maphong) => {
+    // Lấy thông số Tổng Đăng Ký từ model psdangky
+    const totalDKPlus = await psdangkyModel.LayThongKeCuaPhong(maphong);
+
+    // Lấy danh sách bệnh nhân đang chờ theo logic chuẩn
     const data = await psdangkyModel.LayDanhSachBenhNhanChoTheoPhongId(maphong);
     
     if (!data || data.length === 0) {
@@ -49,19 +53,22 @@ const LayDanhSachBenhNhanChoCuaPhong = async (maphong) => {
         return {
             maphong: roomInfo.maphong,
             tenphong: roomInfo.tenphong,
-            totalDKPlus: 0,
+            totalDKPlus: totalDKPlus,
             totalWaiting: 0,
             waitingList: []
         };
     }
     
-    const row = data[0];
-    const rawPatients = row.psdangky || [];
+    // Lấy dữ liệu tên phòng từ data
+    const maphongResult = data[0].maphong;
+    const tenphongResult = data[0].tenphong;
+
+    const rawPatients = (data && data.length > 0) ? (data[0].psdangky || []) : [];
     
     const room = {
-        maphong: row.maphong,
-        tenphong: row.tenphong,
-        totalDKPlus: rawPatients.length,
+        maphong: maphongResult,
+        tenphong: tenphongResult,
+        totalDKPlus: totalDKPlus,
         totalWaiting: rawPatients.length,
         waitingList: rawPatients.map(p => {
             const ngaysinh = p.dmbenhnhan ? p.dmbenhnhan.ngaysinh : null;
