@@ -28,46 +28,45 @@
     </script>
 </head>
 
-<body class="bg-slate-100 text-slate-900 font-sans p-2 flex flex-col h-screen overflow-hidden">
+<body class="bg-slate-100 text-slate-900 font-sans flex flex-col h-screen overflow-hidden">
 
             <!-- Top Bar -->
             <div
-                class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-2 border-2 border-slate-300 rounded-lg mb-4 shadow-sm gap-4 md:gap-0">
+                class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-1 border-2 border-slate-300 shadow-sm gap-2 md:gap-4">
 
                 <!-- Đồng hồ -->
-                <div class="flex justify-center items-center bg-white  mb-4 ">
+                <div class="flex justify-center items-center bg-white">
                     <div>
-                        <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-24 w-auto mr-4">
+                        <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-14 mr-3">
                     </div>
                     <div class="text-center text-brand font-black tabular-nums tracking-wider">
-                        <div id="date-str" class="text-2xl text-slate-500 font-bold mb-2 uppercase tracking-widest">
+                        <div id="date-str" class="text-sm text-slate-500 font-bold mb-0 uppercase tracking-widest">
                         </div>
-                        <div id="time-str" class="text-[2.5rem] leading-none"></div>
+                        <div id="time-str" class="text-[1.5rem] leading-none"></div>
                         <a href="/"
-                            class="text-slate-500 font-semibold text-base hover:text-danger transition-colors inline-block">
-                            <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách phòng
+                            class="text-slate-500 font-semibold text-xs hover:text-danger transition-colors inline-block mt-1">
+                            <i class="fas fa-arrow-left mr-1"></i> Quay lại
                         </a>
                     </div>
-
                 </div>
-                <div class="flex flex-col">
-                    <div class="text-danger text-[3rem] md:text-[4rem] font-extrabold uppercase tracking-wide mb-1">
+
+                <div class="flex flex-col flex-1 text-center items-center justify-center">
+                    <div class="text-danger text-lg md:text-2xl font-extrabold uppercase tracking-wide">
                         <%= room.tenphong || room.maphong %>
                     </div>
-
                 </div>
-                <div class="flex gap-4">
-                    <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
-                        <span class="block text-brand font-bold text-base mb-1 uppercase tracking-wide">Tổng Đăng
-                            Ký</span>
-                        <span class="block text-brand font-black text-3xl tabular-nums">
+
+                <div class="flex gap-2">
+                    <div class="bg-slate-50 px-3 py-1 text-center min-w-[100px] rounded border border-slate-200">
+                        <span class="block text-brand font-bold text-xs uppercase tracking-wide mb-0">Tổng Đăng Ký</span>
+                        <span class="block text-brand font-black text-xl tabular-nums leading-none mt-1">
                             <%= room.totalDKPlus %>
                         </span>
                     </div>
 
-                    <div class="bg-white px-5 py-3  text-center min-w-[140px] shadow-sm">
-                        <span class="block text-danger font-bold text-base mb-1 uppercase tracking-wide">Đang chờ</span>
-                        <span class="block text-danger font-black text-3xl tabular-nums">
+                    <div class="bg-red-50 px-3 py-1 text-center min-w-[100px] rounded border border-red-200">
+                        <span class="block text-danger font-bold text-xs uppercase tracking-wide mb-0">Đang chờ</span>
+                        <span class="block text-danger font-black text-xl tabular-nums leading-none mt-1">
                             <%= room.totalWaiting %>
                         </span>
                     </div>
@@ -75,7 +74,7 @@
             </div>
 
             <!-- Table Container -->
-            <div class="flex-grow overflow-y-auto bg-white border-2 border-slate-300 rounded-lg">
+            <div class="flex-grow overflow-y-auto bg-white border-2 border-slate-300">
                 <table class="w-full text-left border-collapse">
                     <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300">
                         <tr>
