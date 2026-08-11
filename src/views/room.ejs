@@ -51,7 +51,7 @@
                 </div>
 
                 <div class="flex flex-col flex-1 text-center items-center justify-center">
-                    <div class="text-danger text-lg md:text-2xl font-extrabold uppercase tracking-wide">
+                    <div class="text-danger text-lg md:text-4xl font-extrabold uppercase tracking-wide">
                         <%= room.tenphong || room.maphong %>
                     </div>
                 </div>
@@ -95,7 +95,7 @@
                             room.waitingList.forEach(function(patient, index) { 
                                 let timeStr = '';
                                 if (patient.isPriority) { 
-                                    timeStr = '<span class="inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-2xl">Ưu tiên</span>';
+                                    timeStr = '<span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-xl">Ưu tiên</span>';
                                 } 
                                 
                                 let isNear = false; 
@@ -107,19 +107,19 @@
                                 } 
                         %>
                                 <tr class="transition-all <%= isNear ? 'bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md' : 'hover:bg-blue-50 cursor-pointer border-b border-slate-200' %>">
-                                    <td class="py-6 px-6 text-4xl font-extrabold text-center text-blue-900 <%= isNear ? 'text-6xl font-black tracking-tight text-danger' : 'text-5xl font-extrabold' %>"><%= index + 1 %></td>
+                                    <td class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-5xl font-black text-danger' : 'text-4xl' %>"><%= index + 1 %></td>
                                     <td class="py-6 px-6 text-blue-900 <%= isNear ? 'text-6xl font-black tracking-tight text-danger' : 'text-5xl font-extrabold' %>">
                                         <%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %>
                                     </td>
-                                    <td class="py-6 px-6 text-5xl font-bold text-center text-blue-900 <%= isNear ? 'text-6xl font-black tracking-tight text-danger' : 'text-5xl font-extrabold' %>">
+                                    <td class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-5xl font-black text-danger' : 'text-4xl' %>">
                                         <%= patient.dobStr !== 'Chưa cập nhật' ? patient.dobStr.split('/').pop() : '' %>
                                     </td>
                                     <td class="py-6 px-6 text-center text-blue-900"><%- timeStr %></td>
                                     <td class="py-6 px-6 text-center">
                                         <% if (isNear) { %>
-                                            <span class="inline-block bg-red-600 text-white px-8 py-4 rounded-xl text-4xl font-black uppercase shadow-lg animate-pulse">Sắp tới lượt</span>
+                                            <span class="inline-block bg-red-600 text-white px-6 py-3 rounded-xl text-3xl font-black uppercase shadow-lg animate-pulse">Sắp tới lượt</span>
                                         <% } else { %>
-                                            <span class="inline-block bg-slate-100 text-slate-600 px-6 py-3 rounded-xl text-3xl font-bold border-2 border-slate-200 shadow-sm">Đang chờ</span>
+                                            <span class="inline-block bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-2xl font-bold border-2 border-slate-200 shadow-sm">Đang chờ</span>
                                         <% } %>
                                     </td>
                                 </tr>
