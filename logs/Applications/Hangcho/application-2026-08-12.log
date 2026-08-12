@@ -1267,3 +1267,32 @@
 [14:56:20 INF] HTTP GET /js/displayBoard.js responded 304 in 0.4378 ms 
 [14:56:20 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4765 ms 
 [14:57:08 INF] Server running on http://localhost:3000 
+[15:02:12 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 63.4173 ms 
+[15:02:12 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 2.6785 ms 
+[15:02:12 INF] HTTP GET /js/displayBoard.js responded 304 in 4.0839 ms 
+[15:02:13 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6513 ms 
+[15:02:43 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 6.7983 ms 
+[15:02:43 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9598 ms 
+[15:02:43 INF] HTTP GET /js/displayBoard.js responded 304 in 0.8770 ms 
+[15:02:43 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5954 ms 
+[15:03:14 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 8.3342 ms 
+[15:03:14 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.1342 ms 
+[15:03:14 INF] HTTP GET /js/displayBoard.js responded 304 in 0.8179 ms 
+[15:03:14 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9686 ms 
+[15:03:43 INF] Server running on http://localhost:3000 
+[15:03:45 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 62.1225 ms 
+[15:03:45 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.1248 ms 
+[15:03:45 INF] HTTP GET /js/displayBoard.js responded 304 in 0.7133 ms 
+[15:03:45 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5971 ms 
+[15:04:16 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 8.1350 ms 
+[15:04:16 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7367 ms 
+[15:04:16 INF] HTTP GET /js/displayBoard.js responded 304 in 0.7951 ms 
+[15:04:16 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5696 ms 
+[15:04:47 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 11.3012 ms 
+[15:04:47 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7701 ms 
+[15:04:47 INF] HTTP GET /js/displayBoard.js responded 304 in 0.9501 ms 
+[15:04:47 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6317 ms 
+[15:05:18 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 6.6713 ms 
+[15:05:18 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6815 ms 
+[15:05:18 INF] HTTP GET /js/displayBoard.js responded 304 in 0.5235 ms 
+[15:05:18 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4787 ms 
