@@ -24,7 +24,7 @@ const getPriorityLabel = (uutienFromDB) => {
         '1': 'Bệnh cấp cứu',
         '2': 'Khám theo yêu cầu',
         '3': 'Bệnh tàn tật',
-        '4': '>75 tuổi',
+        '4': '>=75 tuổi',
         '5': 'Có thai',
         '6': 'Trẻ em <6 tuổi'
     };
