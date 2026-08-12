@@ -1,12 +1,6 @@
 const https = require('node:https');
 
-/**
- * Dùng Node.js https module thay vì fetch/undici.
- * undici (built-in fetch Node 20) có DNS resolver riêng, bỏ qua
- * dns.setDefaultResultOrder() và không hỗ trợ family:4 option,
- * dẫn đến timeout trong Docker. Node https module dùng dns.lookup()
- * và hỗ trợ family:4 nên hoạt động ổn định.
- */
+
 function httpsRequest(url, options = {}, body = null) {
     return new Promise((resolve, reject) => {
         const parsed = new URL(url);
