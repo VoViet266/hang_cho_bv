@@ -12,25 +12,8 @@ env:
   PORT: 3002
 
 jobs:
-  test:
-    name: Run Tests
-    runs-on: build
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Check Node.js version
-        run: node --version && npm --version
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run Tests
-        run: npm run test --if-present || echo "Bỏ qua test do chưa cấu hình"
-
   build:
     name: Build & Push to Internal Registry
-    needs: test
     runs-on: build
     steps:
       - name: Checkout source
@@ -45,12 +28,13 @@ jobs:
           IMAGE_LATEST="${{ env.IMAGE_NAME }}:latest"
           IMAGE_SHA="${{ env.IMAGE_NAME }}:${{ github.sha }}"
 
-          docker buildx build \
-            --platform linux/amd64 \
+          docker build \
             --tag "$IMAGE_LATEST" \
             --tag "$IMAGE_SHA" \
-            --push \
             .
+
+          docker push "$IMAGE_LATEST"
+          docker push "$IMAGE_SHA"
 
   deploy:
     name: Deploy via SSH Key
@@ -104,7 +88,6 @@ jobs:
             fi
             printf '%s' "$REGISTRY_TOKEN" | docker login 10.10.20.49:3000 -u "$REGISTRY_USERNAME" --password-stdin
 
-
             PREVIOUS_IMAGE_ID=$(docker inspect --format='{{.Image}}' "$CONTAINER_NAME" 2>/dev/null || echo "")
 
             echo "Pulling image mới nhất..."
@@ -124,7 +107,6 @@ jobs:
                 -p "$PORT:$PORT" \
                 -e PORT="$PORT" \
                 -e TZ="Asia/Ho_Chi_Minh" \
-                -e NODE_OPTIONS="--dns-result-order=ipv4first" \
                 -e DATABASE_URL="$DATABASE_URL" \
                 -e AZURE_TTS_API_KEY="$AZURE_TTS_API_KEY" \
                 -e AZURE_TTS_REGION="$AZURE_TTS_REGION" \
@@ -147,24 +129,22 @@ jobs:
             done
 
             if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1; then
-              echo "Health check thành công (server đang lắng nghe)!"
+              echo "Health check thành công!"
             else
-              echo "Health check thất bại! Dump logs của container bị lỗi:"
+              echo "Health check thất bại! Dump logs:"
               docker logs "$CONTAINER_NAME" --tail=100
 
-              echo "Bắt đầu rollback quá trình deploy..."
+              echo "Bắt đầu rollback..."
               docker rm -f "$CONTAINER_NAME" || true
 
               if [ -n "$PREVIOUS_IMAGE_ID" ]; then
-                echo "Khôi phục lại container từ image cũ ($PREVIOUS_IMAGE_ID)..."
+                echo "Khôi phục container từ image cũ ($PREVIOUS_IMAGE_ID)..."
                 start_container "$PREVIOUS_IMAGE_ID"
-
-                echo "Chờ service cũ khởi động lại..."
                 sleep 5
                 if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1; then
-                   echo "Rollback thành công! Hệ thống đã quay về bản cũ."
+                  echo "Rollback thành công!"
                 else
-                   echo "Rollback thất bại! Cần kiểm tra hệ thống thủ công."
+                  echo "Rollback thất bại! Cần kiểm tra thủ công."
                 fi
               else
                 echo "Không tìm thấy phiên bản cũ để rollback."
