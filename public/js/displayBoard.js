@@ -89,6 +89,14 @@ function checkAndSpeak(force = false) {
 
 window.addEventListener("DOMContentLoaded", () => {
   updateSoundIcon();
+
+  // Ẩn nút âm thanh nếu không có bệnh nhân (tránh tốn token TTS)
+  const speechData = document.getElementById("speechData");
+  const btn = document.getElementById("soundToggleBtn");
+  if (btn && speechData && !speechData.dataset.patient) {
+    btn.style.display = "none";
+  }
+
   setTimeout(() => checkAndSpeak(), 1500);
 });
 
