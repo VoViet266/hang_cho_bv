@@ -228,13 +228,13 @@
                     setTimeout(() => checkAndSpeak(), 1500);
                 });
 
-                // Phím tắt: 
-                // 's' hoặc 'S' để bật/tắt âm thanh
-                // 'Space' (phím cách) để đọc lại tên bệnh nhân (nếu âm thanh đang bật)
+                // Phím tắt (Bao gồm cả Remote TV): 
+                // 's' hoặc 'Enter' (Phím OK) để bật/tắt âm thanh
+                // 'Space' (phím cách) hoặc 'ArrowRight' (Phím điều hướng phải) để đọc lại
                 window.addEventListener('keydown', (e) => {
-                    if (e.key.toLowerCase() === 's') {
+                    if (e.key.toLowerCase() === 's' || e.key === 'Enter') {
                         toggleSound();
-                    } else if (e.code === 'Space') {
+                    } else if (e.code === 'Space' || e.key === 'ArrowRight') {
                         e.preventDefault(); // Tránh cuộn trang
                         checkAndSpeak(true);
                     }
