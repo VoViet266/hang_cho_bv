@@ -847,3 +847,23 @@
 [13:53:39 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 6.6429 ms 
 [13:53:39 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.0110 ms 
 [13:53:39 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4495 ms 
+[13:54:10 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 5.4548 ms 
+[13:54:10 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4498 ms 
+[13:54:10 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4340 ms 
+[13:54:41 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 4.9171 ms 
+[13:54:41 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5623 ms 
+[13:54:41 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5948 ms 
+[13:55:01 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4029 ms 
+[13:55:02 INF] HTTP POST /api/tts responded 200 in 1290.2051 ms 
+[13:55:11 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 5.8597 ms 
+[13:55:11 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6393 ms 
+[13:55:11 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4713 ms 
+[13:55:19 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4341 ms 
+[13:55:21 INF] HTTP POST /api/tts responded 200 in 1320.6738 ms 
+[13:55:41 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 4.1692 ms 
+[13:55:41 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4340 ms 
+[13:55:42 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7519 ms 
+[13:56:12 INF] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 304 in 54.2208 ms 
+[13:56:12 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4948 ms 
+[13:56:12 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5094 ms 
+[13:56:27 INF] Server running on http://localhost:3000 
