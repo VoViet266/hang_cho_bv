@@ -52,7 +52,7 @@ const generateSpeech = async (req, res) => {
                     <speak version='1.0' xml:lang='vi-VN'>
                         <voice xml:lang='vi-VN' xml:gender='Female' name='vi-VN-HoaiMyNeural'>
                             <!-- Điều chỉnh tốc độ tại rate. Ví dụ: +10% (nhanh hơn), -10% (chậm hơn), -20%, v.v. -->
-                            <prosody rate="+20%">
+                            <prosody rate="+10%">
                                 ${text}
                             </prosody>
                         </voice>
