@@ -45,10 +45,15 @@
                         <div id="date-str" class="text-sm text-slate-500 font-bold mb-0 uppercase tracking-widest">
                         </div>
                         <div id="time-str" class="text-[1.5rem] leading-none"></div>
-                        <a href="/"
-                            class="text-slate-500 font-semibold text-xs hover:text-danger transition-colors inline-block mt-1">
-                            <i class="fas fa-arrow-left mr-1"></i> Quay lại
-                        </a>
+                        <div class="flex items-center justify-center gap-3 mt-1">
+                            <a href="/"
+                                class="text-slate-500 font-semibold text-xs hover:text-danger transition-colors inline-block">
+                                <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                            </a>
+                            <button id="soundToggleBtn" onclick="toggleSound()" class="text-slate-500 font-semibold text-xs hover:text-brand transition-colors inline-block cursor-pointer">
+                                <i id="soundIcon" class="fas fa-volume-mute mr-1"></i> Âm thanh (Phím S)
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -88,7 +93,9 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y-1 divide-slate-200">
-                        <% if (room.waitingList.length === 0) { %>
+                        <% 
+                            let nextPatientNameToRead = '';
+                            if (room.waitingList.length === 0) { %>
                             <tr>
                                 <td colspan="5" class="text-center p-12 text-slate-500 text-3xl font-bold">Phòng trống, không có bệnh nhân.</td>
                             </tr>
@@ -105,6 +112,7 @@
                                     waitCounter++;
                                     if (waitCounter === 1) {
                                         isNear = true;
+                                        nextPatientNameToRead = `${patient.holot || ''} ${patient.ten || ''}`.trim();
                                     }
                                 }
                         %>
@@ -131,7 +139,108 @@
                 </table>
             </div>
 
+            <!-- Data for speech -->
+            <div id="speechData" 
+                 data-patient="<%= nextPatientNameToRead %>" 
+                 data-room="<%= room.tenphong || room.maphong %>"
+                 style="display: none;"></div>
+
             <script>
+                // --- Audio / Speech Logic ---
+                let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
+                
+                function updateSoundIcon() {
+                    const icon = document.getElementById('soundIcon');
+                    if (soundEnabled) {
+                        icon.classList.remove('fa-volume-mute');
+                        icon.classList.add('fa-volume-up');
+                    } else {
+                        icon.classList.remove('fa-volume-up');
+                        icon.classList.add('fa-volume-mute');
+                    }
+                }
+                
+                function toggleSound() {
+                    soundEnabled = !soundEnabled;
+                    localStorage.setItem('soundEnabled', soundEnabled);
+                    updateSoundIcon();
+                    
+                    if (soundEnabled) {
+                        // Play a tiny silent audio to unlock audio context
+                        const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+                        audio.volume = 0.01;
+                        audio.play().catch(e => {});
+                        
+                        // Speak if there's someone in queue
+                        checkAndSpeak(true); 
+                    }
+                }
+                
+                function checkAndSpeak(force = false) {
+                    if (!soundEnabled) return;
+                    
+                    const speechData = document.getElementById('speechData');
+                    if (!speechData) return;
+                    
+                    const patientName = speechData.dataset.patient;
+                    const roomName = speechData.dataset.room;
+                    
+                    if (!patientName) return;
+                    
+                    const storageKey = 'lastSpokenPatient_' + roomName;
+                    const lastSpoken = sessionStorage.getItem(storageKey);
+                    
+                    if (force || patientName !== lastSpoken) {
+                        const speakText = `Mời bệnh nhân, ${patientName}, vào ${roomName}`;
+                        
+                        // Sử dụng Microsoft Azure TTS qua backend
+                        fetch('/api/tts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: speakText })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.audioContent) {
+                                const audio = new Audio('data:audio/mp3;base64,' + data.audioContent);
+                                audio.play().catch(e => console.error('Audio play failed:', e));
+                            } else {
+                                throw new Error(data.error || 'No audio content');
+                            }
+                        })
+                        .catch(e => {
+                            console.error('Không thể phát âm thanh Azure TTS:', e);
+                            // Fallback to Web Speech API
+                            const utterance = new SpeechSynthesisUtterance(speakText);
+                            utterance.lang = 'vi-VN';
+                            const voices = window.speechSynthesis.getVoices();
+                            const viVoice = voices.find(v => v.lang.includes('vi') || v.name.includes('Vietnamese'));
+                            if (viVoice) utterance.voice = viVoice;
+                            window.speechSynthesis.speak(utterance);
+                        });
+                        
+                        sessionStorage.setItem(storageKey, patientName);
+                    }
+                }
+                
+                window.addEventListener('DOMContentLoaded', () => {
+                    updateSoundIcon();
+                    setTimeout(() => checkAndSpeak(), 1500);
+                });
+
+                // Phím tắt: 
+                // 's' hoặc 'S' để bật/tắt âm thanh
+                // 'Space' (phím cách) để đọc lại tên bệnh nhân (nếu âm thanh đang bật)
+                window.addEventListener('keydown', (e) => {
+                    if (e.key.toLowerCase() === 's') {
+                        toggleSound();
+                    } else if (e.code === 'Space') {
+                        e.preventDefault(); // Tránh cuộn trang
+                        checkAndSpeak(true);
+                    }
+                });
+                // --- End Audio Logic ---
+
                 setTimeout(() => {
                     window.location.reload();
                 }, 30000);

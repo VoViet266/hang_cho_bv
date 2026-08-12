@@ -22,7 +22,7 @@ const LayDanhSachHangChoCDHA = async (tenphong) => {
         LEFT JOIN "current".dmbenhnhan bn ON cdha.mabn = bn.mabn
         WHERE (cdha.xoa = 0 OR cdha.xoa IS NULL)
         AND cdha.ngaykq IS NULL 
-        AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '45 minutes'
+        -- AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '45 minutes'
         AND cdha.tenphong = ${tenphong}
         ORDER BY 
             CASE 
@@ -42,7 +42,7 @@ const LayDanhSachPhongCDHA = async () => {
         FROM "current".hangchocdha_tmd
         WHERE (xoa = 0 OR xoa IS NULL)
           AND ngaykq IS NULL
-          AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '45 minutes'
+        --   AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '45 minutes'
         GROUP BY tenphong
         ORDER BY tenphong ASC
     `;

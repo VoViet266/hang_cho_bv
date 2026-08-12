@@ -43,17 +43,22 @@
                 <div id="date-str" class="text-sm text-slate-500 font-bold mb-0 uppercase tracking-widest">
                 </div>
                 <div id="time-str" class="text-[1.5rem] leading-none"></div>
-                <a href="/cdha"
-                    class="text-slate-500 font-semibold text-xs hover:text-danger transition-colors inline-block mt-1">
-                    <i class="fas fa-arrow-left mr-1"></i> Quay lại
-                </a>
+                <div class="flex items-center justify-center gap-3 mt-1">
+                    <a href="/cdha"
+                        class="text-slate-500 font-semibold text-xs hover:text-danger transition-colors inline-block">
+                        <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                    </a>
+                    <button id="soundToggleBtn" onclick="toggleSound()"
+                        class="text-slate-500 font-semibold text-xs hover:text-brand transition-colors inline-block cursor-pointer">
+                        <i id="soundIcon" class="fas fa-volume-mute mr-1"></i> Âm thanh (Phím S)
+                    </button>
+                </div>
             </div>
         </div>
         <div class="flex flex-col flex-1 text-center items-center justify-center">
             <div class="text-danger text-lg md:text-4xl font-extrabold uppercase tracking-wide">
-                <% let ten=(room && room.tenphong) ? room.tenphong : 'Khoa Chẩn Đoán Hình Ảnh';
-                    let words=ten.trim().split(/\s+/); 
-                    let lastWord=words.pop(); %>
+                <% let ten=(room && room.tenphong) ? room.tenphong : 'Khoa Chẩn Đoán Hình Ảnh' ; let
+                    words=ten.trim().split(/\s+/); let lastWord=words.pop(); %>
 
                     <%= words.join(' ').toUpperCase() %>
                     <span class="inline-block border-4 border-current bg-red-600 text-white rounded-full px-3 py-1 ml-1 leading-none">
@@ -92,7 +97,9 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y-1 divide-slate-200">
-                        <% if (room.waitingList.length === 0) { %>
+                        <% 
+                            let nextPatientNameToRead = '';
+                            if (room.waitingList.length === 0) { %>
                             <tr>
                                 <td colspan="5" class="text-center p-12 text-slate-500 text-3xl font-bold">Không có bệnh nhân chờ chuẩn đoán hình ảnh.</td>
                             </tr>
@@ -101,55 +108,157 @@
                             room.waitingList.forEach(function(patient, index) {
                                 let timeStr = '';
                                 if (patient.priorityLabel) {
-                                    timeStr = '<span class="inline-block bg-yellow-100 text-yellow-800 p-1 rounded-lg border border-yellow-300 font-extrabold shadow-sm text-xl">Ưu tiên: ' + patient.priorityLabel + '</span>';
+                                    timeStr = ` <span
+                        class="inline-block bg-yellow-100 text-yellow-800 p-1 rounded-lg border border-yellow-300 font-extrabold shadow-sm text-xl">
+                        Ưu tiên: ${patient.priorityLabel}</span>`;
                                 }
 
-                                let isNear = false;
-                                if (patient.dakham == 0) {
-                                    waitCounter++;
-                                    if (waitCounter === 1) {
-                                        isNear = true;
-                                    }
-                                }
+                        let isNear = false;
+                        if (patient.dakham == 0) {
+                        waitCounter++;
+                        if (waitCounter === 1) {
+                        isNear = true;
+                        nextPatientNameToRead = `${patient.holot || '' } ${patient.ten || '' }`.trim();
+                        }
+                        }
                         %>
                         <tr
-                            class="transition-all <%= isNear ? 'bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md' : 'hover:bg-blue-50 cursor-pointer border-b border-slate-200' %>">
-                            <td
-                                class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-5xl font-black text-danger' : 'text-4xl' %>">
-                                <%= index + 1 %>
-                            </td>
-                            <td class="py-6 px-6 text-blue-900 overflow-hidden">
-                                <div class="patient-name-container w-full h-full flex items-center">
+                            class="transition-all <%= isNear ? `bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md` : `hover:bg-blue-50 cursor-pointer border-b border-slate-200` %>">
+                        <td
+                            class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-5xl font-black text-danger' : 'text-4xl' %>">
+                            <%= index + 1 %>
+                        </td>
+                        <td class="py-6 px-6 text-blue-900 overflow-hidden">
+                            <div class="patient-name-container w-full h-full flex items-center">
+                                <span
+                                    class="patient-name-text whitespace-nowrap origin-left inline-block <%= isNear ? 'text-6xl font-black tracking-tight text-danger' : 'text-5xl font-extrabold' %>">
+                                    <%= `${patient.holot || '' } ${patient.ten || '' }`.trim().toUpperCase()
+                                        || 'Chưa cập nhật' %>
+                                </span>
+                            </div>
+                        </td>
+                        <td
+                            class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-4xl font-black text-danger' : 'text-3xl' %>">
+                            <%= patient.dobStr !=='Chưa cập nhật' ? patient.dobStr.split('/').pop() : '' %>
+                        </td>
+                        <td class="py-6 px-6 text-center text-blue-900"><%- timeStr %></td>
+                        <td class="py-6 px-6 text-center">
+                            <% if (isNear) { %>
+                                <span
+                                    class="inline-block bg-red-600 text-white px-2 py-2 rounded-xl text-xl font-black uppercase shadow-lg animate-pulse">Sắp
+                                    tới lượt</span>
+                                <% } else { %>
                                     <span
-                                        class="patient-name-text whitespace-nowrap origin-left inline-block <%= isNear ? 'text-6xl font-black tracking-tight text-danger' : 'text-5xl font-extrabold' %>">
-                                        <%= `${patient.holot || '' } ${patient.ten || '' }`.trim().toUpperCase()
-                                            || 'Chưa cập nhật' %>
-                                    </span>
-                                </div>
-                            </td>
-                            <td
-                                class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-4xl font-black text-danger' : 'text-3xl' %>">
-                                <%= patient.dobStr !=='Chưa cập nhật' ? patient.dobStr.split('/').pop() : '' %>
-                            </td>
-                            <td class="py-6 px-6 text-center text-blue-900"><%- timeStr %></td>
-                            <td class="py-6 px-6 text-center">
-                                <% if (isNear) { %>
-                                    <span
-                                        class="inline-block bg-red-600 text-white px-2 py-2 rounded-xl text-xl font-black uppercase shadow-lg animate-pulse">Sắp
-                                        tới lượt</span>
-                                    <% } else { %>
-                                        <span
-                                            class="inline-block bg-slate-100 text-slate-600 px-2 py-2 rounded-xl text-xl font-bold border-2 border-slate-200 shadow-sm">Đang
-                                            chờ</span>
-                                        <% } %>
-                            </td>
+                                        class="inline-block bg-slate-100 text-slate-600 px-2 py-2 rounded-xl text-xl font-bold border-2 border-slate-200 shadow-sm">Đang
+                                        chờ</span>
+                                    <% } %>
+                        </td>
                         </tr>
                         <% }); } %>
                             </tbody>
                             </table>
             </div>
 
+            <!-- Data for speech -->
+            <div id="speechData" data-patient="<%= nextPatientNameToRead %>" data-room="<%= room.tenphong || 'Khoa Chẩn Đoán Hình Ảnh' %>"
+                style="display: none;"></div>
+
             <script>
+                // --- Audio / Speech Logic ---
+                let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
+
+                function updateSoundIcon() {
+                    const icon = document.getElementById('soundIcon');
+                    if (soundEnabled) {
+                        icon.classList.remove('fa-volume-mute');
+                        icon.classList.add('fa-volume-up');
+                    } else {
+                        icon.classList.remove('fa-volume-up');
+                        icon.classList.add('fa-volume-mute');
+                    }
+                }
+
+                function toggleSound() {
+                    soundEnabled = !soundEnabled;
+                    localStorage.setItem('soundEnabled', soundEnabled);
+                    updateSoundIcon();
+
+                    if (soundEnabled) {
+                        // Play a tiny silent audio to unlock audio context
+                        const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+                        audio.volume = 0.01;
+                        audio.play().catch(e => { });
+
+                        // Speak if there's someone in queue
+                        checkAndSpeak(true);
+                    }
+                }
+
+                function checkAndSpeak(force = false) {
+                    if (!soundEnabled) return;
+
+                    const speechData = document.getElementById('speechData');
+                    if (!speechData) return;
+
+                    const patientName = speechData.dataset.patient;
+                    const roomName = speechData.dataset.room;
+
+                    if (!patientName) return;
+
+                    const storageKey = 'lastSpokenPatient_' + roomName;
+                    const lastSpoken = sessionStorage.getItem(storageKey);
+
+                    if (force || patientName !== lastSpoken) {
+                       
+                        const speakText = `Kính mời bệnh nhân, ${patientName}, vào ${roomName}`;
+
+                        fetch('/api/tts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: speakText })
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.audioContent) {
+                                    const audio = new Audio('data:audio/mp3;base64,' + data.audioContent);
+                                    audio.play().catch(e => console.error('Audio play failed:', e));
+                                } else {
+                                    throw new Error(data.error || 'No audio content');
+                                }
+                            })
+                            .catch(e => {
+                                console.error('Không thể phát âm thanh Azure TTS:', e);
+                                // Fallback to Web Speech API
+                                const utterance = new SpeechSynthesisUtterance(speakText);
+                                utterance.lang = 'vi-VN';
+                                const voices = window.speechSynthesis.getVoices();
+                                const viVoice = voices.find(v => v.lang.includes('vi') || v.name.includes('Vietnamese'));
+                                if (viVoice) utterance.voice = viVoice;
+                                window.speechSynthesis.speak(utterance);
+                            });
+
+                        sessionStorage.setItem(storageKey, patientName);
+                    }
+                }
+
+                window.addEventListener('DOMContentLoaded', () => {
+                    updateSoundIcon();
+                    setTimeout(() => checkAndSpeak(), 1500);
+                });
+
+                // Phím tắt: 
+                // 's' hoặc 'S' để bật/tắt âm thanh
+                // 'Space' (phím cách) để đọc lại tên bệnh nhân (nếu âm thanh đang bật)
+                window.addEventListener('keydown', (e) => {
+                    if (e.key.toLowerCase() === 's') {
+                        toggleSound();
+                    } else if (e.code === 'Space') {
+                        e.preventDefault(); // Tránh cuộn trang
+                        checkAndSpeak(true);
+                    }
+                });
+                // --- End Audio Logic ---
+
                 setTimeout(() => {
                     window.location.reload();
                 }, 30000);
