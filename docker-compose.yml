@@ -10,4 +10,6 @@ services:
       - "3002:3002"
     env_file:
       - .env
+    environment:
+      - NODE_OPTIONS=--dns-result-order=ipv4first
     restart: unless-stopped

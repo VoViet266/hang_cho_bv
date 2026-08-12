@@ -118,7 +118,6 @@ jobs:
             mkdir -p "$LOGS_VOLUME"
             chmod 755 "$LOGS_VOLUME" || true
 
-            # Hàm khởi chạy container
             start_container() {
               local IMAGE=$1
               docker run -d \
@@ -126,6 +125,7 @@ jobs:
                 -p "$PORT:$PORT" \
                 -e PORT="$PORT" \
                 -e TZ="Asia/Ho_Chi_Minh" \
+                -e NODE_OPTIONS="--dns-result-order=ipv4first" \
                 -e DATABASE_URL="$DATABASE_URL" \
                 -e AZURE_TTS_API_KEY="$AZURE_TTS_API_KEY" \
                 -e AZURE_TTS_REGION="$AZURE_TTS_REGION" \

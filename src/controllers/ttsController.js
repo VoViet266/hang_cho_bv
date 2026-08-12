@@ -30,7 +30,7 @@ const generateSpeech = async (req, res) => {
                         'User-Agent': 'DanhSachChoApp'
                     },
                     body: ssml,
-                    signal: AbortSignal.timeout(10000)
+                    signal: AbortSignal.timeout(20000) // 20s for Docker/cloud environments
                 });
                 
                 if (response.ok) {
@@ -51,7 +51,7 @@ const generateSpeech = async (req, res) => {
             const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=${encodeURIComponent(text)}`;
             const response = await fetch(googleUrl, {
                 headers: { 'User-Agent': 'Mozilla/5.0' },
-                signal: AbortSignal.timeout(10000)
+                signal: AbortSignal.timeout(15000) // 15s for Docker/cloud environments
             });
 
             if (!response.ok) {

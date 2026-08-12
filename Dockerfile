@@ -16,6 +16,9 @@ RUN npx prisma generate
 COPY . .
 
 
+# Force IPv4 DNS resolution for Node.js fetch (undici) - fixes Azure TTS timeout in Docker
+ENV NODE_OPTIONS=--dns-result-order=ipv4first
+
 EXPOSE 3002
 
 # Start command
