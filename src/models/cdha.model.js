@@ -21,7 +21,9 @@ const LayDanhSachHangChoCDHA = async (tenphong) => {
         FROM "current".hangchocdha_tmd cdha
         LEFT JOIN "current".dmbenhnhan bn ON cdha.mabn = bn.mabn
         WHERE (cdha.xoa = 0 OR cdha.xoa IS NULL)
-          AND cdha.tenphong = ${tenphong}
+        AND cdha.ngaykq IS NULL 
+        AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '45 minutes'
+        AND cdha.tenphong = ${tenphong}
         ORDER BY 
             CASE 
                 WHEN cdha.uutien IN ('1', '2', '3', '4', '5', '6') THEN CAST(cdha.uutien AS INTEGER)
@@ -39,6 +41,8 @@ const LayDanhSachPhongCDHA = async () => {
             COUNT(mabn)::int AS tong_cho_kham
         FROM "current".hangchocdha_tmd
         WHERE (xoa = 0 OR xoa IS NULL)
+          AND ngaykq IS NULL
+          AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '45 minutes'
         GROUP BY tenphong
         ORDER BY tenphong ASC
     `;
