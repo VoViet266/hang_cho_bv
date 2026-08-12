@@ -24,7 +24,6 @@ function toggleSound() {
         audio.volume = 0.01;
         audio.play().catch(e => { });
 
-        // Speak if there's someone in queue
         checkAndSpeak(true);
     }
 }
@@ -32,12 +31,6 @@ function toggleSound() {
 function disableSound() {
     soundEnabled = false;
     updateSoundIcon();
-}
-
-function hideSound() {
-    soundEnabled = false;
-    const btn = document.getElementById('soundToggleBtn');
-    if (btn) btn.style.display = 'none';
 }
 
 function checkAndSpeak(force = false) {
@@ -69,7 +62,7 @@ function checkAndSpeak(force = false) {
             .then(data => {
                 if (data.audioContent) {
                     const audio = new Audio('data:audio/mp3;base64,' + data.audioContent);
-                    audio.onended = () => hideSound(); // Ẩn button sau khi phát xong
+                    audio.onended = () => disableSound();
                     audio.play().catch(e => console.error('Audio play failed:', e));
                 } else {
                     throw new Error(data.error || 'No audio content');
@@ -83,7 +76,7 @@ function checkAndSpeak(force = false) {
                 const voices = window.speechSynthesis.getVoices();
                 const viVoice = voices.find(v => v.lang.includes('vi') || v.name.includes('Vietnamese'));
                 if (viVoice) utterance.voice = viVoice;
-                utterance.onend = () => hideSound(); // Ẩn button sau khi phát xong
+                utterance.onend = () => disableSound();
                 window.speechSynthesis.speak(utterance);
             });
 
