@@ -7,7 +7,7 @@ const generateSpeech = async (req, res) => {
         let audioBuffer = null;
 
         // Try Azure TTS first if API key is provided
-        if (apiKey & region) {
+        if (apiKey && region) {
       
                 const url = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
                 const ssml = `
