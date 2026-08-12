@@ -8,7 +8,7 @@ const generateSpeech = async (req, res) => {
 
         // Try Azure TTS first if API key is provided
         if (apiKey && region) {
-      
+            try {
                 const url = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
                 const ssml = `
                     <speak version='1.0' xml:lang='vi-VN'>
@@ -38,7 +38,9 @@ const generateSpeech = async (req, res) => {
                 } else {
                     console.warn(`Azure TTS failed with status: ${response.status}. Falling back to Google TTS...`);
                 }
-            
+            } catch (azureError) {
+                console.warn('Azure TTS request failed:', azureError.message, '- Falling back to Google TTS...');
+            }
         }
         else {
             console.log('Azure TTS API key or region not provided. Using Google TTS...');
