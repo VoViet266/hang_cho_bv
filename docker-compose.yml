@@ -8,8 +8,14 @@ services:
     container_name: danhsachcho_app
     ports:
       - "3002:3002"
+    networks:
+      - hospital_net
     env_file:
       - .env
     environment:
       - NODE_OPTIONS=--dns-result-order=ipv4first
     restart: unless-stopped
+
+networks:
+  hospital_net:
+    external: true

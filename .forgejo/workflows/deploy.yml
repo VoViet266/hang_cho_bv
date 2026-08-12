@@ -122,6 +122,7 @@ jobs:
               local IMAGE=$1
               docker run -d \
                 --name "$CONTAINER_NAME" \
+                --network hospital_net \
                 -p "$PORT:$PORT" \
                 -e PORT="$PORT" \
                 -e TZ="Asia/Ho_Chi_Minh" \
