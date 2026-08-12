@@ -12,6 +12,8 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ///icon  -->
+    <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
     <script>
         tailwind.config = {
             theme: {
@@ -90,21 +92,21 @@
                             <tr>
                                 <td colspan="5" class="text-center p-12 text-slate-500 text-3xl font-bold">Phòng trống, không có bệnh nhân.</td>
                             </tr>
-                        <% } else { 
-                            let waitCounter = 0; 
-                            room.waitingList.forEach(function(patient, index) { 
+                        <% } else {
+                            let waitCounter = 0;
+                            room.waitingList.forEach(function(patient, index) {
                                 let timeStr = '';
-                                if (patient.isPriority) { 
+                                if (patient.isPriority) {
                                     timeStr = '<span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-xl">Ưu tiên</span>';
-                                } 
-                                
-                                let isNear = false; 
-                                if (patient.dakham == 0) { 
-                                    waitCounter++; 
+                                }
+
+                                let isNear = false;
+                                if (patient.dakham == 0) {
+                                    waitCounter++;
                                     if (waitCounter === 1) {
-                                        isNear = true; 
-                                    } 
-                                } 
+                                        isNear = true;
+                                    }
+                                }
                         %>
                                 <tr class="transition-all <%= isNear ? 'bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md' : 'hover:bg-blue-50 cursor-pointer border-b border-slate-200' %>">
                                     <td class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-5xl font-black text-danger' : 'text-4xl' %>"><%= index + 1 %></td>
@@ -123,7 +125,7 @@
                                         <% } %>
                                     </td>
                                 </tr>
-                        <%  }); 
+                        <%  });
                            } %>
                     </tbody>
                 </table>
