@@ -123,7 +123,6 @@ jobs:
               local IMAGE=$1
               docker run -d \
                 --name "$CONTAINER_NAME" \
-                --dns 8.8.8.8 \
                 -p "$PORT:$PORT" \
                 -e PORT="$PORT" \
                 -e TZ="Asia/Ho_Chi_Minh" \
