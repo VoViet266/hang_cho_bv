@@ -56,7 +56,8 @@ app.post('/api/tts', async (req, res) => {
                         'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
                         'User-Agent': 'DanhSachChoApp'
                     },
-                    body: ssml
+                    body: ssml,
+                    signal: AbortSignal.timeout(3000)
                 });
                 
                 if (response.ok) {
@@ -73,7 +74,8 @@ app.post('/api/tts', async (req, res) => {
         if (!audioBuffer) {
             const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=${encodeURIComponent(text)}`;
             const response = await fetch(googleUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0' }
+                headers: { 'User-Agent': 'Mozilla/5.0' },
+                signal: AbortSignal.timeout(3000)
             });
 
             if (!response.ok) {

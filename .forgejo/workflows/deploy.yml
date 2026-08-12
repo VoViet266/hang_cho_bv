@@ -67,6 +67,8 @@ jobs:
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
           REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          AZURE_TTS_API_KEY: ${{ secrets.AZURE_TTS_API_KEY }}
+          AZURE_TTS_REGION: ${{ secrets.AZURE_TTS_REGION }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
@@ -87,7 +89,7 @@ jobs:
           ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-          SSH_CMD_ENV="REGISTRY_TOKEN=$(printf '%q' "$REGISTRY_TOKEN") REGISTRY_USERNAME=$(printf '%q' "$REGISTRY_USERNAME") DATABASE_URL=$(printf '%q' "$DATABASE_URL") IMAGE_NAME=$(printf '%q' "$IMAGE_NAME") CONTAINER_NAME=$(printf '%q' "$CONTAINER_NAME") PORT=$(printf '%q' "$PORT") LOGS_VOLUME=$(printf '%q' "$LOGS_VOLUME")"
+          SSH_CMD_ENV="REGISTRY_TOKEN=$(printf '%q' "$REGISTRY_TOKEN") REGISTRY_USERNAME=$(printf '%q' "$REGISTRY_USERNAME") DATABASE_URL=$(printf '%q' "$DATABASE_URL") IMAGE_NAME=$(printf '%q' "$IMAGE_NAME") CONTAINER_NAME=$(printf '%q' "$CONTAINER_NAME") PORT=$(printf '%q' "$PORT") LOGS_VOLUME=$(printf '%q' "$LOGS_VOLUME") AZURE_TTS_API_KEY=$(printf '%q' "$AZURE_TTS_API_KEY") AZURE_TTS_REGION=$(printf '%q' "$AZURE_TTS_REGION")"
 
           ssh -o BatchMode=yes -p "$SSH_PORT" "$SSH_USERNAME@$SSH_HOST" $SSH_CMD_ENV /bin/bash -s <<'EOF'
             set -e
@@ -125,6 +127,8 @@ jobs:
                 -e PORT="$PORT" \
                 -e TZ="Asia/Ho_Chi_Minh" \
                 -e DATABASE_URL="$DATABASE_URL" \
+                -e AZURE_TTS_API_KEY="$AZURE_TTS_API_KEY" \
+                -e AZURE_TTS_REGION="$AZURE_TTS_REGION" \
                 -v /etc/localtime:/etc/localtime:ro \
                 -v "$LOGS_VOLUME":/app/logs \
                 --restart unless-stopped \
