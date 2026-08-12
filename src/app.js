@@ -29,6 +29,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 // View Routes
 const dashboardService = require('./services/dashboardService');
 const psdangkyService = require('./services/psdangkyService');
+const cdhaService = require('./services/cdhaService');
 
 app.get('/', async (req, res) => {
     try {
@@ -48,6 +49,27 @@ app.get('/room/:id', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send('Error loading room details: ' + (error.message || String(error)));
+    }
+});
+
+app.get('/cdha', async (req, res) => {
+    try {
+        const stats = await cdhaService.LayDanhSachCacPhongCDHA();
+        res.render('cdha_index', { data: stats });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error loading CDHA dashboard: ' + (error.message || String(error)));
+    }
+});
+
+app.get('/cdha/room/:tenphong', async (req, res) => {
+    try {
+        const room = await cdhaService.LayDanhSachBenhNhanChoCDHA(req.params.tenphong);
+       
+        res.render('cdha', { room: room });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error loading CDHA room details: ' + (error.message || String(error)));
     }
 });
 

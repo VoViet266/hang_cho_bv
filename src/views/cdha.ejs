@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Hàng Chờ Chuẩn Đoán Hình Ảnh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#1e40af',
+                        danger: '#dc2626',
+                        success: '#16a34a',
+                        accent: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-slate-100 text-slate-900 font-sans flex flex-col h-screen overflow-hidden">
+
+            <!-- Top Bar -->
+            <div
+                class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-1 border-2 border-slate-300 shadow-sm gap-2 md:gap-4">
+
+                <!-- Đồng hồ -->
+                <div class="flex justify-center items-center bg-white">
+                    <div>
+                        <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-14 mr-3">
+                    </div>
+                    <div class="text-center text-brand font-black tabular-nums tracking-wider">
+                        <div id="date-str" class="text-sm text-slate-500 font-bold mb-0 uppercase tracking-widest">
+                        </div>
+                        <div id="time-str" class="text-[1.5rem] leading-none"></div>
+                        <a href="/cdha"
+                            class="text-slate-500 font-semibold text-xs hover:text-danger transition-colors inline-block mt-1">
+                            <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex flex-col flex-1 text-center items-center justify-center">
+                    <div class="text-danger text-lg md:text-4xl font-extrabold uppercase tracking-wide">
+                        <%= room.tenphong || 'Khoa Chuẩn Đoán Hình Ảnh' %>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="bg-red-50 px-3 py-1 text-center min-w-[100px] rounded border border-red-200">
+                        <span class="block text-danger font-bold text-xs uppercase tracking-wide mb-0">Đang chờ</span>
+                        <span class="block text-danger font-black text-xl tabular-nums leading-none mt-1">
+                            <%= room.totalWaiting %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="flex-grow overflow-y-auto bg-white border-2 border-slate-300">
+                <table class="w-full text-left border-collapse">
+                    <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300">
+                        <tr>
+                            <th class="py-5 px-6 font-extrabold text-3xl text-center text-blue-900 uppercase">STT</th>
+                            <th class="py-5 px-6 font-extrabold text-3xl text-center text-blue-900 uppercase">Họ và Tên</th>
+                            <th class="py-5 px-6 font-extrabold text-3xl text-center text-blue-900 uppercase">Năm Sinh</th>
+                            <th class="py-5 px-6 font-extrabold text-3xl text-center text-blue-900 uppercase">Ghi Chú</th>
+                            <th class="py-5 px-6 font-extrabold text-3xl text-blue-900 text-center uppercase">Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y-1 divide-slate-200">
+                        <% if (room.waitingList.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="text-center p-12 text-slate-500 text-3xl font-bold">Không có bệnh nhân chờ chuẩn đoán hình ảnh.</td>
+                            </tr>
+                        <% } else {
+                            let waitCounter = 0;
+                            room.waitingList.forEach(function(patient, index) {
+                                let timeStr = '';
+                                if (patient.priorityLabel) {
+                                    timeStr = '<span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg border border-yellow-300 font-extrabold shadow-sm text-xl">Ưu tiên: ' + patient.priorityLabel + '</span>';
+                                }
+
+                                let isNear = false;
+                                if (patient.dakham == 0) {
+                                    waitCounter++;
+                                    if (waitCounter === 1) {
+                                        isNear = true;
+                                    }
+                                }
+                        %>
+                                <tr class="transition-all <%= isNear ? 'bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md' : 'hover:bg-blue-50 cursor-pointer border-b border-slate-200' %>">
+                                    <td class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-5xl font-black text-danger' : 'text-4xl' %>"><%= index + 1 %></td>
+                                    <td class="py-6 px-6 text-blue-900 <%= isNear ? 'text-6xl font-black tracking-tight text-danger' : 'text-5xl font-extrabold' %>">
+                                        <%= `${patient.holot || ''} ${patient.ten || ''}`.trim().toUpperCase() || 'Chưa cập nhật' %>
+                                    </td>
+                                    <td class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-5xl font-black text-danger' : 'text-4xl' %>">
+                                        <%= patient.dobStr !== 'Chưa cập nhật' ? patient.dobStr.split('/').pop() : '' %>
+                                    </td>
+                                    <td class="py-6 px-6 text-center text-blue-900"><%- timeStr %></td>
+                                    <td class="py-6 px-6 text-center">
+                                        <% if (isNear) { %>
+                                            <span class="inline-block bg-red-600 text-white px-6 py-3 rounded-xl text-3xl font-black uppercase shadow-lg animate-pulse">Sắp tới lượt</span>
+                                        <% } else { %>
+                                            <span class="inline-block bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-2xl font-bold border-2 border-slate-200 shadow-sm">Đang chờ</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                        <%  });
+                           } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <script>
+                setTimeout(() => {
+                    window.location.reload();
+                }, 30000);
+
+                function updateTime() {
+                    const now = new Date();
+                    const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                    const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+
+                    const dateStrEl = document.getElementById('date-str');
+                    const timeStrEl = document.getElementById('time-str');
+                    if (dateStrEl && timeStrEl) {
+                        dateStrEl.textContent = now.toLocaleDateString('en-GB', dateOpts);
+                        timeStrEl.textContent = now.toLocaleTimeString('en-GB', timeOpts);
+                    }
+                }
+                setInterval(updateTime, 1000);
+                updateTime();
+            </script>
+</body>
+
+</html>

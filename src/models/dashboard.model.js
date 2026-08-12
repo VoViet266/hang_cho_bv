@@ -34,7 +34,7 @@ const LayTongHopDashboard = async () => {
         WHERE (p.xoa IS NULL OR p.xoa = 0)
           AND p.khoakb = 1
           AND (p.madv IS NULL OR p.madv = '10')
-          AND p.maphong NOT IN ('CLS', 'SL')
+          AND p.maphong NOT IN ('CLS', 'SL', 'A12')
         ORDER BY p.maphong ASC
     `;
     return rows;
