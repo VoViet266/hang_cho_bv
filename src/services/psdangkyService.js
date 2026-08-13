@@ -42,8 +42,6 @@ const KiemTraUuTien = (ngaysinh, gioitinh) => {
 const LayDanhSachBenhNhanChoCuaPhong = async (maphong) => {
     // Lấy thông số Tổng Đăng Ký từ model psdangky
     const totalDKPlus = await psdangkyModel.LayThongKeCuaPhong(maphong);
-
-    // Lấy danh sách bệnh nhân đang chờ theo logic chuẩn
     const data = await psdangkyModel.LayDanhSachBenhNhanChoTheoPhongId(maphong);
     
     if (!data || data.length === 0) {

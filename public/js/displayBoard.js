@@ -1,5 +1,6 @@
 // soundEnabled không lưu localStorage - reset mỗi lần reload trang
 let soundEnabled = false;
+let autoSoundEnabled = localStorage.getItem("autoSoundEnabled") === "true";
 
 function updateSoundIcon() {
   const icon = document.getElementById("soundIcon");
@@ -10,6 +11,17 @@ function updateSoundIcon() {
     } else {
       icon.classList.remove("fa-volume-up");
       icon.classList.add("fa-volume-mute");
+    }
+  }
+
+  const autoBtn = document.getElementById("autoSoundToggleBtn");
+  if (autoBtn) {
+    if (autoSoundEnabled) {
+      autoBtn.classList.remove("text-slate-500");
+      autoBtn.classList.add("text-success");
+    } else {
+      autoBtn.classList.remove("text-success");
+      autoBtn.classList.add("text-slate-500");
     }
   }
 }
@@ -30,7 +42,27 @@ function toggleSound() {
   }
 }
 
+function toggleAutoSound() {
+  autoSoundEnabled = !autoSoundEnabled;
+  localStorage.setItem("autoSoundEnabled", autoSoundEnabled);
+  
+  if (autoSoundEnabled) {
+    soundEnabled = true;
+    // Play a tiny silent audio to unlock audio context
+    const audio = new Audio(
+      "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA",
+    );
+    audio.volume = 0.01;
+    audio.play().catch((e) => {});
+    checkAndSpeak(false);
+  } else {
+    soundEnabled = false;
+  }
+  updateSoundIcon();
+}
+
 function disableSound() {
+  if (autoSoundEnabled) return;
   soundEnabled = false;
   updateSoundIcon();
 }
@@ -49,6 +81,7 @@ function checkAndSpeak(force = false) {
   if (!patientName) return;
 
   const storageKey = "lastSpokenPatient_" + roomName;
+  /// lấy ID bệnh nhân  
   const lastSpoken = sessionStorage.getItem(storageKey);
 
   if (force || patientName !== lastSpoken) {
@@ -88,6 +121,9 @@ function checkAndSpeak(force = false) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  if (autoSoundEnabled) {
+    soundEnabled = true;
+  }
   updateSoundIcon();
 
   // Ẩn nút âm thanh nếu không có bệnh nhân (tránh tốn token TTS)
@@ -102,10 +138,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
 // Phím tắt (Bao gồm cả Remote TV):
 // 's' hoặc 'Enter' (Phím OK) để bật/tắt âm thanh
+// 'a' để bật/tắt chế độ tự động
 // 'Space' (phím cách) hoặc 'ArrowRight' (Phím điều hướng phải) để đọc lại
 window.addEventListener("keydown", (e) => {
   if (e.key.toLowerCase() === "s" || e.key === "Enter") {
     toggleSound();
+  } else if (e.key.toLowerCase() === "a") {
+    toggleAutoSound();
   } else if (e.code === "Space" || e.key === "ArrowRight") {
     e.preventDefault(); // Tránh cuộn trang
     checkAndSpeak(true);

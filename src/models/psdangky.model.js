@@ -26,7 +26,6 @@ const  LayDanhSachBenhNhanChoTheoPhongId = async (maphong) => {
         LEFT JOIN "current".dmbenhnhan bn ON dk.mabn = bn.mabn
         WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'
           AND COALESCE(kb.maphong, dk.maphong) = ${maphong}
-          AND p.maphong NOT IN ('CLS', 'SL')
           AND (kb.xoa IS NULL OR kb.xoa = 0)
           AND (dk.xoa IS NULL OR dk.xoa = 0)
           AND (kb.dakham IS NULL OR kb.dakham = 0)
