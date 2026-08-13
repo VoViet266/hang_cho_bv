@@ -52,10 +52,7 @@
                         class="text-slate-500 font-semibold text-xs hover:text-brand transition-colors inline-block cursor-pointer">
                         <i id="soundIcon" class="fas fa-volume-mute mr-1"></i> Âm thanh (Phím S)
                     </button>
-                    <button id="autoSoundToggleBtn" onclick="toggleAutoSound()"
-                        class="text-slate-500 font-semibold text-xs hover:text-brand transition-colors inline-block cursor-pointer">
-                        <i id="autoSoundIcon" class="fas fa-sync mr-1"></i> Tự động (Phím A)
-                    </button>
+
                 </div>
             </div>
         </div>
@@ -125,47 +122,51 @@
                         nextPatientNameToRead = `${patient.holot || '' } ${patient.ten || '' }`.trim();
                         }
                         }
+                        let currentPatientName = `${patient.holot || ''} ${patient.ten || ''}`.trim();
                         %>
-                        <tr class="transition-all <%= isNear ? `bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md` : `hover:bg-blue-50 cursor-pointer border-b border-slate-200` %>">
-                            <td class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? `text-5xl font-black text-danger` : `text-4xl` %>">
+                        <tr onclick="speakSpecificPatient(' <%=currentPatientName %>')" class="transition-all <%=
+                            isNear ? 'bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md cursor-pointer'
+                            : 'hover:bg-blue-50 cursor-pointer border-b border-slate-200' %>">
+                            <td
+                                class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-5xl font-black text-danger' : 'text-4xl' %>">
                                 <%= index + 1 %>
                             </td>
                             <td class="py-6 px-6 text-blue-900 overflow-hidden">
                                 <div class="patient-name-container w-full h-full flex items-center">
                                     <span
                                         class="patient-name-text whitespace-nowrap origin-left inline-block <%= isNear ? 'text-6xl font-black tracking-tight text-danger' : 'text-5xl font-extrabold' %>">
-                        <%= `${patient.holot || '' } ${patient.ten || '' }`.trim().toUpperCase() || 'Chưa cập nhật' %>
-                            </span>
+                                        <%= currentPatientName.toUpperCase() || 'Chưa cập nhật' %>
+                                    </span>
+                                </div>
+                            </td>
+                            <td
+                                class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-4xl font-black text-danger' : 'text-3xl' %>">
+                                <%= patient.dobStr !=='Chưa cập nhật' ? patient.dobStr.split('/').pop() : '' %>
+                            </td>
+                            <td class="py-6 px-6 text-center text-blue-900"><%- timeStr %></td>
+                            <td class="py-6 px-6 text-center">
+                                <% if (isNear) { %>
+                                    <span
+                                        class="inline-block bg-red-600 text-white px-2 py-2 rounded-xl text-xl font-black uppercase shadow-lg animate-pulse">Sắp
+                                        tới lượt</span>
+                                    <% } else { %>
+                                        <span
+                                            class="inline-block bg-slate-100 text-slate-600 px-2 py-2 rounded-xl text-xl font-bold border-2 border-slate-200 shadow-sm">Đang
+                                            chờ</span>
+                                        <% } %>
+                            </td>
+                            </tr>
+                            <% }); } %>
+                                </tbody>
+                                </table>
             </div>
-            </td>
-            <td
-                class="py-6 px-6 font-bold text-center text-blue-900 <%= isNear ? 'text-4xl font-black text-danger' : 'text-3xl' %>">
-                <%= patient.dobStr !=='Chưa cập nhật' ? patient.dobStr.split('/').pop() : '' %>
-            </td>
-            <td class="py-6 px-6 text-center text-blue-900"><%- timeStr %></td>
-            <td class="py-6 px-6 text-center">
-                <% if (isNear) { %>
-                    <span
-                        class="inline-block bg-red-600 text-white px-2 py-2 rounded-xl text-xl font-black uppercase shadow-lg animate-pulse">Sắp
-                        tới lượt</span>
-                    <% } else { %>
-                        <span
-                            class="inline-block bg-slate-100 text-slate-600 px-2 py-2 rounded-xl text-xl font-bold border-2 border-slate-200 shadow-sm">Đang
-                            chờ</span>
-                        <% } %>
-            </td>
-            </tr>
-            <% }); } %>
-                </tbody>
-                </table>
-        </div>
 
-        <!-- Data for speech -->
-        <div id="speechData" data-patient="<%= nextPatientNameToRead %>"
-            data-room="<%= room.tenphong || 'Khoa Chẩn Đoán Hình Ảnh' %>" data-prefix="Kính mời bệnh nhân,"
-            style="display: none;"></div>
+            <!-- Data for speech -->
+            <div id="speechData" data-patient="<%= nextPatientNameToRead %>"
+                data-room="<%= room.tenphong || 'Khoa Chẩn Đoán Hình Ảnh' %>" data-prefix="Kính mời bệnh nhân,"
+                style="display: none;"></div>
 
-        <script src="/js/displayBoard.js"></script>
+            <script src="/js/displayBoard.js"></script>
 </body>
 
 </html>

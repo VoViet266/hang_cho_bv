@@ -1,6 +1,5 @@
 // soundEnabled không lưu localStorage - reset mỗi lần reload trang
 let soundEnabled = false;
-let autoSoundEnabled = localStorage.getItem("autoSoundEnabled") === "true";
 
 function updateSoundIcon() {
   const icon = document.getElementById("soundIcon");
@@ -14,16 +13,6 @@ function updateSoundIcon() {
     }
   }
 
-  const autoBtn = document.getElementById("autoSoundToggleBtn");
-  if (autoBtn) {
-    if (autoSoundEnabled) {
-      autoBtn.classList.remove("text-slate-500");
-      autoBtn.classList.add("text-success");
-    } else {
-      autoBtn.classList.remove("text-success");
-      autoBtn.classList.add("text-slate-500");
-    }
-  }
 }
 
 function toggleSound() {
@@ -42,27 +31,8 @@ function toggleSound() {
   }
 }
 
-function toggleAutoSound() {
-  autoSoundEnabled = !autoSoundEnabled;
-  localStorage.setItem("autoSoundEnabled", autoSoundEnabled);
-  
-  if (autoSoundEnabled) {
-    soundEnabled = true;
-    // Play a tiny silent audio to unlock audio context
-    const audio = new Audio(
-      "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA",
-    );
-    audio.volume = 0.01;
-    audio.play().catch((e) => {});
-    checkAndSpeak(false);
-  } else {
-    soundEnabled = false;
-  }
-  updateSoundIcon();
-}
 
 function disableSound() {
-  if (autoSoundEnabled) return;
   soundEnabled = false;
   updateSoundIcon();
 }
@@ -103,7 +73,7 @@ function checkAndSpeak(force = false) {
         }
       })
       .catch((e) => {
-        console.error("Không thể phát âm thanh Azure TTS:", e);
+        console.error("Không thể phát âm thanh Google TTS:", e);
         // Fallback to Web Speech API
         const utterance = new SpeechSynthesisUtterance(speakText);
         utterance.lang = "vi-VN";
@@ -120,10 +90,52 @@ function checkAndSpeak(force = false) {
   }
 }
 
+// Function để phát âm thanh khi click vào tên bất kỳ
+function speakSpecificPatient(patientName) {
+  const speechData = document.getElementById("speechData");
+  if (!speechData) return;
+
+  const roomName = speechData.dataset.room;
+  const prefix = speechData.dataset.prefix || "Mời bệnh nhân,";
+  
+  if (!patientName) return;
+
+  const speakText = `${prefix} ${patientName}, vào ${roomName}`;
+
+  // Unlock audio context nếu chưa bật
+  const dummyAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+  dummyAudio.volume = 0.01;
+  dummyAudio.play().catch((e) => {});
+
+  fetch("/api/tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: speakText }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.audioContent) {
+        const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
+        audio.play().catch((e) => console.error("Audio play failed:", e));
+      } else {
+        throw new Error(data.error || "No audio content");
+      }
+    })
+    .catch((e) => {
+      console.error("Không thể phát âm thanh Google TTS:", e);
+      // Fallback to Web Speech API
+      const utterance = new SpeechSynthesisUtterance(speakText);
+      utterance.lang = "vi-VN";
+      const voices = window.speechSynthesis.getVoices();
+      const viVoice = voices.find(
+        (v) => v.lang.includes("vi") || v.name.includes("Vietnamese"),
+      );
+      if (viVoice) utterance.voice = viVoice;
+      window.speechSynthesis.speak(utterance);
+    });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
-  if (autoSoundEnabled) {
-    soundEnabled = true;
-  }
   updateSoundIcon();
 
   // Ẩn nút âm thanh nếu không có bệnh nhân (tránh tốn token TTS)
@@ -138,13 +150,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
 // Phím tắt (Bao gồm cả Remote TV):
 // 's' hoặc 'Enter' (Phím OK) để bật/tắt âm thanh
-// 'a' để bật/tắt chế độ tự động
 // 'Space' (phím cách) hoặc 'ArrowRight' (Phím điều hướng phải) để đọc lại
 window.addEventListener("keydown", (e) => {
   if (e.key.toLowerCase() === "s" || e.key === "Enter") {
     toggleSound();
-  } else if (e.key.toLowerCase() === "a") {
-    toggleAutoSound();
   } else if (e.code === "Space" || e.key === "ArrowRight") {
     e.preventDefault(); // Tránh cuộn trang
     checkAndSpeak(true);
