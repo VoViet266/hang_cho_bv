@@ -1,110 +1,121 @@
-const https = require('node:https');
-
+const https = require("node:https");
 
 function httpsRequest(url, options = {}, body = null) {
-    return new Promise((resolve, reject) => {
-        const parsed = new URL(url);
-        const reqOptions = {
-            hostname: parsed.hostname,
-            path: parsed.pathname + parsed.search,
-            method: options.method || 'GET',
-            headers: options.headers || {},
-            timeout: options.timeoutMs || 20000,
-            family: 4, // Force IPv4
-        };
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const reqOptions = {
+      hostname: parsed.hostname,
+      path: parsed.pathname + parsed.search,
+      method: options.method || "GET",
+      headers: options.headers || {},
+      timeout: options.timeoutMs || 20000,
+      family: 4, // Force IPv4
+    };
 
-        const req = https.request(reqOptions, (res) => {
-            const chunks = [];
-            res.on('data', (chunk) => chunks.push(chunk));
-            res.on('end', () => {
-                resolve({
-                    status: res.statusCode,
-                    ok: res.statusCode >= 200 && res.statusCode < 300,
-                    arrayBuffer: () => Promise.resolve(Buffer.concat(chunks)),
-                });
-            });
+    const req = https.request(reqOptions, (res) => {
+      const chunks = [];
+      res.on("data", (chunk) => chunks.push(chunk));
+      res.on("end", () => {
+        resolve({
+          status: res.statusCode,
+          ok: res.statusCode >= 200 && res.statusCode < 300,
+          arrayBuffer: () => Promise.resolve(Buffer.concat(chunks)),
         });
-
-        req.on('timeout', () => {
-            req.destroy(new Error(`Request timeout after ${reqOptions.timeout}ms`));
-        });
-
-        req.on('error', reject);
-
-        if (body) req.write(body);
-        req.end();
+      });
     });
+
+    req.on("timeout", () => {
+      req.destroy(new Error(`Request timeout after ${reqOptions.timeout}ms`));
+    });
+
+    req.on("error", reject);
+
+    if (body) req.write(body);
+    req.end();
+  });
 }
 
 const generateSpeech = async (req, res) => {
-    try {
-        const { text } = req.body;
-        const apiKey = process.env.AZURE_TTS_API_KEY;
-        const region = process.env.AZURE_TTS_REGION || 'southeastasia';
+  try {
+    const { text } = req.body;
 
-        let audioBuffer = null;
+    const googleApiKey = process.env.GOOGLE_TTS_API_KEY;
 
-        // Try Azure TTS first if API key is provided
-        if (apiKey && region) {
-            try {
-                const url = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
-                const ssml = `
-                    <speak version='1.0' xml:lang='vi-VN'>
-                        <voice xml:lang='vi-VN' xml:gender='Female' name='vi-VN-HoaiMyNeural'>
-                            <!-- Điều chỉnh tốc độ tại rate. Ví dụ: +10% (nhanh hơn), -10% (chậm hơn), -20%, v.v. -->
-                            <prosody rate="+10%">
-                                ${text}
-                            </prosody>
-                        </voice>
-                    </speak>
-                `;
+    let audioBuffer = null;
+    let base64Audio = null;
 
-                const response = await httpsRequest(url, {
-                    method: 'POST',
-                    headers: {
-                        'Ocp-Apim-Subscription-Key': apiKey,
-                        'Content-Type': 'application/ssml+xml',
-                        'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
-                        'User-Agent': 'DanhSachChoApp',
-                        'Content-Length': Buffer.byteLength(ssml),
-                    },
-                    timeoutMs: 20000,
-                }, ssml);
+    // 1. Try Official Google Cloud TTS if API key is provided
+    if (googleApiKey) {
+      try {
+        const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${googleApiKey}`;
+        const payload = JSON.stringify({
+          input: { text: text },
+          voice: { languageCode: "vi-VN", name: "vi-VN-Standard-A" }, // Can change to Wavenet or Standard
+          audioConfig: { audioEncoding: "MP3", speakingRate: 1.1 }, // Tốc độ nói +10%
+        });
 
-                if (response.ok) {
-                    audioBuffer = await response.arrayBuffer();
-                } else {
-                    console.warn(`Azure TTS failed with status: ${response.status}. Falling back to Google TTS...`);
-                }
-            } catch (azureError) {
-                console.warn('Azure TTS request failed:', azureError.message, '- Falling back to Google TTS...');
-            }
+        const response = await httpsRequest(
+          url,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Content-Length": Buffer.byteLength(payload),
+            },
+            timeoutMs: 20000,
+          },
+          payload,
+        );
+
+        if (response.ok) {
+          const responseData = JSON.parse(
+            (await response.arrayBuffer()).toString("utf-8"),
+          );
+          if (responseData.audioContent) {
+            base64Audio = responseData.audioContent; // Already base64 encoded by Google
+          } else {
+            console.warn(
+              "Google Cloud TTS returned OK but no audioContent. Falling back...",
+            );
+          }
         } else {
-            console.log('Azure TTS API key or region not provided. Using Google TTS...');
+          const errorMsg = (await response.arrayBuffer()).toString("utf-8");
+          console.warn(
+            `Google Cloud TTS failed with status: ${response.status}. Error: ${errorMsg}. Falling back...`,
+          );
         }
-
-        // Fallback to Google Translate TTS
-        if (!audioBuffer) {
-            const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=${encodeURIComponent(text)}`;
-            const response = await httpsRequest(googleUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0' },
-                timeoutMs: 15000,
-            });
-
-            if (!response.ok) {
-                throw new Error(`Google TTS Error: ${response.status}`);
-            }
-            audioBuffer = await response.arrayBuffer();
-        }
-
-        const base64Audio = Buffer.from(audioBuffer).toString('base64');
-        res.json({ audioContent: base64Audio });
-    } catch (error) {
-        console.error('TTS Error:', error);
-        res.status(500).json({ error: error.message });
+      } catch (googleError) {
+        console.warn(
+          "Google Cloud TTS request failed:",
+          googleError.message,
+          "- Falling back...",
+        );
+      }
     }
+
+    // 2. Fallback to Google Translate TTS (Free version)
+    if (!base64Audio) {
+      console.log("Using fallback free Google Translate TTS...");
+      const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=${encodeURIComponent(text)}`;
+      const response = await httpsRequest(googleUrl, {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        timeoutMs: 15000,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Fallback Google TTS Error: ${response.status}`);
+      }
+      audioBuffer = await response.arrayBuffer();
+      base64Audio = Buffer.from(audioBuffer).toString("base64");
+    }
+
+    res.json({ audioContent: base64Audio });
+  } catch (error) {
+    console.error("TTS Error:", error);
+    res.status(500).json({ error: error.message });
+  }
 };
 
 module.exports = {
-    generateSpeech
+  generateSpeech,
 };
