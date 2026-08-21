@@ -530,32 +530,6 @@ document.addEventListener("change", (e) => {
   }
 });
 
-window.addEventListener("keydown", (e) => {
-  const roomModal = document.getElementById("roomModal");
-  const isRoomModalOpen = roomModal && !roomModal.classList.contains("hidden");
-  const patientModal = document.getElementById("patientActionModal");
-  const isPatientModalOpen = patientModal && !patientModal.classList.contains("hidden");
-
-  const key = (e.key || "").toLowerCase();
-  const code = e.keyCode || e.which;
-
-  if (isRoomModalOpen || isPatientModalOpen) return;
-
-  // Bật/Tắt âm thanh: Phím S
-  if (key === "s" || code === 83) {
-    toggleSound();
-  } 
-  // Đọc lại ngay: Phím Space, Phím mũi tên Phải, Phím R
-  else if (e.code === "Space" || key === " " || key === "r" || code === 32 || code === 82) {
-    e.preventDefault();
-    checkInitialSpeech(true);
-  } 
-  // Mở modal chia phòng: Phím M
-  else if (key === "m" || code === 77) {
-    toggleRoomModal(true);
-  }
-}, true);
-
 // Đồng hồ
 function updateTime() {
   const now = new Date();
