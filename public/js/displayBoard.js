@@ -3,28 +3,21 @@ let soundEnabled = localStorage.getItem("soundEnabled") === "true";
 
 function updateSoundIcon() {
   const icon = document.getElementById("soundIcon");
-  const text = document.getElementById("soundStatusText");
   const btn = document.getElementById("soundToggleBtn");
 
   if (soundEnabled) {
     if (icon) {
-      icon.className = "fas fa-volume-up mr-1 text-green-600 animate-pulse";
-    }
-    if (text) {
-      text.textContent = "Auto đọc: BẬT";
+      icon.className = "fas fa-volume-up text-green-600 text-sm animate-pulse";
     }
     if (btn) {
-      btn.className = "px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-300 hover:bg-green-100 transition-all cursor-pointer inline-flex items-center shadow-sm";
+      btn.title = "Auto đọc: ĐANG BẬT (Bấm để tắt hoặc nhấn phím S)";
     }
   } else {
     if (icon) {
-      icon.className = "fas fa-volume-mute mr-1 text-slate-400";
-    }
-    if (text) {
-      text.textContent = "Auto đọc: TẮT";
+      icon.className = "fas fa-volume-mute text-slate-400 hover:text-slate-600 text-sm";
     }
     if (btn) {
-      btn.className = "px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-300 hover:bg-slate-200 transition-all cursor-pointer inline-flex items-center";
+      btn.title = "Auto đọc: ĐANG TẮT (Bấm để bật hoặc nhấn phím S)";
     }
   }
 }
