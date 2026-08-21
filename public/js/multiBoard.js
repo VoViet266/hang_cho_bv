@@ -219,23 +219,23 @@ function updateQuadrantDOM(roomId, data) {
         ? "bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md font-black"
         : "hover:bg-blue-50 border-b border-slate-200";
 
-      const sttClass = isNear ? "text-danger text-lg md:text-2xl font-black" : "text-base md:text-lg text-blue-900 font-bold";
-      const nameClass = isNear ? "text-danger text-base md:text-2xl font-black tracking-tight" : "text-base md:text-lg text-blue-900 font-bold";
-      const dobClass = isNear ? "text-danger text-base md:text-xl font-black" : "text-sm md:text-base text-blue-900 font-bold";
+      const sttClass = isNear ? "text-danger text-2xl md:text-4xl lg:text-5xl font-black" : "text-xl md:text-3xl font-bold";
+      const nameClass = isNear ? "text-danger text-2xl md:text-4xl lg:text-5xl font-black tracking-tight" : "text-xl md:text-3xl lg:text-4xl font-extrabold";
+      const dobClass = isNear ? "text-danger text-xl md:text-3xl lg:text-4xl font-black" : "text-lg md:text-2xl font-bold";
 
       const statusBadge = isNear
-        ? `<span class="inline-block bg-red-600 text-white px-2 md:px-3 py-1 rounded-xl text-xs md:text-base font-black uppercase shadow-lg animate-pulse">Tới Lượt</span>`
-        : `<span class="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs md:text-sm font-bold border border-slate-300 shadow-sm">Chờ khám</span>`;
+        ? `<span class="inline-block bg-red-600 text-white px-2.5 md:px-4 py-1 rounded-xl text-sm md:text-xl font-black uppercase shadow-lg animate-pulse">Tới Lượt</span>`
+        : `<span class="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs md:text-base font-bold border border-slate-300 shadow-sm">Chờ khám</span>`;
 
       const safePatientName = currentPatientName.replace(/"/g, '&quot;');
       const safeRoomTitle = roomTitle.replace(/"/g, '&quot;');
 
       rowsHtml += `
         <tr data-patient="${safePatientName}" data-room="${safeRoomTitle}" onclick="onRowClick(this)" class="cursor-pointer transition-all ${rowClass}">
-          <td class="py-2 px-2 text-center ${sttClass}">
+          <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${sttClass}">
             ${index + 1}
           </td>
-          <td class="py-2 px-2 text-blue-900 ${nameClass}">
+          <td class="py-2.5 px-2 text-blue-900 ${nameClass}">
             <div class="patient-name-container flex items-center overflow-hidden">
               <span class="patient-name-text truncate">
                 ${(currentPatientName || "Chưa cập nhật").toUpperCase()}
@@ -243,10 +243,10 @@ function updateQuadrantDOM(roomId, data) {
               ${noteTag}
             </div>
           </td>
-          <td class="py-2 px-2 text-center ${dobClass}">
+          <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${dobClass}">
             ${dobYear}
           </td>
-          <td class="py-2 px-2 text-center">
+          <td class="py-2.5 px-2 text-center">
             ${statusBadge}
           </td>
         </tr>
