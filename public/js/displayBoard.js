@@ -1,22 +1,37 @@
-// soundEnabled không lưu localStorage - reset mỗi lần reload trang
-let soundEnabled = false;
+// soundEnabled lưu trong localStorage - duy trì qua các lần reload trang
+let soundEnabled = localStorage.getItem("soundEnabled") === "true";
 
 function updateSoundIcon() {
   const icon = document.getElementById("soundIcon");
-  if (icon) {
-    if (soundEnabled) {
-      icon.classList.remove("fa-volume-mute");
-      icon.classList.add("fa-volume-up");
-    } else {
-      icon.classList.remove("fa-volume-up");
-      icon.classList.add("fa-volume-mute");
+  const text = document.getElementById("soundStatusText");
+  const btn = document.getElementById("soundToggleBtn");
+
+  if (soundEnabled) {
+    if (icon) {
+      icon.className = "fas fa-volume-up mr-1 text-green-600 animate-pulse";
+    }
+    if (text) {
+      text.textContent = "Auto đọc: BẬT";
+    }
+    if (btn) {
+      btn.className = "px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-300 hover:bg-green-100 transition-all cursor-pointer inline-flex items-center shadow-sm";
+    }
+  } else {
+    if (icon) {
+      icon.className = "fas fa-volume-mute mr-1 text-slate-400";
+    }
+    if (text) {
+      text.textContent = "Auto đọc: TẮT";
+    }
+    if (btn) {
+      btn.className = "px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-300 hover:bg-slate-200 transition-all cursor-pointer inline-flex items-center";
     }
   }
-
 }
 
 function toggleSound() {
   soundEnabled = !soundEnabled;
+  localStorage.setItem("soundEnabled", soundEnabled);
   updateSoundIcon();
 
   if (soundEnabled) {
@@ -29,12 +44,6 @@ function toggleSound() {
 
     checkAndSpeak(true);
   }
-}
-
-
-function disableSound() {
-  soundEnabled = false;
-  updateSoundIcon();
 }
 
 function checkAndSpeak(force = false) {
@@ -51,8 +60,7 @@ function checkAndSpeak(force = false) {
   if (!patientName) return;
 
   const storageKey = "lastSpokenPatient_" + roomName;
-  /// lấy ID bệnh nhân  
-  const lastSpoken = sessionStorage.getItem(storageKey);
+  const lastSpoken = localStorage.getItem(storageKey);
 
   if (force || patientName !== lastSpoken) {
     const speakText = `${prefix} ${patientName}, vào ${roomName}`;
@@ -66,8 +74,9 @@ function checkAndSpeak(force = false) {
       .then((data) => {
         if (data.audioContent) {
           const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
-          audio.onended = () => disableSound();
-          audio.play().catch((e) => console.error("Audio play failed:", e));
+          audio.play().catch((e) => {
+            console.warn("Audio autoplay blocked by browser policy:", e);
+          });
         } else {
           throw new Error(data.error || "No audio content");
         }
@@ -82,11 +91,10 @@ function checkAndSpeak(force = false) {
           (v) => v.lang.includes("vi") || v.name.includes("Vietnamese"),
         );
         if (viVoice) utterance.voice = viVoice;
-        utterance.onend = () => disableSound();
         window.speechSynthesis.speak(utterance);
       });
 
-    sessionStorage.setItem(storageKey, patientName);
+    localStorage.setItem(storageKey, patientName);
   }
 }
 
@@ -138,14 +146,8 @@ function speakSpecificPatient(patientName) {
 window.addEventListener("DOMContentLoaded", () => {
   updateSoundIcon();
 
-  // Ẩn nút âm thanh nếu không có bệnh nhân (tránh tốn token TTS)
-  const speechData = document.getElementById("speechData");
-  const btn = document.getElementById("soundToggleBtn");
-  if (btn && speechData && !speechData.dataset.patient) {
-    btn.style.display = "none";
-  }
-
-  setTimeout(() => checkAndSpeak(), 1500);
+  // Tự động kiểm tra và phát âm thanh nếu có bệnh nhân mới tới lượt
+  setTimeout(() => checkAndSpeak(false), 1500);
 });
 
 // Phím tắt (Bao gồm cả Remote TV):
