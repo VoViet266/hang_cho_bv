@@ -86,32 +86,32 @@
 
             <!-- Nút Chia phòng -->
             <button onclick="toggleRoomModal(true)"
-                        class="remote-item bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                        tabindex="0"
-                        title="Chia màn hình 2 hoặc 4 phòng (Phím M)">
-                        <i class="fas fa-th-large"></i>
-                        <span class="hidden md:inline">
-                            <%= roomsData.length <= 1 ? 'Chia phòng (M)' : 'Đổi phòng (M)' %>
-                        </span>
-                    </button>
+                class="remote-item bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                tabindex="0"
+                title="Chia màn hình phòng khám">
+                <i class="fas fa-th-large"></i>
+                <span class="hidden md:inline">
+                    <%= roomsData.length <= 1 ? 'Chia phòng' : 'Đổi phòng' %>
+                </span>
+            </button>
 
-                    <!-- Nút bật âm thanh -->
-                    <button id="soundToggleBtn" onclick="toggleSound()"
-                        class="remote-item bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                        tabindex="0"
-                        title="Bật/Tắt Auto đọc bệnh nhân (Phím S hoặc Enter)">
-                        <i id="soundIcon" class="fas fa-volume-mute text-slate-400"></i>
-                        <span id="soundText" class="hidden md:inline text-xs font-bold">Loa: Tắt</span>
-                    </button>
+            <!-- Nút bật âm thanh -->
+            <button id="soundToggleBtn" onclick="toggleSound()"
+                class="remote-item bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                tabindex="0"
+                title="Bật/Tắt âm thanh">
+                <i id="soundIcon" class="fas fa-volume-mute text-slate-400"></i>
+                <span id="soundText" class="hidden md:inline text-xs font-bold">Loa: Tắt</span>
+            </button>
 
-                    <!-- Nút quay lại -->
-                    <a href="/"
-                        class="remote-item bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
-                        tabindex="0"
-                        title="Về trang chủ">
-                        <i class="fas fa-arrow-left"></i>
-                        <span class="hidden md:inline">Quay lại</span>
-                    </a>
+            <!-- Nút quay lại -->
+            <a href="/"
+                class="remote-item bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
+                tabindex="0"
+                title="Về trang chủ">
+                <i class="fas fa-arrow-left"></i>
+                <span class="hidden md:inline">Quay lại</span>
+            </a>
         </div>
     </header>
 
@@ -406,26 +406,20 @@
 
             <div class="flex flex-col gap-3 py-2">
                 <!-- Nút gọi đọc tên -->
-                <button id="btnActionSpeak" onclick="triggerModalSpeak()" class="remote-item flex items-center justify-between p-3.5 bg-blue-50 hover:bg-blue-600 text-blue-900 hover:text-white rounded-xl border-2 border-blue-200 transition-all font-black text-base md:text-lg cursor-pointer" tabindex="0">
-                    <span class="flex items-center gap-3">
-                        <i class="fas fa-volume-up text-xl"></i>
-                        <span>Gọi / Đọc lại tên</span>
-                    </span>
-                    <span class="text-xs bg-white/80 text-blue-900 px-2 py-0.5 rounded font-bold">Space / R</span>
+                <button id="btnActionSpeak" onclick="triggerModalSpeak()" class="remote-item flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-600 text-blue-900 hover:text-white rounded-xl border-2 border-blue-200 transition-all font-black text-base md:text-xl cursor-pointer" tabindex="0">
+                    <i class="fas fa-volume-up text-2xl"></i>
+                    <span>Gọi / Đọc lại tên bệnh nhân</span>
                 </button>
 
                 <!-- Nút Bỏ qua & Đôn người khác lên -->
-                <button id="btnActionSkip" onclick="triggerModalSkip()" class="remote-item flex items-center justify-between p-3.5 bg-red-50 hover:bg-red-600 text-danger hover:text-white rounded-xl border-2 border-red-200 transition-all font-black text-base md:text-lg cursor-pointer" tabindex="0">
-                    <span class="flex items-center gap-3">
-                        <i class="fas fa-forward text-xl"></i>
-                        <span>Bỏ qua & Đôn người kế tiếp</span>
-                    </span>
-                    <span class="text-xs bg-white/80 text-danger px-2 py-0.5 rounded font-bold">D / Delete</span>
+                <button id="btnActionSkip" onclick="triggerModalSkip()" class="remote-item flex items-center gap-3 p-4 bg-red-50 hover:bg-red-600 text-danger hover:text-white rounded-xl border-2 border-red-200 transition-all font-black text-base md:text-xl cursor-pointer" tabindex="0">
+                    <i class="fas fa-forward text-2xl"></i>
+                    <span>Bỏ qua & Đôn người kế tiếp lên</span>
                 </button>
 
                 <!-- Nút Đóng -->
-                <button onclick="closePatientActionModal()" class="remote-item p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border border-slate-300 transition-colors font-bold text-sm md:text-base text-center cursor-pointer" tabindex="0">
-                    Đóng (Back)
+                <button onclick="closePatientActionModal()" class="remote-item p-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border border-slate-300 transition-colors font-bold text-sm md:text-base text-center cursor-pointer" tabindex="0">
+                    Đóng
                 </button>
             </div>
         </div>

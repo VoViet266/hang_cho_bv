@@ -1,11 +1,9 @@
 /**
- * remoteNav.js - Bộ điều khiển D-Pad (Lên / Xuống / Trái / Phải / OK) cho Smart TV & Bàn phím
- * Hỗ trợ tối ưu 100% cho mọi dòng TV:
- *  - Android TV (Sony, TCL, Xiaomi, Casper, Sharp): KeyCode 19, 20, 21, 22, 23, 66, 4
- *  - Samsung Tizen OS: KeyCode 37, 38, 39, 40, 13, 29443, 10009, 403..406
- *  - LG webOS: KeyCode 37, 38, 39, 40, 13, 461, 65385, 403..406
- *  - Toshiba VIDAA OS / Hisense / Philips: KeyCode 13, 14, 29443, 37..40
- *  - Bàn phím máy tính / Laptop: Arrow keys, Space, Enter, Escape, D, R, S, M
+ * remoteNav.js - Bộ điều hướng thuần D-Pad (Lên / Xuống / Trái / Phải / OK / Back) cho Smart TV & Bàn phím
+ * Đã loại bỏ toàn bộ các phím tắt phức tạp, chỉ giữ lại các phím điều hướng chuẩn:
+ *  - Lên / Xuống / Trái / Phải (D-Pad): Di chuyển giữa các ô phòng, dòng bệnh nhân và nút bấm
+ *  - OK / Enter: Chọn, kích hoạt nút, hoặc mở bảng tác vụ bệnh nhân
+ *  - Back / Escape: Đóng hộp thoại / Quay lại
  */
 
 (function () {
@@ -14,19 +12,6 @@
   let isInitialized = false;
 
   const FOCUS_CLASS = "tv-focused";
-
-  // Đăng ký phím chuyên dụng nếu là Tizen OS
-  try {
-    if (window.tizen && window.tizen.tvinputdevice) {
-      const tvKeys = [
-        "ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue",
-        "MediaPlay", "MediaPause", "MediaPlayPause", "MediaStop"
-      ];
-      tvKeys.forEach((k) => {
-        try { window.tizen.tvinputdevice.registerKey(k); } catch (e) {}
-      });
-    }
-  } catch (e) {}
 
   function injectFocusStyles() {
     if (document.getElementById("tv-focus-style")) return;
@@ -106,7 +91,7 @@
       });
     }
 
-    // Lọc các phần tử thực sự hiển thị trên màn hình (độ tương thích TV cao)
+    // Lọc các phần tử thực sự hiển thị trên màn hình
     return rawElements.filter((el) => {
       if (el.disabled) return false;
       const rect = el.getBoundingClientRect();
@@ -238,7 +223,7 @@
     const currentEl = items[currentIndex];
 
     // ========================================================
-    // 1. NHẬN DIỆN PHÍM LÊN (ArrowUp, DPAD_UP = 19, VK_UP = 38)
+    // 1. PHÍM LÊN (ArrowUp, DPAD_UP = 19, VK_UP = 38)
     // ========================================================
     if (code === 38 || code === 19 || key === "arrowup" || key === "up" || key === "dpadup") {
       moveFocus("up");
@@ -248,7 +233,7 @@
     }
 
     // ========================================================
-    // 2. NHẬN DIỆN PHÍM XUỐNG (ArrowDown, DPAD_DOWN = 20, VK_DOWN = 40)
+    // 2. PHÍM XUỐNG (ArrowDown, DPAD_DOWN = 20, VK_DOWN = 40)
     // ========================================================
     if (code === 40 || code === 20 || key === "arrowdown" || key === "down" || key === "dpaddown") {
       moveFocus("down");
@@ -258,7 +243,7 @@
     }
 
     // ========================================================
-    // 3. NHẬN DIỆN PHÍM TRÁI (ArrowLeft, DPAD_LEFT = 21, VK_LEFT = 37)
+    // 3. PHÍM TRÁI (ArrowLeft, DPAD_LEFT = 21, VK_LEFT = 37)
     // ========================================================
     if (code === 37 || code === 21 || key === "arrowleft" || key === "left" || key === "dpadleft") {
       moveFocus("left");
@@ -268,7 +253,7 @@
     }
 
     // ========================================================
-    // 4. NHẬN DIỆN PHÍM PHẢI (ArrowRight, DPAD_RIGHT = 22, VK_RIGHT = 39)
+    // 4. PHÍM PHẢI (ArrowRight, DPAD_RIGHT = 22, VK_RIGHT = 39)
     // ========================================================
     if (code === 39 || code === 22 || key === "arrowright" || key === "right" || key === "dpadright") {
       moveFocus("right");
@@ -278,7 +263,7 @@
     }
 
     // ========================================================
-    // 5. NHẬN DIỆN PHÍM OK / ENTER (13, 14, 23, 66, 29443, 65385)
+    // 5. PHÍM OK / ENTER (13, 14, 23, 66, 29443, 65385)
     // ========================================================
     if (
       code === 13 ||
@@ -317,7 +302,7 @@
     }
 
     // ========================================================
-    // 6. NHẬN DIỆN PHÍM BACK / RETURN / ESCAPE (4, 8, 27, 461, 10009)
+    // 6. PHÍM BACK / RETURN / ESCAPE (4, 27, 461, 10009, Backspace)
     // ========================================================
     if (
       code === 27 ||
@@ -343,77 +328,6 @@
         }, 100);
         return;
       }
-    }
-
-    // ========================================================
-    // 7. PHÍM ĐỎ TRÊN REMOTE, PHÍM TUA TỚI (⏩), PHÍM SỐ 0 HOẶC PHÍM D / DELETE (Bỏ qua & Đôn lên)
-    // Code: 403 (Tizen Red), 183 (Android TV Red), 228 (FastForward), 176 (NextTrack), 48/96 (Số 0), 46 (Delete), 8 (Backspace), phím 'd'
-    // ========================================================
-    if (
-      code === 403 ||
-      code === 183 ||
-      code === 228 ||
-      code === 176 ||
-      code === 87 ||
-      code === 48 ||
-      code === 96 ||
-      key === "colorf0red" ||
-      key === "red" ||
-      key === "mediafastforward" ||
-      key === "mediatracknext" ||
-      key === "0" ||
-      (!isModalOpen() && (code === 46 || code === 8 || key === "delete" || key === "backspace" || key === "d" || key === "x"))
-    ) {
-      if (currentEl && (currentEl.hasAttribute("data-patient") || currentEl.closest("tr[data-patient]"))) {
-        e.preventDefault();
-        e.stopPropagation();
-        const tr = currentEl.hasAttribute("data-patient") ? currentEl : currentEl.closest("tr[data-patient]");
-        if (typeof window.skipPatientFromElement === "function") {
-          window.skipPatientFromElement(tr);
-        }
-        return;
-      }
-    }
-
-    // ========================================================
-    // 8. PHÍM XANH LÁ TRÊN REMOTE HOẶC PHÍM R / SPACE (Đọc lại tên)
-    // Code: 404 (Tizen Green), 184 (Android TV Green), 82 ('r'), 32 (Space)
-    // ========================================================
-    if (code === 404 || code === 184 || key === "colorf1green" || key === "green") {
-      e.preventDefault();
-      e.stopPropagation();
-      if (typeof speakCurrentPatients === "function") {
-        speakCurrentPatients(true);
-      } else if (typeof checkInitialSpeech === "function") {
-        checkInitialSpeech(true);
-      }
-      return;
-    }
-
-    // ========================================================
-    // 9. PHÍM VÀNG TRÊN REMOTE HOẶC PHÍM M (Mở Chia phòng)
-    // Code: 405 (Tizen Yellow), 185 (Android TV Yellow), 77 ('m')
-    // ========================================================
-    if (code === 405 || code === 185 || key === "colorf2yellow" || key === "yellow") {
-      e.preventDefault();
-      e.stopPropagation();
-      if (typeof toggleRoomModal === "function") {
-        toggleRoomModal(!isModalOpen());
-      }
-      return;
-    }
-
-    // ========================================================
-    // 10. PHÍM XANH DƯƠNG TRÊN REMOTE HOẶC PHÍM S (Bật/Tắt Loa)
-    // Code: 406 (Tizen Blue), 186 (Android TV Blue), 83 ('s')
-    // ========================================================
-    if (code === 406 || code === 186 || key === "colorf3blue" || key === "blue") {
-      e.preventDefault();
-      e.stopPropagation();
-      if (typeof toggleSound === "function") {
-        toggleSound();
-      }
-      return;
     }
   }
 
@@ -441,12 +355,10 @@
       setFocus(0, false);
     }
 
-    // Lắng nghe cả 3 lớp sự kiện để không bị TV Browser nuốt event
     window.addEventListener("keydown", handleKeyDown, true);
     document.addEventListener("keydown", handleKeyDown, true);
     document.body.addEventListener("keydown", handleKeyDown, true);
 
-    // Bắt buộc document có focus trên TV
     try {
       window.focus();
       document.body.tabIndex = 0;

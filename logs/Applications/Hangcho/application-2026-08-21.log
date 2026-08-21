@@ -383,3 +383,7 @@
 [15:35:48 INF] Server running on http://localhost:3000 
 [15:35:53 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
 [15:35:53 INF] Server running on http://localhost:3000 
+[15:37:03 INF] [127.0.0.1] HTTP GET /room/B14?rooms=B14%2CB21 responded 304 in 727.9963 ms 
+[15:39:19 INF] [127.0.0.1] HTTP GET /room/B14?rooms=B14%2CB21 responded 304 in 1300.7605 ms 
+[15:40:06 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[15:40:06 INF] Server running on http://localhost:3000 
