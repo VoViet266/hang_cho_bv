@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Màn hình hàng chờ đa phòng - Tâm Minh Đức</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#1e40af',
+                        danger: '#dc2626',
+                        success: '#16a34a',
+                        accent: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 text-slate-900 font-sans flex flex-col h-screen overflow-hidden select-none">
+
+    <!-- Top Bar Header -->
+    <header
+        class="bg-white border-2 border-slate-300 px-3 py-1 flex justify-between items-center shrink-0 shadow-sm gap-2">
+        <!-- Logo & Đồng hồ -->
+        <div class="flex items-center gap-3">
+            <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-12 md:h-14 object-contain">
+            <div class="tabular-nums">
+                <div id="date-str" class="text-xs text-slate-500 font-bold uppercase tracking-widest leading-tight">
+                </div>
+                <div id="time-str" class="text-xl md:text-2xl font-black text-brand leading-none"></div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex items-center gap-2">
+            <!-- Nút chọn phòng -->
+            <button onclick="toggleRoomModal(true)"
+                class="bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer">
+                <i class="fas fa-sliders-h"></i>
+                <span class="hidden md:inline">Chọn phòng</span>
+            </button>
+
+            <!-- Nút bật/tắt âm thanh -->
+            <button id="soundToggleBtn" onclick="toggleSound()"
+                class="bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                title="Bật/Tắt Auto đọc bệnh nhân (Phím S hoặc Enter)">
+                <i id="soundIcon" class="fas fa-volume-mute text-slate-400"></i>
+                <span id="soundText" class="hidden md:inline text-xs font-bold">Loa: Tắt</span>
+            </button>
+
+            <!-- Nút quay lại trang chủ -->
+            <a href="/"
+                class="bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
+                title="Về trang chủ">
+                <i class="fas fa-arrow-left"></i>
+                <span class="hidden md:inline">Quay lại</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Grid Layout Container (Chia 2 hoặc Chia 4) -->
+    <main class="flex-grow p-1.5 overflow-hidden">
+        <% if (roomsData.length===0) { %>
+            <!-- Empty State khi chưa chọn phòng -->
+            <div
+                class="h-full flex flex-col items-center justify-center bg-white rounded-2xl border-2 border-slate-300 shadow-sm p-8 text-center">
+                <div
+                    class="w-20 h-20 bg-blue-50 text-brand rounded-full flex items-center justify-center text-4xl mb-4 border-2 border-blue-200 shadow-inner">
+                    <i class="fas fa-th-large"></i>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-black text-danger uppercase mb-2">Chưa chọn phòng hiển thị</h2>
+                <p class="text-slate-600 text-sm md:text-base max-w-md mb-6 font-medium">
+                    Vui lòng bấm nút <strong>"Chọn phòng"</strong> bên dưới để chọn các phòng cần hiển thị trên màn hình
+                    này.
+                </p>
+                <button onclick="toggleRoomModal(true)"
+                    class="bg-brand hover:bg-blue-800 text-white font-black px-6 py-3 rounded-xl text-base shadow-lg transition-all flex items-center gap-2 cursor-pointer">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Cấu hình chọn phòng ngay</span>
+                </button>
+            </div>
+            <% } else { const isSplit2=roomsData.length <=2; const gridClass=isSplit2
+                ? 'grid grid-cols-1 md:grid-cols-2 gap-2 h-full' : 'grid grid-cols-2 grid-rows-2 gap-2 h-full' ; %>
+                <div class="<%= gridClass %>">
+                    <% roomsData.forEach(function(room, rIdx) { const roomId=room.maphong || room.tenphong || '' ; const
+                        roomTitle=room.tenphong || room.maphong || '' ; const waitingList=room.waitingList || []; let
+                        nextPatient='' ; %>
+                        <!-- Quadrant Room Card -->
+                        <div id="room-card-<%= roomId %>"
+                            class="room-quadrant bg-white text-slate-900 rounded-xl shadow-sm border-2 border-slate-300 flex flex-col overflow-hidden h-full"
+                            data-room-type="<%= roomType %>" data-room-id="<%= roomId %>"
+                            data-room-name="<%= roomTitle %>">
+
+                            <!-- Quadrant Header -->
+                            <div
+                                class="bg-white px-3 py-1.5 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
+                                <div class="flex items-center gap-1.5 min-w-0">
+
+                                    <h2
+                                        class="text-base md:text-2xl font-black text-danger uppercase truncate tracking-wide">
+                                        <%= roomTitle %>
+                                    </h2>
+                                </div>
+
+                                <div class="flex items-center gap-1.5 text-xs md:text-sm shrink-0">
+                                    <% if (room.totalDKPlus !==undefined) { %>
+                                        <div
+                                            class="bg-slate-50 border border-slate-200 px-2 py-0.5 rounded text-center hidden sm:block">
+                                            <span class="text-slate-500 font-bold text-[10px] uppercase">Tổng ĐK:</span>
+                                            <span id="total-dk-<%= roomId %>"
+                                                class="text-brand font-black text-sm md:text-base tabular-nums">
+                                                <%= room.totalDKPlus %>
+                                            </span>
+                                        </div>
+                                        <% } %>
+                                            <div
+                                                class="bg-red-50 border border-red-200 px-2 py-0.5 rounded text-center">
+                                                <span class="text-danger font-bold text-[10px] uppercase">Đang
+                                                    chờ:</span>
+                                                <span id="total-wait-<%= roomId %>"
+                                                    class="text-danger font-black text-sm md:text-base tabular-nums">
+                                                    <%= room.totalWaiting %>
+                                                </span>
+                                            </div>
+                                </div>
+                            </div>
+
+                            <!-- Quadrant Table -->
+                            <div class="flex-grow overflow-y-auto no-scrollbar bg-white">
+                                <table class="w-full text-left border-collapse" style="table-layout: fixed;">
+                                    <colgroup>
+                                        <col style="width: 12%;">
+                                        <col style="width: 48%;">
+                                        <col style="width: 15%;">
+                                        <col style="width: 25%;">
+                                    </colgroup> 
+                                    <thead
+                                        class="sticky top-0 bg-slate-200 text-blue-900 font-extrabold border-b-2 border-slate-300 shadow-sm z-10 text-xs md:text-sm uppercase">
+                                        <tr>
+                                            <th class="py-1.5 px-2 text-center">STT</th>
+                                            <th class="py-1.5 px-2">Họ và Tên</th>
+                                            <th class="py-1.5 px-2 text-center">Năm</th>
+                                            <th class="py-1.5 px-2 text-center">Trạng Thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-<%= roomId %>"
+                                        class="divide-y divide-slate-200 text-xs md:text-sm">
+                                        <% if (waitingList.length===0) { %>
+                                            <tr>
+                                                <td colspan="4"
+                                                    class="text-center py-8 text-slate-400 font-bold text-base md:text-xl">
+                                                    Phòng trống, không có bệnh nhân.
+                                                </td>
+                                            </tr>
+                                            <% } else { let waitCount=0; waitingList.forEach(function(p, pIdx) { let
+                                                isNear=false; if (p.dakham==0) { waitCount++; if (waitCount===1) {
+                                                isNear=true; nextPatient=`${p.holot || '' } ${p.ten || '' }`.trim(); } }
+                                                const pName=`${p.holot || '' } ${p.ten || '' }`.trim(); const
+                                                pYear=p.dobStr && p.dobStr !=='Chưa cập nhật' ?
+                                                p.dobStr.split('/').pop() : '' ; let noteTag='' ; if (p.priorityLabel) {
+                                                noteTag=`<span
+                                                class="inline-block bg-yellow-100 text-yellow-800 text-[10px] md:text-xs px-1 py-0.5 rounded font-extrabold border border-yellow-300 ml-1">
+                                                Ưu tiên: ${p.priorityLabel}</span>`;
+                                                } else if (p.isPriority) {
+                                                noteTag = `<span
+                                                    class="inline-block bg-yellow-100 text-yellow-800 text-[10px] md:text-xs px-1 py-0.5 rounded font-extrabold border border-yellow-300 ml-1">Ưu
+                                                    tiên</span>`;
+                                                }
+                                                %>
+                            <tr data-patient="<%= pName %>" data-room="<%= roomTitle %>" onclick="onRowClick(this)"
+                                class="cursor-pointer transition-all <%= isNear ? 'bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md font-black' : 'hover:bg-blue-50 border-b border-slate-200' %>">
+                                                            <td
+                                                                class="py-2 px-2 text-center font-bold text-blue-900 <%= isNear ? 'text-danger text-lg md:text-2xl font-black' : 'text-base md:text-lg' %>">
+                                                                <%= pIdx + 1 %>
+                                                            </td>
+                                                            <td
+                                                                class="py-2 px-2 text-blue-900 <%= isNear ? 'text-danger text-base md:text-2xl font-black tracking-tight' : 'text-base md:text-lg font-bold' %>">
+                                                                <div
+                                                                    class="patient-name-container flex items-center overflow-hidden">
+                                                                    <span class="patient-name-text truncate">
+                                                                        <%= (pName || 'Chưa cập nhật' ).toUpperCase() %>
+                                                                    </span>
+                                                                    <%- noteTag %>
+                                                                </div>
+                                                            </td>
+                                                            <td
+                                                                class="py-2 px-2 text-center font-bold text-blue-900 <%= isNear ? 'text-danger text-base md:text-xl font-black' : 'text-sm md:text-base' %>">
+                                                                <%= pYear %>
+                                                            </td>
+                                                            <td class="py-2 px-2 text-center">
+                                                                <% if (isNear) { %>
+                                                                    <span
+                                                                        class="inline-block bg-red-600 text-white px-2 md:px-3 py-1 rounded-xl text-xs md:text-base font-black uppercase shadow-lg animate-pulse">
+                                                                        Tới Lượt
+                                                                    </span>
+                                                                    <% } else { %>
+                                                                        <span
+                                                                            class="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs md:text-sm font-bold border border-slate-300 shadow-sm">
+                                                                            Chờ khám
+                                                                        </span>
+                                                                        <% } %>
+                                                            </td>
+                                                </tr>
+                                                <% }); } %>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Hidden speech tracker per room -->
+                            <div id="speech-track-<%= roomId %>" data-patient="<%= nextPatient %>"
+                                data-room="<%= roomTitle %>" style="display:none;"></div>
+                        </div>
+                        <% }); %>
+                </div>
+                <% } %>
+    </main>
+
+    <!-- Modal Chọn Phòng -->
+    <div id="roomModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div
+            class="bg-white border-2 border-slate-300 rounded-2xl w-full max-w-2xl p-5 text-slate-900 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center pb-3 border-b-2 border-slate-200">
+                <h3 class="text-lg md:text-xl font-black text-brand flex items-center gap-2 uppercase">
+
+                </h3>
+                <button onclick="toggleRoomModal(false)"
+                    class="text-slate-400 hover:text-danger text-2xl font-bold cursor-pointer transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="my-3 flex-grow overflow-hidden flex flex-col">
+                <p class="text-xs md:text-sm text-slate-600 mb-2 font-medium">
+                    Tích chọn các phòng để hiển thị trên màn hình:
+                </p>
+
+                <!-- Action buttons -->
+                <div class="flex justify-between items-center mb-3 shrink-0">
+                    <span class="text-xs text-slate-500 font-semibold">Danh sách các phòng có sẵn:</span>
+                    <button type="button" onclick="clearRoomSelection()"
+                        class="bg-red-50 hover:bg-red-100 text-danger text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors">
+                        <i class="fas fa-trash-alt mr-1"></i> Bỏ chọn hết
+                    </button>
+                </div>
+
+                <!-- Danh sách phòng (Checkboxes) -->
+                <div
+                    class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto p-2 bg-slate-50 rounded-xl border-2 border-slate-200 flex-grow">
+                    <% allAvailableRooms.forEach(function(r) { const isChecked=selectedRoomIds.includes(r.id); %>
+                        <label
+                            class="flex items-center gap-2 p-2 bg-white hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border border-slate-300 shadow-2xs">
+                            <input type="checkbox" name="roomSelection" value="<%= r.id %>" <%=isChecked ? 'checked'
+                                : '' %>
+                            class="w-4 h-4 rounded text-brand focus:ring-brand cursor-pointer">
+                            <span class="text-xs md:text-sm font-bold text-slate-800 truncate">
+                                <%= r.name %>
+                            </span>
+                        </label>
+                        <% }); %>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-3 border-t-2 border-slate-200 shrink-0">
+                <span id="selectedCountText" class="text-xs md:text-sm text-brand font-black">
+                    Đã chọn: <%= selectedRoomIds.length %> phòng
+                </span>
+                <div class="flex gap-2">
+                    <button onclick="toggleRoomModal(false)"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs md:text-sm border border-slate-300 transition-colors cursor-pointer">
+                        Hủy
+                    </button>
+                    <button onclick="applyRoomSelection()"
+                        class="px-5 py-2 bg-brand hover:bg-blue-800 text-white rounded-xl font-black text-xs md:text-sm shadow-md transition-colors cursor-pointer">
+                        Áp Dụng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/multiBoard.js"></script>
+</body>
+
+</html>
