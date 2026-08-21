@@ -59,3 +59,142 @@
 [08:59:34 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.0038 ms 
 [08:59:36 INF] HTTP POST /tts responded 200 in 402.8377 ms 
 [08:59:36 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4867 ms 
+[09:00:05 INF] HTTP GET /room/B24 responded 304 in 664.4837 ms 
+[09:00:05 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7084 ms 
+[09:00:05 INF] HTTP GET /js/displayBoard.js responded 304 in 0.6830 ms 
+[09:00:05 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4849 ms 
+[09:00:36 INF] HTTP GET /room/B24 responded 304 in 776.0860 ms 
+[09:00:36 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7572 ms 
+[09:00:36 INF] HTTP GET /js/displayBoard.js responded 304 in 0.9484 ms 
+[09:00:36 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5084 ms 
+[09:01:07 INF] HTTP GET /room/B24 responded 304 in 693.9329 ms 
+[09:01:07 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7507 ms 
+[09:01:07 INF] HTTP GET /js/displayBoard.js responded 304 in 1.3504 ms 
+[09:01:07 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5571 ms 
+[09:01:38 INF] HTTP GET /room/B24 responded 304 in 584.4707 ms 
+[09:01:38 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6996 ms 
+[09:01:38 INF] HTTP GET /js/displayBoard.js responded 304 in 0.8952 ms 
+[09:01:38 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5837 ms 
+[09:02:09 INF] HTTP GET /room/B24 responded 304 in 572.5979 ms 
+[09:02:09 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9776 ms 
+[09:02:09 INF] HTTP GET /js/displayBoard.js responded 304 in 1.6075 ms 
+[09:02:09 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4787 ms 
+[09:02:40 INF] HTTP GET /room/B24 responded 304 in 674.3631 ms 
+[09:02:40 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6374 ms 
+[09:02:40 INF] HTTP GET /js/displayBoard.js responded 304 in 0.6706 ms 
+[09:02:40 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4991 ms 
+[09:03:11 INF] HTTP GET /room/B24 responded 304 in 543.6991 ms 
+[09:03:11 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7643 ms 
+[09:03:11 INF] HTTP GET /js/displayBoard.js responded 304 in 1.5620 ms 
+[09:03:11 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6996 ms 
+[09:03:42 INF] HTTP GET /room/B24 responded 200 in 631.3111 ms 
+[09:03:42 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7278 ms 
+[09:03:42 INF] HTTP GET /js/displayBoard.js responded 304 in 1.0892 ms 
+[09:03:42 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4409 ms 
+[09:04:13 INF] HTTP GET /room/B24 responded 304 in 610.3527 ms 
+[09:04:13 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8450 ms 
+[09:04:13 INF] HTTP GET /js/displayBoard.js responded 304 in 1.2500 ms 
+[09:04:13 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8489 ms 
+[09:04:44 INF] HTTP GET /room/B24 responded 304 in 694.5711 ms 
+[09:04:44 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8367 ms 
+[09:04:44 INF] HTTP GET /js/displayBoard.js responded 304 in 0.6330 ms 
+[09:04:44 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4588 ms 
+[09:05:15 INF] HTTP GET /room/B24 responded 304 in 571.4922 ms 
+[09:05:15 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7311 ms 
+[09:05:15 INF] HTTP GET /js/displayBoard.js responded 304 in 0.6060 ms 
+[09:05:15 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6187 ms 
+[09:05:46 INF] HTTP GET /room/B24 responded 304 in 835.0915 ms 
+[09:05:46 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6385 ms 
+[09:05:46 INF] HTTP GET /js/displayBoard.js responded 304 in 0.6631 ms 
+[09:05:46 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4884 ms 
+[09:06:17 INF] HTTP GET /room/B24 responded 304 in 620.1867 ms 
+[09:06:17 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5640 ms 
+[09:06:17 INF] HTTP GET /js/displayBoard.js responded 304 in 0.5905 ms 
+[09:06:17 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7178 ms 
+[09:06:48 INF] HTTP GET /room/B24 responded 200 in 492.7228 ms 
+[09:06:48 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5251 ms 
+[09:06:48 INF] HTTP GET /js/displayBoard.js responded 304 in 0.8068 ms 
+[09:06:48 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6813 ms 
+[09:07:19 INF] HTTP GET /room/B24 responded 304 in 587.4943 ms 
+[09:07:19 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5582 ms 
+[09:07:19 INF] HTTP GET /js/displayBoard.js responded 304 in 0.5731 ms 
+[09:07:19 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5602 ms 
+[09:07:50 INF] HTTP GET /room/B24 responded 304 in 586.2346 ms 
+[09:07:50 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6284 ms 
+[09:07:50 INF] HTTP GET /js/displayBoard.js responded 304 in 0.5215 ms 
+[09:07:50 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4821 ms 
+[09:08:21 INF] HTTP GET /room/B24 responded 304 in 594.7626 ms 
+[09:08:21 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6410 ms 
+[09:08:21 INF] HTTP GET /js/displayBoard.js responded 304 in 0.5890 ms 
+[09:08:21 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5739 ms 
+[09:08:52 INF] HTTP GET /room/B24 responded 304 in 582.4365 ms 
+[09:08:52 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6930 ms 
+[09:08:52 INF] HTTP GET /js/displayBoard.js responded 304 in 0.6350 ms 
+[09:08:52 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6106 ms 
+[09:09:23 INF] HTTP GET /room/B24 responded 304 in 653.3210 ms 
+[09:09:23 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6189 ms 
+[09:09:23 INF] HTTP GET /js/displayBoard.js responded 304 in 0.4598 ms 
+[09:09:23 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6266 ms 
+[09:09:54 INF] HTTP GET /room/B24 responded 304 in 567.5640 ms 
+[09:09:54 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4138 ms 
+[09:09:54 INF] HTTP GET /js/displayBoard.js responded 304 in 0.3751 ms 
+[09:09:54 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4266 ms 
+[09:10:25 INF] HTTP GET /room/B24 responded 304 in 601.0775 ms 
+[09:10:25 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4469 ms 
+[09:10:25 INF] HTTP GET /js/displayBoard.js responded 304 in 0.7693 ms 
+[09:10:25 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4988 ms 
+[09:10:56 INF] HTTP GET /room/B24 responded 304 in 746.7653 ms 
+[09:10:56 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7800 ms 
+[09:10:56 INF] HTTP GET /js/displayBoard.js responded 304 in 0.8585 ms 
+[09:10:56 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7655 ms 
+[09:11:27 INF] HTTP GET /room/B24 responded 304 in 588.7029 ms 
+[09:11:27 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.5047 ms 
+[09:11:27 INF] HTTP GET /js/displayBoard.js responded 304 in 0.3791 ms 
+[09:11:27 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6170 ms 
+[09:11:58 INF] HTTP GET /room/B24 responded 304 in 616.1031 ms 
+[09:11:58 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6333 ms 
+[09:11:58 INF] HTTP GET /js/displayBoard.js responded 304 in 0.9798 ms 
+[09:11:58 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7733 ms 
+[09:12:29 INF] HTTP GET /room/B24 responded 304 in 661.6547 ms 
+[09:12:29 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6513 ms 
+[09:12:29 INF] HTTP GET /js/displayBoard.js responded 304 in 0.7753 ms 
+[09:12:29 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4779 ms 
+[09:13:00 INF] HTTP GET /room/B24 responded 304 in 628.2653 ms 
+[09:13:00 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4366 ms 
+[09:13:00 INF] HTTP GET /js/displayBoard.js responded 304 in 0.5857 ms 
+[09:13:00 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4174 ms 
+[09:13:31 INF] HTTP GET /room/B24 responded 304 in 646.6071 ms 
+[09:13:31 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6108 ms 
+[09:13:31 INF] HTTP GET /js/displayBoard.js responded 304 in 0.6717 ms 
+[09:13:31 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6696 ms 
+[09:14:02 INF] HTTP GET /room/B24 responded 304 in 640.9082 ms 
+[09:14:02 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9139 ms 
+[09:14:02 INF] HTTP GET /js/displayBoard.js responded 304 in 1.6727 ms 
+[09:14:02 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6301 ms 
+[09:14:33 INF] HTTP GET /room/B24 responded 304 in 862.5766 ms 
+[09:14:33 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8397 ms 
+[09:14:33 INF] HTTP GET /js/displayBoard.js responded 304 in 0.4987 ms 
+[09:14:33 INF] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6955 ms 
+[09:15:01 INF] Server running on http://localhost:3000 
+[09:15:05 INF] [127.0.0.1] HTTP GET /room/B24 responded 304 in 864.7720 ms 
+[09:15:05 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.8557 ms 
+[09:15:05 INF] [127.0.0.1] HTTP GET /js/displayBoard.js responded 304 in 1.6511 ms 
+[09:15:05 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8575 ms 
+[09:15:19 INF] Server running on http://localhost:3000 
+[09:15:25 INF] [127.0.0.1] HTTP GET /room/B24 responded 304 in 679.8804 ms 
+[09:15:25 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.8783 ms 
+[09:15:25 INF] [127.0.0.1] HTTP GET /js/displayBoard.js responded 304 in 2.7401 ms 
+[09:15:25 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.7730 ms 
+[09:15:28 INF] [127.0.0.1] HTTP GET / responded 200 in 529.0473 ms 
+[09:15:28 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.6673 ms 
+[09:15:30 INF] [127.0.0.1] HTTP GET /room/A1 responded 200 in 595.9087 ms 
+[09:15:30 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8924 ms 
+[09:15:30 INF] [127.0.0.1] HTTP GET /js/displayBoard.js responded 304 in 1.5061 ms 
+[09:15:31 INF] [127.0.0.1] HTTP GET /room/B1 responded 200 in 557.9253 ms 
+[09:15:31 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.9163 ms 
+[09:15:31 INF] [127.0.0.1] HTTP GET /js/displayBoard.js responded 304 in 0.6435 ms 
+[09:15:43 INF] Server running on http://localhost:3000 
+[09:15:46 INF] [127.0.0.1] HTTP GET /room/B1 responded 304 in 724.3479 ms 
+[09:15:46 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 1.9258 ms 
+[09:15:46 INF] [127.0.0.1] HTTP GET /js/displayBoard.js responded 304 in 1.1141 ms 
+[09:15:46 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.8571 ms 
