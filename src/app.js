@@ -8,9 +8,25 @@ const app = express();
 
 app.set("trust proxy", true);
 
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+// Phục vụ static files trước (không qua middleware log)
+app.use(express.static(path.join(__dirname, "../public")));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Bỏ qua log các file tĩnh, favicon, hoặc HEAD request
+const isIgnoredUrl = (url) => {
+  return url.match(/\.(png|jpg|jpeg|gif|svg|ico|js|css|woff|woff2|ttf|eot|map)$/i) || url === "/favicon.ico";
+};
+
 app.use((req, res, next) => {
+  if (req.method === "HEAD" || isIgnoredUrl(req.url)) {
+    return next();
+  }
+
   const start = process.hrtime();
 
   // Lấy địa chỉ IP của Client (hỗ trợ cả Proxy/Nginx/Docker và LAN)
@@ -30,11 +46,6 @@ app.use((req, res, next) => {
   });
   next();
 });
-
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-
-app.use(express.static(path.join(__dirname, "../public")));
 
 // Import Routes
 const viewRoutes = require("./routes/viewRoutes");
