@@ -334,3 +334,18 @@
 [15:08:41 INF] [127.0.0.1] HTTP GET / responded 200 in 547.3694 ms 
 [15:08:49 INF] [127.0.0.1] HTTP GET /room/B8 responded 200 in 1009.2557 ms 
 [15:08:58 INF] [127.0.0.1] HTTP GET /room/B22?rooms=B22%2CB25%2CB27%2CB8 responded 200 in 915.9090 ms 
+[15:10:18 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[15:10:18 INF] Server running on http://localhost:3000 
+[15:19:26 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[15:19:26 INF] Server running on http://localhost:3000 
+[15:19:39 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[15:19:39 INF] Server running on http://localhost:3000 
+[15:19:48 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[15:19:48 INF] Server running on http://localhost:3000 
+[15:21:08 INF] [127.0.0.1] HTTP GET / responded 200 in 418.9797 ms 
+[15:21:17 INF] [127.0.0.1] HTTP GET /room/B19 responded 200 in 616.8620 ms 
+[15:21:24 INF] [127.0.0.1] HTTP GET /room/A1 responded 200 in 838.7557 ms 
+[15:22:22 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[15:22:22 INF] Server running on http://localhost:3000 
+[15:22:30 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[15:22:30 INF] Server running on http://localhost:3000 

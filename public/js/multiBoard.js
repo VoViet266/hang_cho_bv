@@ -362,16 +362,23 @@ document.addEventListener("change", (e) => {
 });
 
 window.addEventListener("keydown", (e) => {
-  if (e.key.toLowerCase() === "s" || e.key === "Enter") {
-    const modal = document.getElementById("roomModal");
-    if (modal && !modal.classList.contains("hidden")) return;
+  const modal = document.getElementById("roomModal");
+  const isModalOpen = modal && !modal.classList.contains("hidden");
+
+  const key = (e.key || "").toLowerCase();
+  const code = e.keyCode || e.which;
+
+  if (key === "s" || key === "enter" || key === "ok" || code === 13 || code === 14 || code === 29443 || code === 83) {
+    if (isModalOpen) return;
     toggleSound();
-  } else if (e.key.toLowerCase() === "m") {
-    const modal = document.getElementById("roomModal");
-    const isHidden = modal && modal.classList.contains("hidden");
-    toggleRoomModal(isHidden);
+  } else if (e.code === "Space" || key === " " || key === "arrowright" || key === "right" || key === "r" || code === 39 || code === 32 || code === 82) {
+    if (isModalOpen) return;
+    e.preventDefault();
+    checkInitialSpeech(true);
+  } else if (key === "m" || code === 77) {
+    toggleRoomModal(!isModalOpen);
   }
-});
+}, true);
 
 function updateTime() {
   const now = new Date();

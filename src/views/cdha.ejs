@@ -79,7 +79,8 @@
 
             <!-- Nút Chia phòng -->
             <button onclick="toggleRoomModal(true)"
-                class="bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                class="remote-item bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                tabindex="0"
                 title="Chia màn hình 2 hoặc 4 phòng (Phím M)">
                 <i class="fas fa-th-large"></i>
                 <span class="hidden md:inline"><%= roomsData.length <= 1 ? 'Chia phòng (M)' : 'Đổi phòng (M)' %></span>
@@ -87,14 +88,15 @@
 
             <!-- Nút bật âm thanh -->
             <button id="soundToggleBtn" onclick="toggleSound()"
-                class="bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                class="remote-item bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                tabindex="0"
                 title="Bật/Tắt Auto đọc bệnh nhân (Phím S hoặc Enter)">
                 <i id="soundIcon" class="fas fa-volume-mute text-slate-400"></i>
                 <span id="soundText" class="hidden md:inline text-xs font-bold">Loa: Tắt</span>
             </button>
 
             <!-- Nút quay lại -->
-            <a href="/cdha" class="bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1" title="Về danh sách CDHA">
+            <a href="/cdha" class="remote-item bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1" tabindex="0" title="Về danh sách CDHA">
                 <i class="fas fa-arrow-left"></i>
                 <span class="hidden md:inline">Quay lại</span>
             </a>
@@ -337,7 +339,7 @@
 
                 <div class="flex justify-between items-center mb-3 shrink-0">
                     <span class="text-xs text-slate-500 font-semibold">Danh sách các phòng CDHA:</span>
-                    <button type="button" onclick="clearRoomSelection()" class="bg-red-50 hover:bg-red-100 text-danger text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors">
+                    <button type="button" onclick="clearRoomSelection()" class="remote-item bg-red-50 hover:bg-red-100 text-danger text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors" tabindex="0">
                         <i class="fas fa-trash-alt mr-1"></i> Bỏ chọn hết
                     </button>
                 </div>
@@ -347,9 +349,9 @@
                     <% allAvailableRooms.forEach(function(r) { 
                         const isChecked = selectedRoomIds.includes(r.id);
                     %>
-                    <label class="flex items-center gap-2 p-2 bg-white hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border border-slate-300 shadow-2xs">
+                    <label class="remote-item flex items-center gap-2 p-2 bg-white hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border border-slate-300 shadow-2xs" tabindex="0">
                         <input type="checkbox" name="roomSelection" value="<%= r.id %>" <%= isChecked ? 'checked' : '' %>
-                               class="w-4 h-4 rounded text-brand focus:ring-brand cursor-pointer">
+                               class="w-4 h-4 rounded text-brand focus:ring-brand cursor-pointer pointer-events-none">
                         <span class="text-xs md:text-sm font-bold text-slate-800 truncate"><%= r.name %></span>
                     </label>
                     <% }); %>
@@ -361,10 +363,10 @@
                     Đã chọn: <%= selectedRoomIds.length %> phòng
                 </span>
                 <div class="flex gap-2">
-                    <button onclick="toggleRoomModal(false)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs md:text-sm border border-slate-300 transition-colors cursor-pointer">
+                    <button onclick="toggleRoomModal(false)" class="remote-item px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs md:text-sm border border-slate-300 transition-colors cursor-pointer" tabindex="0">
                         Hủy
                     </button>
-                    <button onclick="applyRoomSelection('/cdha/room')" class="px-5 py-2 bg-brand hover:bg-blue-800 text-white rounded-xl font-black text-xs md:text-sm shadow-md transition-colors cursor-pointer">
+                    <button onclick="applyRoomSelection('/cdha/room')" class="remote-item px-5 py-2 bg-brand hover:bg-blue-800 text-white rounded-xl font-black text-xs md:text-sm shadow-md transition-colors cursor-pointer" tabindex="0">
                         Áp Dụng
                     </button>
                 </div>
@@ -374,6 +376,7 @@
 
     <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/remoteNav.js"></script>
     <script src="/js/displayBoard.js"></script>
 </body>
 

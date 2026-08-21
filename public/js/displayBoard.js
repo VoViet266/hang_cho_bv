@@ -409,6 +409,9 @@ function toggleRoomModal(open) {
     } else {
       modal.classList.add("hidden");
     }
+    if (window.TVRemoteNav && typeof window.TVRemoteNav.onModalToggle === "function") {
+      window.TVRemoteNav.onModalToggle(open);
+    }
   }
 }
 
@@ -454,22 +457,29 @@ document.addEventListener("change", (e) => {
   }
 });
 
-// Phím tắt Remote TV & Bàn phím
 window.addEventListener("keydown", (e) => {
   const modal = document.getElementById("roomModal");
   const isModalOpen = modal && !modal.classList.contains("hidden");
 
-  if (e.key.toLowerCase() === "s" || e.key === "Enter") {
+  const key = (e.key || "").toLowerCase();
+  const code = e.keyCode || e.which;
+
+  // Bật/Tắt âm thanh: Phím S, Enter, OK
+  if (key === "s" || key === "enter" || key === "ok" || code === 13 || code === 14 || code === 29443 || code === 83) {
     if (isModalOpen) return;
     toggleSound();
-  } else if (e.code === "Space" || e.key === "ArrowRight" || e.key.toLowerCase() === "r") {
+  } 
+  // Đọc lại ngay: Phím Space, Phím mũi tên Phải, Phím R
+  else if (e.code === "Space" || key === " " || key === "arrowright" || key === "right" || key === "r" || code === 39 || code === 32 || code === 82) {
     if (isModalOpen) return;
     e.preventDefault();
     speakCurrentPatients(true);
-  } else if (e.key.toLowerCase() === "m") {
+  } 
+  // Mở modal chia phòng: Phím M
+  else if (key === "m" || code === 77) {
     toggleRoomModal(!isModalOpen);
   }
-});
+}, true);
 
 // Đồng hồ
 function updateTime() {
