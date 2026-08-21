@@ -346,14 +346,22 @@
     }
 
     // ========================================================
-    // 7. PHÍM ĐỎ TRÊN REMOTE HOẶC PHÍM D / DELETE (Bỏ qua & Đôn lên)
-    // Code: 403 (Tizen Red), 183 (Android TV Red), 46 (Delete), 8 (Backspace ngoài modal), phím 'd'
+    // 7. PHÍM ĐỎ TRÊN REMOTE, PHÍM TUA TỚI (⏩), PHÍM SỐ 0 HOẶC PHÍM D / DELETE (Bỏ qua & Đôn lên)
+    // Code: 403 (Tizen Red), 183 (Android TV Red), 228 (FastForward), 176 (NextTrack), 48/96 (Số 0), 46 (Delete), 8 (Backspace), phím 'd'
     // ========================================================
     if (
       code === 403 ||
       code === 183 ||
+      code === 228 ||
+      code === 176 ||
+      code === 87 ||
+      code === 48 ||
+      code === 96 ||
       key === "colorf0red" ||
       key === "red" ||
+      key === "mediafastforward" ||
+      key === "mediatracknext" ||
+      key === "0" ||
       (!isModalOpen() && (code === 46 || code === 8 || key === "delete" || key === "backspace" || key === "d" || key === "x"))
     ) {
       if (currentEl && (currentEl.hasAttribute("data-patient") || currentEl.closest("tr[data-patient]"))) {
