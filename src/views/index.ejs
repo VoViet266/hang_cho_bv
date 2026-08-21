@@ -56,14 +56,16 @@
     <!-- BODY: CÁC CỤM CARD -->
     <div class="flex-grow overflow-y-auto p-1">
         <div id="roomGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 h-max">
-            <div class="bg-slate-200 border-2 border-slate-300 rounded-xl shadow-sm hover:border-brand hover:bg-slate-50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-center items-center p-1 min-h-[70px]"
+            <div class="remote-item bg-slate-200 border-2 border-slate-300 rounded-xl shadow-sm hover:border-brand hover:bg-slate-50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-center items-center p-1 min-h-[70px]"
+                tabindex="0"
                 onclick="window.location.href='/cdha'">
                 <div class="text-brand font-bold text-xl md:text-2xl text-center truncate w-full px-1">
                     Chẩn đoán hình ảnh
                 </div>
             </div>
             <% data.rooms.forEach(function(r) { %>
-                <div class="bg-white border-2 border-slate-300 rounded-xl shadow-sm hover:border-brand hover:bg-slate-50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-center items-center p-1 min-h-[70px]"
+                <div class="remote-item bg-white border-2 border-slate-300 rounded-xl shadow-sm hover:border-brand hover:bg-slate-50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-center items-center p-1 min-h-[70px]"
+                    tabindex="0"
                     onclick="window.location.href='/room/<%= r.maphong %>'">
                     <div class="text-brand font-bold text-xl md:text-2xl text-center truncate w-full px-1">
                         <%= r.tenphong || r.maphong %>
@@ -74,6 +76,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/remoteNav.js"></script>
     <script>
         function updateTime() {
             const now = new Date();

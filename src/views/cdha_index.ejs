@@ -57,7 +57,8 @@
                 </div>
             <% } else { %>
                 <% data.rooms.forEach(function(r) { %>
-                <div class="bg-white border-2 border-slate-300 rounded-xl shadow-sm hover:border-brand hover:bg-slate-50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-center items-center p-4 min-h-[120px] gap-2" 
+                <div class="remote-item bg-white border-2 border-slate-300 rounded-xl shadow-sm hover:border-brand hover:bg-slate-50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-center items-center p-4 min-h-[120px] gap-2" 
+                     tabindex="0"
                      onclick="window.location.href='/cdha/room/<%= encodeURIComponent(r.tenphong) %>'">
                     <div class="text-brand font-bold text-xl md:text-2xl text-center truncate w-full px-1">
                         <%= r.tenphong || 'Chưa cập nhật' %>
@@ -72,6 +73,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/remoteNav.js"></script>
     <script>
         function updateTime() {
             const now = new Date();
