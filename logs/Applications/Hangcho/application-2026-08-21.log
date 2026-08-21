@@ -232,3 +232,19 @@
 [14:26:16 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
 [14:26:27 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
 [14:26:32 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[14:27:09 INF] [127.0.0.1] HTTP GET / responded 200 in 396.3069 ms 
+[14:27:11 INF] [127.0.0.1] HTTP GET /room/B14 responded 200 in 651.8941 ms 
+[14:27:26 INF] [127.0.0.1] HTTP GET /room/B23 responded 200 in 491.8913 ms 
+[14:27:29 INF] [127.0.0.1] HTTP GET /room/B24 responded 200 in 480.2640 ms 
+[14:27:31 INF] [127.0.0.1] HTTP GET /room/B2 responded 200 in 662.4461 ms 
+[14:27:32 INF] [127.0.0.1] HTTP GET /room/B20 responded 200 in 610.2109 ms 
+[14:27:34 INF] [127.0.0.1] HTTP GET /room/B16 responded 200 in 650.8978 ms 
+[14:27:36 INF] [127.0.0.1] HTTP GET /room/B15 responded 200 in 923.8487 ms 
+[14:27:48 INF] [127.0.0.1] HTTP GET /room/B18 responded 200 in 599.0297 ms 
+[14:30:36 INF] [127.0.0.1] HTTP GET /cdha responded 200 in 6.1254 ms 
+[14:32:40 INF] [127.0.0.1] HTTP GET /cdha responded 304 in 2.7399 ms 
+[14:32:43 INF] [127.0.0.1] HTTP GET /cdha responded 304 in 53.9812 ms 
+[14:33:05 INF] [127.0.0.1] HTTP GET /cdha responded 200 in 2.3736 ms 
+[14:33:06 INF] [127.0.0.1] HTTP GET /cdha/room/Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 200 in 11.3358 ms 
+[14:33:06 INF] [127.0.0.1] HTTP GET /tts?text=K%C3%ADnh%20m%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Phan%20Th%E1%BB%8B%20Trinh%2C%20v%C3%A0o%20Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 200 in 566.9161 ms 
+[14:34:45 INF] [127.0.0.1] HTTP GET /tts?text=K%C3%ADnh%20m%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20L%C3%AA%20Th%E1%BB%8B%20Ph%C6%B0%E1%BB%A3ng%2C%20v%C3%A0o%20Ph%C3%B2ng%20si%C3%AAu%20%C3%A2m%201 responded 200 in 415.0274 ms 
