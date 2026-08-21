@@ -349,3 +349,13 @@
 [15:22:22 INF] Server running on http://localhost:3000 
 [15:22:30 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
 [15:22:30 INF] Server running on http://localhost:3000 
+[15:23:41 INF] [127.0.0.1] HTTP GET /room/A1 responded 500 in 1059.9682 ms 
+[15:23:49 INF] [127.0.0.1] HTTP GET /room/B19 responded 500 in 935.7268 ms 
+[15:24:51 INF] [127.0.0.1] HTTP GET /room/B19 responded 200 in 608.2660 ms 
+[15:24:54 INF] [127.0.0.1] HTTP GET /room/B14 responded 200 in 802.3264 ms 
+[15:25:01 INF] [127.0.0.1] HTTP GET / responded 200 in 263.4911 ms 
+[15:25:09 INF] [127.0.0.1] HTTP GET /room/B14 responded 304 in 997.3721 ms 
+[15:25:13 INF] [127.0.0.1] HTTP GET /room/B14?rooms=B14%2CB16 responded 200 in 734.4273 ms 
+[15:25:16 INF] [127.0.0.1] HTTP GET /room/B14?rooms=B14%2CB16%2CB21%2CB22 responded 200 in 812.6551 ms 
+[15:25:23 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[15:25:23 INF] Server running on http://localhost:3000 

@@ -270,9 +270,9 @@ function updateRoomDOM(roomId, data) {
             ? "bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md font-black"
             : "hover:bg-blue-50 border-b border-slate-200";
 
-          const sttClass = isNear ? "text-danger text-lg md:text-2xl font-black" : "text-base md:text-lg text-blue-900 font-bold";
-          const nameClass = isNear ? "text-danger text-base md:text-2xl font-black tracking-tight" : "text-base md:text-lg text-blue-900 font-bold";
-          const dobClass = isNear ? "text-danger text-base md:text-xl font-black" : "text-sm md:text-base text-blue-900 font-bold";
+          const sttClass = isNear ? "text-danger text-xl md:text-3xl font-black" : "text-base md:text-2xl text-blue-900 font-bold";
+          const nameClass = isNear ? "text-danger text-xl md:text-3xl font-black tracking-tight" : "text-base md:text-2xl text-blue-900 font-bold";
+          const dobClass = isNear ? "text-danger text-lg md:text-2xl font-black" : "text-base md:text-xl text-blue-900 font-bold";
 
           const statusBadge = isNear
             ? `<span class="inline-block bg-red-600 text-white px-2 md:px-3 py-1 rounded-xl text-xs md:text-base font-black uppercase shadow-lg animate-pulse">Tới Lượt</span>`
@@ -280,10 +280,10 @@ function updateRoomDOM(roomId, data) {
 
           rowsHtml += `
             <tr data-patient="${safePatientName}" data-room="${safeRoomName}" onclick="onRowClick(this)" class="cursor-pointer transition-all ${rowClass}">
-              <td class="py-2 px-2 text-center ${sttClass}">
+              <td class="py-2.5 px-2 text-center ${sttClass}">
                 ${index + 1}
               </td>
-              <td class="py-2 px-2 text-blue-900 ${nameClass}">
+              <td class="py-2.5 px-2 text-blue-900 ${nameClass}">
                 <div class="patient-name-container flex items-center overflow-hidden">
                   <span class="patient-name-text truncate">
                     ${(currentPatientName || "Chưa cập nhật").toUpperCase()}
@@ -291,10 +291,10 @@ function updateRoomDOM(roomId, data) {
                   ${noteBadge}
                 </div>
               </td>
-              <td class="py-2 px-2 text-center ${dobClass}">
+              <td class="py-2.5 px-2 text-center ${dobClass}">
                 ${dobYear}
               </td>
-              <td class="py-2 px-2 text-center">
+              <td class="py-2.5 px-2 text-center">
                 ${statusBadge}
               </td>
             </tr>
@@ -305,9 +305,9 @@ function updateRoomDOM(roomId, data) {
             ? "bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md"
             : "hover:bg-blue-50 border-b border-slate-200";
 
-          const sttClass = isNear ? "text-4xl md:text-5xl font-black text-danger" : "text-3xl md:text-4xl";
-          const nameClass = isNear ? "text-4xl md:text-6xl font-black tracking-tight text-danger" : "text-3xl md:text-5xl font-extrabold";
-          const dobClass = isNear ? "text-3xl md:text-5xl font-black text-danger" : "text-2xl md:text-4xl";
+          const sttClass = isNear ? "text-5xl md:text-7xl font-black text-danger" : "text-4xl md:text-6xl font-bold";
+          const nameClass = isNear ? "text-5xl md:text-7xl font-black tracking-tight text-danger" : "text-4xl md:text-6xl font-black";
+          const dobClass = isNear ? "text-4xl md:text-6xl font-black text-danger" : "text-3xl md:text-5xl";
 
           const statusBadge = isNear
             ? `<span class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl text-xl md:text-3xl font-black uppercase shadow-lg animate-pulse">Tới Lượt Khám</span>`
