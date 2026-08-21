@@ -71,7 +71,7 @@
                 <div class="flex gap-2">
                     <div class="bg-red-50 px-3 py-1 text-center min-w-[100px] rounded border border-red-200">
                         <span class="block text-danger font-bold text-xs uppercase tracking-wide mb-0">Đang chờ</span>
-                        <span class="block text-danger font-black text-xl tabular-nums leading-none mt-1">
+                        <span id="totalWaiting" class="block text-danger font-black text-xl tabular-nums leading-none mt-1">
                             <%= room.totalWaiting %>
                         </span>
                     </div>
@@ -97,7 +97,7 @@
                             <th class="py-0 px-6 font-extrabold text-3xl text-blue-900 text-center uppercase">Trạng Thái</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y-1 divide-slate-200">
+                    <tbody id="patientTableBody" class="divide-y-1 divide-slate-200">
                         <% 
                             let nextPatientNameToRead = '';
                             if (room.waitingList.length === 0) { %>
@@ -162,10 +162,15 @@
             </div>
 
             <!-- Data for speech -->
-            <div id="speechData" data-patient="<%= nextPatientNameToRead %>"
-                data-room="<%= room.tenphong || 'Khoa Chẩn Đoán Hình Ảnh' %>" data-prefix="Kính mời bệnh nhân,"
+            <div id="speechData" 
+                data-room-type="cdha" 
+                data-room-id="<%= room.tenphong %>" 
+                data-patient="<%= nextPatientNameToRead %>"
+                data-room="<%= room.tenphong || 'Khoa Chẩn Đoán Hình Ảnh' %>" 
+                data-prefix="Kính mời bệnh nhân,"
                 style="display: none;"></div>
 
+            <script src="/socket.io/socket.io.js"></script>
             <script src="/js/displayBoard.js"></script>
 </body>
 

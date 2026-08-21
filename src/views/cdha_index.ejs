@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách phòng Chẩn Đoán Hình Ảnh</title>
-    <meta http-equiv="refresh" content="60">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
@@ -41,7 +40,7 @@
         <div class="flex flex-col gap-2 min-w-[250px]">
             <div class="bg-white border-2 gap-3 border-red-300 px-3 py-2 rounded-lg text-danger text-lg font-extrabold flex justify-between items-center">
                 <span>TỔNG ĐANG CHỜ:</span>
-                <span class="text-2xl tabular-nums"><%= data.overview.tong_cho_kham %></span>
+                <span id="cdha_tong_cho_kham" class="text-2xl tabular-nums"><%= data.overview.tong_cho_kham %></span>
             </div>
             <a href="/" class="bg-slate-200 border-2 gap-3 border-slate-300 px-3 py-2 rounded-lg text-slate-700 hover:text-brand hover:border-brand text-center font-bold text-lg transition-colors inline-block mt-1">
                 <i class="fas fa-home mr-1"></i> Trở về phòng khám
@@ -51,9 +50,7 @@
 
     <!-- BODY -->
     <div class="flex-grow overflow-y-auto p-1">
-        <!-- Tự động chia cột: 2 cột (mobile), 3 cột (tablet), 4-5 cột (màn hình lớn) -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 h-max">
-            
+        <div id="cdhaGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 h-max">
             <% if (data.rooms.length === 0) { %>
                 <div class="col-span-full text-center text-slate-500 text-2xl font-bold p-10">
                     Không có phòng CDHA nào đang hoạt động.
@@ -62,23 +59,19 @@
                 <% data.rooms.forEach(function(r) { %>
                 <div class="bg-white border-2 border-slate-300 rounded-xl shadow-sm hover:border-brand hover:bg-slate-50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-center items-center p-4 min-h-[120px] gap-2" 
                      onclick="window.location.href='/cdha/room/<%= encodeURIComponent(r.tenphong) %>'">
-                    
-                    <!-- Tên phòng -->
                     <div class="text-brand font-bold text-xl md:text-2xl text-center truncate w-full px-1">
                         <%= r.tenphong || 'Chưa cập nhật' %>
                     </div>
-                    
                     <div class="bg-red-50 text-danger font-bold px-3 py-1 rounded-full border border-red-200">
                         Chờ: <%= r.tong_cho_kham %>
                     </div>
-                    
                 </div>
                 <% }); %>
             <% } %>
-
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         function updateTime() {
             const now = new Date();
@@ -94,6 +87,23 @@
         }
         setInterval(updateTime, 1000);
         updateTime();
+
+        // Socket.IO Real-time cho CDHA Dashboard
+        if (typeof io !== "undefined") {
+            const socket = io();
+            socket.on("connect", () => {
+                socket.emit("join_room", { roomType: "cdha_dashboard", roomId: "" });
+            });
+
+            socket.on("room_data_updated", (payload) => {
+                if (!payload || !payload.data) return;
+                const d = payload.data;
+                if (d.overview) {
+                    const ckEl = document.getElementById("cdha_tong_cho_kham");
+                    if (ckEl) ckEl.textContent = d.overview.tong_cho_kham;
+                }
+            });
+        }
     </script>
 </body>
 
