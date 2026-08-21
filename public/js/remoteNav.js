@@ -4,7 +4,9 @@
  * Tích hợp điều khiển toàn diện:
  *  - Dashboard chọn phòng
  *  - Nút Mở loa, Nút Chia phòng (M), Nút Quay lại trên Header
- *  - Dòng bệnh nhân trên bảng (bấm OK để gọi đọc tên)
+ *  - Di chuyển trực tiếp đến từng dòng bệnh nhân trên bảng (Chế độ 1 phòng & Multi-room Chia 2/Chia 4)
+ *  - Phím OK trên dòng bệnh nhân: Mở bảng tác vụ (Gọi đọc tên / Bỏ qua & Đôn người khác lên)
+ *  - Phím nóng D / Delete / Backspace: Bỏ qua trực tiếp bệnh nhân đang focus và đôn người kế tiếp lên
  *  - Điều hướng và chọn phòng trực tiếp trong Modal Chia Phòng (M) bằng D-Pad & OK
  */
 
@@ -24,36 +26,70 @@
         outline: none !important;
         transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease !important;
       }
-      .remote-item.tv-focused {
+      /* Nút hoặc thẻ card thông thường */
+      .remote-item.tv-focused:not(tr) {
         outline: none !important;
         border-color: #1e40af !important;
-        background-color: #eff6ff !important; /* bg-blue-50 */
+        background-color: #eff6ff !important;
         box-shadow: 0 0 0 4px #2563eb, 0 10px 25px -4px rgba(30, 64, 175, 0.35) !important;
-        transform: scale(1.04) !important;
+        transform: scale(1.03) !important;
         z-index: 40 !important;
         position: relative !important;
+      }
+      /* Dòng bệnh nhân trong bảng (tr) */
+      tr.remote-item.tv-focused {
+        outline: none !important;
+        background-color: #dbeafe !important; /* bg-blue-100 */
+        box-shadow: inset 0 0 0 3px #1d4ed8, 0 4px 14px rgba(29, 78, 216, 0.3) !important;
+        position: relative !important;
+        z-index: 25 !important;
+      }
+      tr.remote-item.tv-focused td {
+        color: #1e3a8a !important;
+      }
+      tr.remote-item.tv-focused.bg-red-50 td {
+        color: #b91c1c !important;
+      }
+      /* Toast notification banner */
+      .tv-toast {
+        animation: slideInRight 0.25s ease-out forwards;
+      }
+      @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
       }
     `;
     document.head.appendChild(style);
   }
 
+  function getActiveModal() {
+    const patientModal = document.getElementById("patientActionModal");
+    if (patientModal && !patientModal.classList.contains("hidden")) return patientModal;
+    const roomModal = document.getElementById("roomModal");
+    if (roomModal && !roomModal.classList.contains("hidden")) return roomModal;
+    return null;
+  }
+
   function isModalOpen() {
-    const modal = document.getElementById("roomModal");
-    return modal && !modal.classList.contains("hidden");
+    return getActiveModal() !== null;
   }
 
   function getNavItems() {
-    const modal = document.getElementById("roomModal");
-    if (modal && !modal.classList.contains("hidden")) {
-      // Khi Modal đang mở: Chỉ điều hướng các phần tử bên trong Modal
-      return Array.from(modal.querySelectorAll(".remote-item")).filter(
+    const activeModal = getActiveModal();
+    if (activeModal) {
+      // Khi Modal đang mở: Chỉ điều hướng các phần tử bên trong Modal đang mở
+      return Array.from(activeModal.querySelectorAll(".remote-item")).filter(
         (el) => el.offsetParent !== null && !el.disabled
       );
     }
 
-    // Khi Modal đóng: Điều hướng các phần tử trên trang chính (bỏ qua phần tử trong modal)
+    // Khi Modal đóng: Điều hướng các phần tử trên trang chính (Header, các dòng bệnh nhân trên bảng)
+    const roomModal = document.getElementById("roomModal");
+    const patientModal = document.getElementById("patientActionModal");
+
     return Array.from(document.querySelectorAll(".remote-item")).filter((el) => {
-      if (modal && modal.contains(el)) return false;
+      if (roomModal && roomModal.contains(el)) return false;
+      if (patientModal && patientModal.contains(el)) return false;
       return el.offsetParent !== null && !el.disabled;
     });
   }
@@ -147,7 +183,8 @@
       }
 
       if (isValidDirection) {
-        const distance = primaryDist + secondaryDist * 2.5;
+        // Ưu tiên các phần tử cùng trục
+        const distance = primaryDist + secondaryDist * 2.2;
         if (distance < minDistance) {
           minDistance = distance;
           bestCandidateIndex = idx;
@@ -158,7 +195,7 @@
     if (bestCandidateIndex !== -1) {
       setFocus(bestCandidateIndex);
     } else {
-      // Fallback 1D nếu góc 2D không khớp
+      // Fallback 1D nếu 2D không tìm thấy
       if (direction === "right" || direction === "down") {
         if (currentIndex < items.length - 1) {
           setFocus(currentIndex + 1);
@@ -175,11 +212,16 @@
     const key = (e.key || "").toLowerCase();
     const code = e.keyCode || e.which;
 
-    // Phím Back / Return / Escape trên Smart TV khi Modal đang mở: Đóng Modal
+    items = getNavItems();
+    const currentEl = items[currentIndex];
+
+    // 1. Phím Back / Return / Escape trên Smart TV khi Modal đang mở: Đóng Modal
     if (isModalOpen() && (code === 27 || code === 8 || code === 10009 || code === 461 || key === "escape" || key === "backspace")) {
       e.preventDefault();
       e.stopPropagation();
-      if (typeof toggleRoomModal === "function") {
+      if (typeof closePatientActionModal === "function" && document.getElementById("patientActionModal") && !document.getElementById("patientActionModal").classList.contains("hidden")) {
+        closePatientActionModal();
+      } else if (typeof toggleRoomModal === "function") {
         toggleRoomModal(false);
       }
       setTimeout(() => {
@@ -187,6 +229,19 @@
         setFocus(0);
       }, 100);
       return;
+    }
+
+    // 2. Phím nóng Bỏ qua bệnh nhân (Delete, Backspace, phím D, phím X) khi đang focus vào 1 dòng bệnh nhân
+    if (!isModalOpen() && currentEl && (currentEl.hasAttribute("data-patient") || currentEl.closest("tr[data-patient]"))) {
+      if (code === 46 || code === 8 || key === "delete" || key === "backspace" || key === "d" || key === "x") {
+        e.preventDefault();
+        e.stopPropagation();
+        const tr = currentEl.hasAttribute("data-patient") ? currentEl : currentEl.closest("tr[data-patient]");
+        if (typeof window.skipPatientFromElement === "function") {
+          window.skipPatientFromElement(tr);
+        }
+        return;
+      }
     }
 
     let handled = false;
@@ -213,8 +268,6 @@
     }
     // PHÍM OK / ENTER (Enter, OK, Select, VK_ENTER = 13, 14, 29443)
     else if (code === 13 || code === 14 || code === 29443 || key === "enter" || key === "ok" || key === "select") {
-      items = getNavItems();
-      const currentEl = items[currentIndex];
       if (currentEl) {
         // Nếu là checkbox item trong Modal: toggle checkbox
         const checkbox = currentEl.querySelector('input[type="checkbox"]');
@@ -224,6 +277,13 @@
           checkbox.dispatchEvent(changeEvt);
           if (typeof updateSelectedCount === "function") {
             updateSelectedCount();
+          }
+        } else if (currentEl.hasAttribute("data-patient") || currentEl.tagName === "TR") {
+          // Bấm OK trên dòng bệnh nhân -> Mở modal tác vụ hoặc gọi đọc tên
+          if (typeof onRowClick === "function") {
+            onRowClick(currentEl);
+          } else {
+            currentEl.click();
           }
         } else {
           currentEl.click();
@@ -276,7 +336,7 @@
 
   setTimeout(init, 200);
 
-  // Hook hỗ trợ khi mở/đóng Modal
+  // Hook toàn cục
   window.TVRemoteNav = {
     setFocus,
     onModalToggle: (isOpen) => {
@@ -287,9 +347,17 @@
       }, 50);
     },
     refresh: () => {
-      items = getNavItems();
-      bindMouseEvents();
-      setFocus(currentIndex);
+      setTimeout(() => {
+        items = getNavItems();
+        bindMouseEvents();
+        // Giữ vị trí focus hợp lệ
+        if (currentIndex >= items.length) currentIndex = Math.max(0, items.length - 1);
+        setFocus(currentIndex, false);
+      }, 50);
     },
+    getCurrentElement: () => {
+      items = getNavItems();
+      return items[currentIndex] || null;
+    }
   };
 })();
