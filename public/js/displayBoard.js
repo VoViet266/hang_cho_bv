@@ -22,18 +22,40 @@ function updateSoundIcon() {
   }
 }
 
+function playAudioUrl(url, fallbackText) {
+  const audio = new Audio(url);
+  audio.volume = 1.0;
+
+  audio.play().catch((err) => {
+    console.warn("Lỗi phát âm thanh audio element:", err);
+    // Fallback sang Web Speech API (cho Desktop Chrome / thiết bị có hỗ trợ vi-VN)
+    if (fallbackText && "speechSynthesis" in window) {
+      try {
+        const utterance = new SpeechSynthesisUtterance(fallbackText);
+        utterance.lang = "vi-VN";
+        const voices = window.speechSynthesis.getVoices();
+        const viVoice = voices.find(
+          (v) => v.lang.includes("vi") || v.name.includes("Vietnamese"),
+        );
+        if (viVoice) utterance.voice = viVoice;
+        window.speechSynthesis.speak(utterance);
+      } catch (speechErr) {
+        console.error("Web Speech API fallback thất bại:", speechErr);
+      }
+    }
+  });
+}
+
 function toggleSound() {
   soundEnabled = !soundEnabled;
   localStorage.setItem("soundEnabled", soundEnabled);
   updateSoundIcon();
 
   if (soundEnabled) {
-    // Play a tiny silent audio to unlock audio context
-    const audio = new Audio(
-      "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA",
-    );
-    audio.volume = 0.01;
-    audio.play().catch((e) => {});
+    // Mở khóa Audio context trên Smart TV / Browser bằng file silent.mp3 tĩnh
+    const unlockAudio = new Audio("/audio/silent.mp3");
+    unlockAudio.volume = 0.01;
+    unlockAudio.play().catch(() => {});
 
     checkAndSpeak(true);
   }
@@ -57,36 +79,9 @@ function checkAndSpeak(force = false) {
 
   if (force || patientName !== lastSpoken) {
     const speakText = `${prefix} ${patientName}, vào ${roomName}`;
+    const audioUrl = `/api/tts?text=${encodeURIComponent(speakText)}`;
 
-    fetch("/api/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: speakText }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.audioContent) {
-          const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
-          audio.play().catch((e) => {
-            console.warn("Audio autoplay blocked by browser policy:", e);
-          });
-        } else {
-          throw new Error(data.error || "No audio content");
-        }
-      })
-      .catch((e) => {
-        console.error("Không thể phát âm thanh Google TTS:", e);
-        // Fallback to Web Speech API
-        const utterance = new SpeechSynthesisUtterance(speakText);
-        utterance.lang = "vi-VN";
-        const voices = window.speechSynthesis.getVoices();
-        const viVoice = voices.find(
-          (v) => v.lang.includes("vi") || v.name.includes("Vietnamese"),
-        );
-        if (viVoice) utterance.voice = viVoice;
-        window.speechSynthesis.speak(utterance);
-      });
-
+    playAudioUrl(audioUrl, speakText);
     localStorage.setItem(storageKey, patientName);
   }
 }
@@ -98,42 +93,13 @@ function speakSpecificPatient(patientName) {
 
   const roomName = speechData.dataset.room;
   const prefix = speechData.dataset.prefix || "Mời bệnh nhân,";
-  
+
   if (!patientName) return;
 
   const speakText = `${prefix} ${patientName}, vào ${roomName}`;
+  const audioUrl = `/api/tts?text=${encodeURIComponent(speakText)}`;
 
-  // Unlock audio context nếu chưa bật
-  const dummyAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
-  dummyAudio.volume = 0.01;
-  dummyAudio.play().catch((e) => {});
-
-  fetch("/api/tts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: speakText }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.audioContent) {
-        const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
-        audio.play().catch((e) => console.error("Audio play failed:", e));
-      } else {
-        throw new Error(data.error || "No audio content");
-      }
-    })
-    .catch((e) => {
-      console.error("Không thể phát âm thanh Google TTS:", e);
-      // Fallback to Web Speech API
-      const utterance = new SpeechSynthesisUtterance(speakText);
-      utterance.lang = "vi-VN";
-      const voices = window.speechSynthesis.getVoices();
-      const viVoice = voices.find(
-        (v) => v.lang.includes("vi") || v.name.includes("Vietnamese"),
-      );
-      if (viVoice) utterance.voice = viVoice;
-      window.speechSynthesis.speak(utterance);
-    });
+  playAudioUrl(audioUrl, speakText);
 }
 
 window.addEventListener("DOMContentLoaded", () => {

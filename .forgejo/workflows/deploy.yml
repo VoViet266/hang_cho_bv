@@ -78,7 +78,8 @@ jobs:
             if [ -z "$LOGS_VOLUME" ]; then
               LOGS_VOLUME="$HOME/logs"
             fi
-            echo "Sử dụng LOGS_VOLUME=$LOGS_VOLUME"
+            AUDIO_CACHE_VOLUME="$HOME/hang_cho_kham_audio_cache"
+            echo "Sử dụng LOGS_VOLUME=$LOGS_VOLUME, AUDIO_CACHE_VOLUME=$AUDIO_CACHE_VOLUME"
 
             echo "Đăng nhập Internal Registry..."
             if [ -z "$REGISTRY_TOKEN" ]; then
@@ -95,8 +96,8 @@ jobs:
             echo "Dừng container cũ..."
             docker rm -f "$CONTAINER_NAME" || true
 
-            mkdir -p "$LOGS_VOLUME"
-            chmod 755 "$LOGS_VOLUME" || true
+            mkdir -p "$LOGS_VOLUME" "$AUDIO_CACHE_VOLUME"
+            chmod 755 "$LOGS_VOLUME" "$AUDIO_CACHE_VOLUME" || true
 
             start_container() {
               local IMAGE=$1
@@ -110,6 +111,7 @@ jobs:
                 -e GOOGLE_TTS_API_KEY="$GOOGLE_TTS_API_KEY" \
                 -v /etc/localtime:/etc/localtime:ro \
                 -v "$LOGS_VOLUME":/app/logs \
+                -v "$AUDIO_CACHE_VOLUME":/app/public/audio/cache \
                 --restart unless-stopped \
                 "$IMAGE"
             }

@@ -2,7 +2,7 @@ const winston = require('winston');
 require('winston-daily-rotate-file');
 const path = require('path');
 
-// Định dạng viết tắt giống Serilog
+
 const levelMap = {
     info: 'INF',
     warn: 'WRN',
@@ -10,7 +10,6 @@ const levelMap = {
     debug: 'DBG'
 };
 
-// Định dạng xuất ra file (không chứa mã màu ANSI)
 const fileFormat = winston.format.combine(
     winston.format.timestamp({ format: 'HH:mm:ss' }),
     winston.format.errors({ stack: true }),
@@ -21,7 +20,7 @@ const fileFormat = winston.format.combine(
     })
 );
 
-// Định dạng xuất ra màn hình console (giữ lại màu sắc)
+
 const consoleFormat = winston.format.combine(
     winston.format.colorize(),
     winston.format.timestamp({ format: 'HH:mm:ss' }),

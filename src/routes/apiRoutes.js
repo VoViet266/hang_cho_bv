@@ -1,8 +1,8 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const ttsController = require('../controllers/ttsController');
+const ttsController = require("../controllers/ttsController");
 
-// TTS Endpoint
-router.post('/tts', ttsController.generateSpeech);
+router.get("/tts", ttsController.streamSpeech);
+router.post("/tts", ttsController.generateSpeech);
 
 module.exports = router;

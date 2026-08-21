@@ -5,3 +5,6 @@ node_modules
 .gitignore
 test.js
 test_prisma.js
+public/audio/cache
+logs
+
