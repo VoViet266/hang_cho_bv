@@ -216,3 +216,4 @@
 [09:17:51 INF] [127.0.0.1] HTTP GET /logo_tam-minh-duc.png responded 304 in 0.4361 ms 
 [09:17:52 INF] Server running on http://localhost:3000 
 [09:17:58 INF] Server running on http://localhost:3000 
+[09:18:22 INF] [127.0.0.1] HTTP GET /room/B1 responded 304 in 742.9224 ms 
