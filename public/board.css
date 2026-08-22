@@ -215,6 +215,18 @@
   line-height: 1.15;
 }
 
+.btn-hide-patient {
+  opacity: 0.45;
+  transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+tr:hover .btn-hide-patient,
+tr.tv-focused .btn-hide-patient,
+.btn-hide-patient:focus,
+.btn-hide-patient:hover {
+  opacity: 1;
+}
+
 .tv-board .tv-focused:not(tr) {
   transform: none !important;
 }

@@ -85,7 +85,7 @@ function updateSoundIcon() {
       text.textContent = "Loa: BẬT";
     }
     if (button) {
-      button.title = "Loa đang bật";
+      button.title = "Loa: ĐANG BẬT (Phím A / S để tắt, Space để đọc lại)";
       button.setAttribute("aria-label", "Tắt âm thanh");
     }
   } else {
@@ -96,7 +96,7 @@ function updateSoundIcon() {
       text.textContent = "Loa: TẮT";
     }
     if (button) {
-      button.title = "Loa đang tắt";
+      button.title = "Loa: ĐANG TẮT (Phím A / S để bật)";
       button.setAttribute("aria-label", "Bật âm thanh");
     }
   }
@@ -117,6 +117,7 @@ function toggleSound() {
     audioQueue.clear();
   }
 }
+window.toggleSound = toggleSound;
 
 function formatRoomSpokenName(roomName) {
   if (!roomName || !roomName.trim()) return "";
@@ -133,6 +134,7 @@ function requestSpeak(patientName, roomName) {
   const speakText = `Mời bệnh nhân, ${patientName.trim()}, vào ${spokenRoom}`;
   audioQueue.enqueue(speakText);
 }
+window.requestSpeak = requestSpeak;
 
 // ==========================================
 // TOAST NOTIFICATION TRÊN TV
@@ -152,7 +154,7 @@ function showToast(message, type = "info", undoCallback = null) {
 
   toast.innerHTML = `
     <div class="flex items-center gap-2.5">
-      <i class="${type === 'danger' ? 'fas fa-forward' : 'fas fa-info-circle'} text-lg"></i>
+      <i class="${type === 'danger' ? 'fas fa-trash-alt' : 'fas fa-info-circle'} text-lg"></i>
       <span>${message}</span>
     </div>
   `;
@@ -176,22 +178,23 @@ function showToast(message, type = "info", undoCallback = null) {
     setTimeout(() => toast.remove(), 300);
   }, 4000);
 }
+window.showToast = showToast;
 
 // ==========================================
-// QUẢN LÝ BỎ QUA BỆNH NHÂN & ĐÔN NGƯỜI KẾ TIẾP
+// QUẢN LÝ XÓA / ẨN BỆNH NHÂN KHỎI MÀN HÌNH
 // ==========================================
 function getPatientKey(p) {
   return window.QueuePolicy ? window.QueuePolicy.getPatientKey(p) : "";
 }
 
-function skipPatient(patientKey, patientName, roomName) {
-  if (!patientName) return;
+function removePatient(patientKey, patientName, roomName) {
+  if (!patientName && !patientKey) return;
 
-  if (!window.QueuePolicy) return;
-  window.QueuePolicy.demote(patientKey, patientName);
+  if (window.QueuePolicy) {
+    window.QueuePolicy.hide(patientKey, patientName, roomName);
+  }
 
-  // Rerender lại tất cả các quadrant đang hiển thị
-  const quadrants = document.querySelectorAll(".room-quadrant");
+  const quadrants = document.querySelectorAll(".room-quadrant, .room-container");
   quadrants.forEach((q) => {
     const rId = q.dataset.roomId;
     if (lastKnownMultiRoomsData[rId]) {
@@ -199,37 +202,157 @@ function skipPatient(patientKey, patientName, roomName) {
     }
   });
 
-  // Tự động đọc bệnh nhân mới vừa được đôn lên
+  updateHiddenBadge();
+
   setTimeout(() => {
     checkInitialSpeech(true);
   }, 200);
-
-  showToast(`Đã hạ ${patientName} xuống 1 STT`, "danger", () => {
-    window.QueuePolicy.restore(patientKey, patientName);
-    quadrants.forEach((q) => {
-      const rId = q.dataset.roomId;
-      if (lastKnownMultiRoomsData[rId]) {
-        updateQuadrantDOM(rId, lastKnownMultiRoomsData[rId]);
-      }
-    });
-    showToast(`Đã khôi phục BN: ${patientName}`, "info");
-  });
 
   if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
     window.TVRemoteNav.refresh();
   }
 }
-window.skipPatient = skipPatient;
+window.removePatient = removePatient;
 
-window.skipPatientFromElement = function (el) {
-  if (!el) return;
-  const patientKey = el.dataset.patientKey || el.dataset.patient;
-  const patientName = el.dataset.patient;
-  const roomName = el.dataset.room;
-  skipPatient(patientKey, patientName, roomName);
-};
+function removePatientFromElement(btnOrEl, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
 
-// Nhấp hoặc nhấn Enter trên dòng để gọi tên ngay.
+  if (!btnOrEl) return;
+  const row = btnOrEl.tagName === "TR" ? btnOrEl : btnOrEl.closest("tr[data-patient]");
+  if (!row) return;
+
+  const patientKey = row.dataset.patientKey || row.dataset.patient;
+  const patientName = row.dataset.patient || "";
+  const roomName = row.dataset.room || "";
+
+  removePatient(patientKey, patientName, roomName);
+}
+window.removePatientFromElement = removePatientFromElement;
+
+function restorePatient(patientKey, patientName) {
+  if (window.QueuePolicy) {
+    window.QueuePolicy.restore(patientKey, patientName);
+  }
+
+  const quadrants = document.querySelectorAll(".room-quadrant, .room-container");
+  quadrants.forEach((q) => {
+    const rId = q.dataset.roomId;
+    if (lastKnownMultiRoomsData[rId]) {
+      updateQuadrantDOM(rId, lastKnownMultiRoomsData[rId]);
+    }
+  });
+
+  updateHiddenBadge();
+  renderHiddenModalList();
+  showToast(`Đã khôi phục BN: ${patientName || patientKey}`, "info");
+
+  if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
+    window.TVRemoteNav.refresh();
+  }
+}
+window.restorePatient = restorePatient;
+
+function restoreAllHiddenPatients() {
+  if (window.QueuePolicy) {
+    window.QueuePolicy.restoreAll();
+  }
+
+  const quadrants = document.querySelectorAll(".room-quadrant, .room-container");
+  quadrants.forEach((q) => {
+    const rId = q.dataset.roomId;
+    if (lastKnownMultiRoomsData[rId]) {
+      updateQuadrantDOM(rId, lastKnownMultiRoomsData[rId]);
+    }
+  });
+
+  updateHiddenBadge();
+  renderHiddenModalList();
+  showToast("Đã khôi phục tất cả bệnh nhân", "info");
+
+  if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
+    window.TVRemoteNav.refresh();
+  }
+}
+window.restoreAllHiddenPatients = restoreAllHiddenPatients;
+
+function updateHiddenBadge() {
+  const badge = document.getElementById("hiddenBadgeCount");
+  if (!badge) return;
+
+  const list = window.QueuePolicy ? window.QueuePolicy.getHiddenList() : [];
+  if (list.length > 0) {
+    badge.textContent = list.length;
+    badge.classList.remove("hidden");
+  } else {
+    badge.textContent = "0";
+    badge.classList.add("hidden");
+  }
+}
+
+function renderHiddenModalList() {
+  const container = document.getElementById("hiddenPatientsListContainer");
+  if (!container) return;
+
+  const list = window.QueuePolicy ? window.QueuePolicy.getHiddenList() : [];
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-10 text-slate-400">
+        <i class="fas fa-check-circle text-4xl mb-2 text-green-500 block"></i>
+        <p class="font-bold text-base">Không có bệnh nhân nào bị xóa/ẩn.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = `<div class="divide-y divide-slate-200">`;
+  list.forEach((item) => {
+    const safeKey = (item.key || "").replace(/"/g, '&quot;');
+    const safeName = (item.name || "").replace(/"/g, '&quot;');
+    html += `
+      <div class="py-3 px-3 flex justify-between items-center hover:bg-blue-50/50 rounded-lg transition-colors gap-3">
+        <div class="min-w-0">
+          <div class="font-black text-slate-800 text-sm md:text-base uppercase truncate">${item.name}</div>
+          <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+            ${item.room ? `<span class="bg-blue-50 text-brand px-1.5 py-0.5 rounded font-bold border border-blue-200">${item.room}</span>` : ""}
+            <span>Đã xóa lúc: ${item.time || "--:--"}</span>
+          </div>
+        </div>
+        <button onclick="restorePatient('${safeKey}', '${safeName}')"
+                class="remote-item bg-green-50 hover:bg-green-600 hover:text-white text-green-700 font-black px-3 py-1.5 rounded-lg text-xs md:text-sm border border-green-300 transition-all shrink-0 cursor-pointer"
+                tabindex="0">
+          <i class="fas fa-undo mr-1"></i> Khôi phục
+        </button>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function toggleHiddenModal(show) {
+  const modal = document.getElementById("hiddenPatientsModal");
+  if (!modal) return;
+
+  if (show) {
+    renderHiddenModalList();
+    modal.classList.remove("hidden");
+    if (window.TVRemoteNav && typeof window.TVRemoteNav.onModalToggle === "function") {
+      window.TVRemoteNav.onModalToggle(true);
+    }
+  } else {
+    modal.classList.add("hidden");
+    if (window.TVRemoteNav && typeof window.TVRemoteNav.onModalToggle === "function") {
+      window.TVRemoteNav.onModalToggle(false);
+    }
+  }
+}
+window.toggleHiddenModal = toggleHiddenModal;
+
+// Nhấp hoặc nhấn Enter trên dòng để gọi tên ngay
 function onRowClick(el) {
   if (!el) return;
   const patientName = (el.dataset.patient || "").trim();
@@ -248,7 +371,7 @@ window.onRowClick = onRowClick;
 
 function checkInitialSpeech(force = false) {
   if (!soundEnabled) return;
-  const quadrants = document.querySelectorAll(".room-quadrant");
+  const quadrants = document.querySelectorAll(".room-quadrant, .room-container");
   quadrants.forEach((q) => {
     const roomId = q.dataset.roomId;
     const roomName = q.dataset.roomName;
@@ -276,8 +399,9 @@ function updateQuadrantDOM(roomId, data) {
   const roomTitle = card ? card.dataset.roomName : (data.tenphong || data.maphong || roomId);
 
   const rawList = data.waitingList || [];
+  // Lọc bỏ bệnh nhân đã bị xóa/ẩn và áp dụng đôn thứ tự
   const waitingList = window.QueuePolicy
-    ? window.QueuePolicy.applyManualDemotions(rawList)
+    ? window.QueuePolicy.applyQueuePolicy(rawList)
     : [...rawList];
   const activeWaitingCount = waitingList.filter((p) => p.dakham == 0).length;
 
@@ -345,6 +469,17 @@ function updateQuadrantDOM(roomId, data) {
         ? `<span class="inline-block bg-red-600 text-white px-2.5 md:px-4 py-1 rounded-xl text-sm md:text-xl font-black uppercase shadow-lg animate-pulse">Tới Lượt</span>`
         : `<span class="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs md:text-base font-bold border border-slate-300 shadow-sm">Chờ khám</span>`;
 
+      const deleteBtn = `
+        <button type="button" 
+                title="Xóa/Ẩn khỏi màn hình" 
+                aria-label="Xóa bệnh nhân khỏi danh sách hiển thị" 
+                onclick="removePatientFromElement(this, event)" 
+                class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer" 
+                tabindex="0">
+          <i class="fas fa-trash-alt text-xs md:text-sm"></i>
+        </button>
+      `;
+
       const safePatientName = currentPatientName.replace(/"/g, '&quot;');
       const safeRoomTitle = roomTitle.replace(/"/g, '&quot;');
       const safeKey = pKey.replace(/"/g, '&quot;');
@@ -355,7 +490,7 @@ function updateQuadrantDOM(roomId, data) {
             ${index + 1}
           </td>
           <td class="py-2.5 px-2 text-blue-900 ${nameClass}">
-            <div class="patient-name-container">
+            <div class="patient-name-container flex items-center overflow-hidden">
               <span class="patient-name-text">
                 ${(currentPatientName || "Chưa cập nhật").toUpperCase()}
               </span>
@@ -366,7 +501,10 @@ function updateQuadrantDOM(roomId, data) {
             ${dobYear}
           </td>
           <td class="py-2.5 px-2 text-center">
-            ${statusBadge}
+            <div class="flex items-center justify-center gap-1.5">
+              ${statusBadge}
+              ${deleteBtn}
+            </div>
           </td>
         </tr>
       `;
@@ -392,6 +530,7 @@ function updateQuadrantDOM(roomId, data) {
     window.TVRemoteNav.refresh();
   }
 }
+window.updateQuadrantDOM = updateQuadrantDOM;
 
 // ==========================================
 // SOCKET.IO REALTIME LISTENER
@@ -406,7 +545,7 @@ function initSocket() {
     reconnectionAttempts: Infinity,
   });
 
-  const quadrants = document.querySelectorAll(".room-quadrant");
+  const quadrants = document.querySelectorAll(".room-quadrant, .room-container");
 
   socket.on("connect", () => {
     quadrants.forEach((q) => {
@@ -441,12 +580,14 @@ function toggleRoomModal(show) {
     }
   }
 }
+window.toggleRoomModal = toggleRoomModal;
 
 function clearRoomSelection() {
   const checkboxes = document.querySelectorAll('input[name="roomSelection"]');
   checkboxes.forEach((cb) => (cb.checked = false));
   updateSelectedCount();
 }
+window.clearRoomSelection = clearRoomSelection;
 
 function updateSelectedCount() {
   const checked = document.querySelectorAll('input[name="roomSelection"]:checked');
@@ -455,6 +596,7 @@ function updateSelectedCount() {
     textEl.textContent = `Đã chọn: ${checked.length} phòng`;
   }
 }
+window.updateSelectedCount = updateSelectedCount;
 
 function applyRoomSelection() {
   const checkboxes = document.querySelectorAll('input[name="roomSelection"]:checked');
@@ -470,9 +612,10 @@ function applyRoomSelection() {
     return;
   }
 
-  const query = selected.join(",");
-  window.location.href = `/multi-rooms?rooms=${encodeURIComponent(query)}`;
+  const currentType = new URLSearchParams(window.location.search).get("type") || "room";
+  window.location.href = `/multi?type=${currentType}&rooms=${encodeURIComponent(selected.join(","))}`;
 }
+window.applyRoomSelection = applyRoomSelection;
 
 document.addEventListener("change", (e) => {
   if (e.target && e.target.name === "roomSelection") {
@@ -503,6 +646,16 @@ updateTime();
 
 window.addEventListener("DOMContentLoaded", () => {
   updateSoundIcon();
+  updateHiddenBadge();
   initSocket();
+
+  const quadrants = document.querySelectorAll(".room-quadrant, .room-container");
+  quadrants.forEach((q) => {
+    const rId = q.dataset.roomId;
+    if (lastKnownMultiRoomsData[rId]) {
+      updateQuadrantDOM(rId, lastKnownMultiRoomsData[rId]);
+    }
+  });
+
   setTimeout(() => checkInitialSpeech(false), 1500);
 });

@@ -1,9 +1,17 @@
 /**
- * remoteNav.js - Bộ điều hướng thuần D-Pad (Lên / Xuống / Trái / Phải / OK / Back) cho Smart TV & Bàn phím
- * Đã loại bỏ toàn bộ các phím tắt phức tạp, chỉ giữ lại các phím điều hướng chuẩn:
- *  - Lên / Xuống / Trái / Phải (D-Pad): Di chuyển giữa các ô phòng, dòng bệnh nhân và nút bấm
- *  - OK / Enter: Chọn, kích hoạt nút, hoặc mở bảng tác vụ bệnh nhân
- *  - Back / Escape: Đóng hộp thoại / Quay lại
+ * remoteNav.js - Bộ điều hướng toàn diện cho Bàn phím máy tính (PC Keyboard) & Smart TV Remote
+ * Hỗ trợ đầy đủ các phím chuẩn trên bàn phím máy tính:
+ *  - Phím M: Mở / Đóng modal chia phòng (Multi Tab / Cấu hình phòng)
+ *  - Phím A hoặc S: Bật / Tắt âm thanh (Audio / Sound)
+ *  - Phím Space (Phím cách): Đọc lại tên bệnh nhân hiện tại
+ *  - Phím H: Mở / Đóng danh sách bệnh nhân đã xóa / ẩn
+ *  - Phím Delete (Del), D, X, 0: Xóa / Ẩn bệnh nhân khỏi màn hình
+ *  - Phím Backspace: Khi ở trên dòng bệnh nhân -> Xóa/Ẩn; Khi ở ngoài -> Quay lại trang trước; Khi trong modal -> Đóng modal
+ *  - Phím Escape (Esc): Đóng modal đang mở
+ *  - Phím Mũi tên (Lên / Xuống / Trái / Phải): Di chuyển focus 2D
+ *  - Phím Tab / Shift+Tab: Di chuyển tới / lui giữa các phần tử
+ *  - Phím Home / End: Về đầu / Về cuối danh sách
+ *  - Phím Enter / Return: Chọn nút, check ô phòng hoặc gọi tên bệnh nhân
  */
 
 (function () {
@@ -63,6 +71,10 @@
   function getActiveModal() {
     const roomModal = document.getElementById("roomModal");
     if (roomModal && !roomModal.classList.contains("hidden")) return roomModal;
+
+    const hiddenModal = document.getElementById("hiddenPatientsModal");
+    if (hiddenModal && !hiddenModal.classList.contains("hidden")) return hiddenModal;
+
     return null;
   }
 
@@ -80,8 +92,11 @@
     } else {
       // Khi Modal đóng: Điều hướng Header + Bảng bệnh nhân
       const roomModal = document.getElementById("roomModal");
+      const hiddenModal = document.getElementById("hiddenPatientsModal");
+
       rawElements = Array.from(document.querySelectorAll(".remote-item")).filter((el) => {
         if (roomModal && roomModal.contains(el)) return false;
+        if (hiddenModal && hiddenModal.contains(el)) return false;
         return true;
       });
     }
@@ -210,6 +225,13 @@
   }
 
   function handleKeyDown(e) {
+    // Nếu đang gõ vào ô nhập liệu văn bản thực sự thì không can thiệp
+    const targetTag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : "";
+    const targetType = (e.target && e.target.type) ? e.target.type.toLowerCase() : "";
+    if (targetTag === "TEXTAREA" || (targetTag === "INPUT" && targetType !== "checkbox" && targetType !== "button")) {
+      return;
+    }
+
     const rawKey = e.key || "";
     const key = rawKey.toLowerCase();
     const code = e.keyCode || e.which || 0;
@@ -217,9 +239,79 @@
     items = getNavItems();
     const currentEl = items[currentIndex];
 
-    // ========================================================
-    // 1. PHÍM LÊN (ArrowUp, DPAD_UP = 19, VK_UP = 38)
-    // ========================================================
+    if (key === "m" || code === 77) {
+      e.preventDefault();
+      e.stopPropagation();
+      const roomModal = document.getElementById("roomModal");
+      const isRoomModalOpen = roomModal && !roomModal.classList.contains("hidden");
+      if (typeof toggleRoomModal === "function") {
+        toggleRoomModal(!isRoomModalOpen);
+      }
+      return;
+    }
+
+    if (key === "a" || code === 65 || key === "s" || code === 83) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof toggleSound === "function") {
+        toggleSound();
+      }
+      return;
+    }
+
+    if (key === "h" || code === 72) {
+      e.preventDefault();
+      e.stopPropagation();
+      const hiddenModal = document.getElementById("hiddenPatientsModal");
+      const isHiddenOpen = hiddenModal && !hiddenModal.classList.contains("hidden");
+      if (typeof toggleHiddenModal === "function") {
+        toggleHiddenModal(!isHiddenOpen);
+      }
+      return;
+    }
+
+
+    if (key === " " || key === "spacebar" || code === 32) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (currentEl && (currentEl.hasAttribute("data-patient") || currentEl.tagName === "TR")) {
+        if (typeof onRowClick === "function") {
+          onRowClick(currentEl);
+        }
+      } else {
+        if (typeof speakCurrentPatients === "function") {
+          speakCurrentPatients(true);
+        }
+      }
+      return;
+    }
+
+    if (key === "tab" || code === 9) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.shiftKey) {
+        if (currentIndex > 0) setFocus(currentIndex - 1);
+        else setFocus(items.length - 1);
+      } else {
+        if (currentIndex < items.length - 1) setFocus(currentIndex + 1);
+        else setFocus(0);
+      }
+      return;
+    }
+    if (key === "home" || code === 36) {
+      e.preventDefault();
+      e.stopPropagation();
+      setFocus(0);
+      return;
+    }
+    if (key === "end" || code === 35) {
+      e.preventDefault();
+      e.stopPropagation();
+      setFocus(items.length - 1);
+      return;
+    }
+
     if (code === 38 || code === 19 || key === "arrowup" || key === "up" || key === "dpadup") {
       moveFocus("up");
       e.preventDefault();
@@ -227,9 +319,6 @@
       return;
     }
 
-    // ========================================================
-    // 2. PHÍM XUỐNG (ArrowDown, DPAD_DOWN = 20, VK_DOWN = 40)
-    // ========================================================
     if (code === 40 || code === 20 || key === "arrowdown" || key === "down" || key === "dpaddown") {
       moveFocus("down");
       e.preventDefault();
@@ -237,9 +326,6 @@
       return;
     }
 
-    // ========================================================
-    // 3. PHÍM TRÁI (ArrowLeft, DPAD_LEFT = 21, VK_LEFT = 37)
-    // ========================================================
     if (code === 37 || code === 21 || key === "arrowleft" || key === "left" || key === "dpadleft") {
       moveFocus("left");
       e.preventDefault();
@@ -247,9 +333,6 @@
       return;
     }
 
-    // ========================================================
-    // 4. PHÍM PHẢI (ArrowRight, DPAD_RIGHT = 22, VK_RIGHT = 39)
-    // ========================================================
     if (code === 39 || code === 22 || key === "arrowright" || key === "right" || key === "dpadright") {
       moveFocus("right");
       e.preventDefault();
@@ -257,9 +340,6 @@
       return;
     }
 
-    // ========================================================
-    // 5. PHÍM OK / ENTER (13, 14, 23, 66, 29443, 65385)
-    // ========================================================
     if (
       code === 13 ||
       code === 23 ||
@@ -296,30 +376,70 @@
       return;
     }
 
+
+    if (
+      code === 46 ||
+      key === "delete" ||
+      (!isModalOpen() && (key === "d" || key === "x" || key === "0" || code === 48 || code === 96 || code === 403 || code === 183 || key === "red" || key === "colorf0red"))
+    ) {
+      const patientRow = currentEl ? (currentEl.hasAttribute("data-patient") ? currentEl : currentEl.closest("tr[data-patient]")) : null;
+      if (patientRow) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof removePatientFromElement === "function") {
+          removePatientFromElement(patientRow, e);
+        }
+        return;
+      }
+    }
+
     // ========================================================
-    // 6. PHÍM BACK / RETURN / ESCAPE (4, 27, 461, 10009, Backspace)
+    // 10. PHÍM BACKSPACE / ESCAPE / BACK / RETURN (Quay lại trước hoặc đóng modal)
     // ========================================================
     if (
       code === 27 ||
       code === 4 ||
+      code === 8 ||
       code === 10009 ||
       code === 461 ||
-      (isModalOpen() && (code === 8 || key === "backspace")) ||
       key === "escape" ||
+      key === "backspace" ||
       key === "back" ||
       key === "goback"
     ) {
+      e.preventDefault();
+      e.stopPropagation();
+
       if (isModalOpen()) {
-        e.preventDefault();
-        e.stopPropagation();
+        // Đóng các modal đang mở
         if (typeof toggleRoomModal === "function") {
           toggleRoomModal(false);
+        }
+        if (typeof toggleHiddenModal === "function") {
+          toggleHiddenModal(false);
         }
         setTimeout(() => {
           items = getNavItems();
           setFocus(0);
         }, 100);
         return;
+      }
+
+      // Khi đang focus vào 1 dòng bệnh nhân và bấm Backspace -> Xóa bệnh nhân đó
+      if (code === 8 || key === "backspace") {
+        const patientRow = currentEl ? (currentEl.hasAttribute("data-patient") ? currentEl : currentEl.closest("tr[data-patient]")) : null;
+        if (patientRow && typeof removePatientFromElement === "function") {
+          removePatientFromElement(patientRow, e);
+          return;
+        }
+      }
+
+      // Khi không trong modal: Quay lại trang trước
+      if (window.history && window.history.length > 1) {
+        window.history.back();
+      } else {
+        const isCdha = window.location.pathname.includes("/cdha");
+        window.location.href = isCdha ? "/cdha" : "/";
       }
     }
   }
