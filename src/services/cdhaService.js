@@ -1,4 +1,5 @@
 const cdhaModel = require('../models/cdha.model');
+const { demoteFirstOverduePatient } = require('../utils/queuePolicy');
 
 
 
@@ -49,26 +50,28 @@ const LayDanhSachBenhNhanChoCDHA = async (tenphong) => {
         };
     }
 
+    const waitingList = rawData.map(p => {
+        return {
+            makb: p.makb,
+            mabn: p.mabn,
+            holot: p.holot || '',
+            ten: p.ten || '',
+            ngaysinh: p.ngaysinh,
+            dobStr: DinhDangNgaySinh(p.ngaysinh),
+            gioitinh: p.gioitinh,
+            genderStr: LayChuoiGioiTinh(p.gioitinh),
+            priorityLabel: getPriorityLabel(p.uutien),
+            ngaydk: p.ngaynhap,
+            tenphong: p.tenphong,
+            ghichu: p.ghichu,
+            dakham: 0,
+        };
+    });
+
     const room = {
         tenphong: tenphong,
         totalWaiting: rawData.length,
-        waitingList: rawData.map(p => {
-            return {
-                makb: p.makb,
-                mabn: p.mabn,
-                holot: p.holot || '',
-                ten: p.ten || '',
-                ngaysinh: p.ngaysinh,
-                dobStr: DinhDangNgaySinh(p.ngaysinh),
-                gioitinh: p.gioitinh,
-                genderStr: LayChuoiGioiTinh(p.gioitinh),
-                priorityLabel: getPriorityLabel(p.uutien),
-                ngaydk: p.ngaynhap,
-                tenphong: p.tenphong,
-                ghichu: p.ghichu,
-                dakham: 0 // Assume 0 as they are in waiting list view
-            };
-        })
+        waitingList: demoteFirstOverduePatient(waitingList),
     };
     
     return room;

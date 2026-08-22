@@ -1,4 +1,5 @@
 const psdangkyModel = require('../models/psdangky.model');
+const { demoteFirstOverduePatient } = require('../utils/queuePolicy');
 
 const DinhDangNgaySinh = (dateVal) => {
     if (!dateVal) return 'Chưa cập nhật';
@@ -39,6 +40,38 @@ const KiemTraUuTien = (ngaysinh, gioitinh) => {
     return isElderly;
 };
 
+const buildRoomViewModel = (maphong, data = [], roomInfo = {}, totalDKPlus) => {
+    const roomData = data[0] || roomInfo;
+    const rawPatients = roomData.psdangky || [];
+
+    const waitingList = rawPatients.map((patient) => {
+        const patientInfo = patient.dmbenhnhan || {};
+        const { ngaysinh = null, gioitinh = null } = patientInfo;
+
+        return {
+            makb: patient.makb,
+            mabn: patientInfo.mabn || null,
+            holot: patientInfo.holot || '',
+            ten: patientInfo.ten || '',
+            ngaysinh,
+            dobStr: DinhDangNgaySinh(ngaysinh),
+            gioitinh,
+            genderStr: LayChuoiGioiTinh(gioitinh),
+            isPriority: KiemTraUuTien(ngaysinh, gioitinh),
+            ngaydk: patient.ngaydk,
+            dakham: 0,
+        };
+    });
+
+    return {
+        maphong: roomData.maphong || maphong,
+        tenphong: roomData.tenphong || roomInfo.tenphong || maphong,
+        totalDKPlus: totalDKPlus ?? rawPatients.length,
+        totalWaiting: rawPatients.length,
+        waitingList: demoteFirstOverduePatient(waitingList),
+    };
+};
+
 const LayDanhSachBenhNhanChoCuaPhong = async (maphong) => {
     // Lấy thông số Tổng Đăng Ký từ model psdangky
     const totalDKPlus = await psdangkyModel.LayThongKeCuaPhong(maphong);
@@ -48,49 +81,13 @@ const LayDanhSachBenhNhanChoCuaPhong = async (maphong) => {
         const roomInfo = await psdangkyModel.LayThongTinPhong(maphong);
         if (!roomInfo) return null; // Room completely invalid
         
-        return {
-            maphong: roomInfo.maphong,
-            tenphong: roomInfo.tenphong,
-            totalDKPlus: totalDKPlus,
-            totalWaiting: 0,
-            waitingList: []
-        };
+        return buildRoomViewModel(maphong, [], roomInfo, totalDKPlus);
     }
-    
-    // Lấy dữ liệu tên phòng từ data
-    const maphongResult = data[0].maphong;
-    const tenphongResult = data[0].tenphong;
 
-    const rawPatients = (data && data.length > 0) ? (data[0].psdangky || []) : [];
-    
-    const room = {
-        maphong: maphongResult,
-        tenphong: tenphongResult,
-        totalDKPlus: totalDKPlus,
-        totalWaiting: rawPatients.length,
-        waitingList: rawPatients.map(p => {
-            const ngaysinh = p.dmbenhnhan ? p.dmbenhnhan.ngaysinh : null;
-            const gioitinh = p.dmbenhnhan ? p.dmbenhnhan.gioitinh : null;
-            
-            return {
-                makb: p.makb,
-                mabn: p.dmbenhnhan ? p.dmbenhnhan.mabn : null,
-                holot: p.dmbenhnhan ? p.dmbenhnhan.holot : '',
-                ten: p.dmbenhnhan ? p.dmbenhnhan.ten : '',
-                ngaysinh: ngaysinh,
-                dobStr: DinhDangNgaySinh(ngaysinh),
-                gioitinh: gioitinh,
-                genderStr: LayChuoiGioiTinh(gioitinh),
-                isPriority: KiemTraUuTien(ngaysinh, gioitinh),
-                ngaydk: p.ngaydk,
-                dakham: 0
-            };
-        })
-    };
-    
-    return room;
+    return buildRoomViewModel(maphong, data, data[0], totalDKPlus);
 };
 
 module.exports = {
+    buildRoomViewModel,
     LayDanhSachBenhNhanChoCuaPhong,
 };

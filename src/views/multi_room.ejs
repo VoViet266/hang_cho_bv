@@ -5,12 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Màn hình hàng chờ đa phòng - Tâm Minh Đức</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/board.css">
     <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
     <script>
         tailwind.config = {
@@ -38,47 +35,46 @@
     </style>
 </head>
 
-<body class="bg-slate-100 text-slate-900 font-sans flex flex-col h-screen overflow-hidden select-none">
+<body class="tv-board bg-slate-100 text-slate-900 font-sans flex flex-col h-screen overflow-hidden select-none">
 
     <!-- Top Bar Header -->
     <header
-        class="bg-white border-2 border-slate-300 px-3 py-1 flex justify-between items-center shrink-0 shadow-sm gap-2">
+        class="tv-header tv-header--compact bg-white border-2 border-slate-300 px-3 py-1 flex justify-between items-center shrink-0 shadow-sm gap-2">
         <!-- Logo & Đồng hồ -->
-        <div class="flex items-center gap-3">
+        <div class="tv-brand flex items-center gap-3">
             <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-12 md:h-14 object-contain">
             <div class="tabular-nums">
-                <div id="date-str" class="text-xs text-slate-500 font-bold uppercase tracking-widest leading-tight">
+                <div id="date-str" class="tv-clock-date text-xs text-slate-500 font-bold uppercase tracking-widest leading-tight">
                 </div>
-                <div id="time-str" class="text-xl md:text-2xl font-black text-brand leading-none"></div>
+                <div id="time-str" class="tv-clock-time text-xl md:text-2xl font-black text-brand leading-none"></div>
             </div>
         </div>
 
         <!-- Controls -->
-        <div class="flex items-center gap-2">
+        <div class="tv-actions flex items-center gap-2">
             <!-- Nút chọn phòng -->
             <button onclick="toggleRoomModal(true)"
-                class="remote-item bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                tabindex="0">
+                class="remote-item icon-button bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                tabindex="0" aria-label="Chọn phòng hiển thị" title="Chọn phòng hiển thị">
                 <i class="fas fa-sliders-h"></i>
-                <span class="hidden md:inline">Chọn phòng</span>
             </button>
 
             <!-- Nút bật/tắt âm thanh -->
             <button id="soundToggleBtn" onclick="toggleSound()"
-                class="remote-item bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                class="remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                 tabindex="0"
+                aria-label="Bật hoặc tắt âm thanh"
                 title="Bật/Tắt âm thanh">
                 <i id="soundIcon" class="fas fa-volume-mute text-slate-400"></i>
-                <span id="soundText" class="hidden md:inline text-xs font-bold">Loa: Tắt</span>
             </button>
 
             <!-- Nút quay lại trang chủ -->
             <a href="/"
-                class="remote-item bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
+                class="remote-item icon-button bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
                 tabindex="0"
+                aria-label="Về trang chủ"
                 title="Về trang chủ">
                 <i class="fas fa-arrow-left"></i>
-                <span class="hidden md:inline">Quay lại</span>
             </a>
         </div>
     </header>
@@ -148,7 +144,7 @@
                                                 </span>
                                              <!-- Quadrant Table -->
                             <div class="flex-grow overflow-y-auto no-scrollbar bg-white">
-                                <table class="w-full text-left border-collapse" style="table-layout: fixed;">
+                                <table class="patient-table patient-table--split w-full text-left border-collapse">
                                     <colgroup>
                                         <col style="width: 8%;">
                                         <col style="width: 56%;">
@@ -199,7 +195,7 @@
                                                         class="py-2.5 px-2 text-blue-900 <%= isNear ? 'text-danger text-2xl md:text-3xl lg:text-4xl font-black tracking-tight' : 'text-xl md:text-2xl lg:text-3xl font-extrabold' %>">
                                                         <div
                                                             class="patient-name-container flex items-center overflow-hidden">
-                                                            <span class="patient-name-text truncate">
+                                                            <span class="patient-name-text">
                                                                 <%= (pName || 'Chưa cập nhật' ).toUpperCase() %>
                                                             </span>
                                                             <%- noteTag %>
@@ -305,43 +301,10 @@
         </div>
     </div>
 
-    <!-- Modal Tác Vụ Bệnh Nhân (Gọi đọc tên hoặc Bỏ qua/Đôn lên) -->
-    <div id="patientActionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border-2 border-slate-300 rounded-2xl w-full max-w-lg p-5 text-slate-900 shadow-2xl flex flex-col gap-4">
-            <div class="flex justify-between items-center pb-2 border-b border-slate-200">
-                <div>
-                    <span id="modalPatientRoom" class="text-xs font-bold text-slate-500 uppercase tracking-wide block">Phòng khám</span>
-                    <h3 id="modalPatientName" class="text-xl md:text-2xl font-black text-danger uppercase truncate max-w-sm">Bệnh nhân</h3>
-                </div>
-                <button onclick="closePatientActionModal()" class="text-slate-400 hover:text-danger text-2xl font-bold cursor-pointer transition-colors">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="flex flex-col gap-3 py-2">
-                <!-- Nút gọi đọc tên -->
-                <button id="btnActionSpeak" onclick="triggerModalSpeak()" class="remote-item flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-600 text-blue-900 hover:text-white rounded-xl border-2 border-blue-200 transition-all font-black text-base md:text-xl cursor-pointer" tabindex="0">
-                    <i class="fas fa-volume-up text-2xl"></i>
-                    <span>Gọi / Đọc lại tên bệnh nhân</span>
-                </button>
-
-                <!-- Nút Bỏ qua & Đôn người khác lên -->
-                <button id="btnActionSkip" onclick="triggerModalSkip()" class="remote-item flex items-center gap-3 p-4 bg-red-50 hover:bg-red-600 text-danger hover:text-white rounded-xl border-2 border-red-200 transition-all font-black text-base md:text-xl cursor-pointer" tabindex="0">
-                    <i class="fas fa-forward text-2xl"></i>
-                    <span>Bỏ qua & Đôn người kế tiếp lên</span>
-                </button>
-
-                <!-- Nút Đóng -->
-                <button onclick="closePatientActionModal()" class="remote-item p-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border border-slate-300 transition-colors font-bold text-sm md:text-base text-center cursor-pointer" tabindex="0">
-                    Đóng
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/remoteNav.js"></script>
+    <script src="/js/queuePolicy.js"></script>
     <script src="/js/multiBoard.js"></script>
 </body>
 

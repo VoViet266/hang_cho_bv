@@ -1,0 +1,66 @@
+[07:39:38 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[07:39:38 INF] Server running on http://localhost:3000 
+[07:39:41 INF] [127.0.0.1] HTTP GET / responded 200 in 713.9399 ms 
+[07:39:45 INF] [127.0.0.1] HTTP GET /cdha responded 200 in 8.5484 ms 
+[07:39:48 INF] [127.0.0.1] HTTP GET /room/B1 responded 200 in 1430.3656 ms 
+[07:39:57 INF] [127.0.0.1] HTTP GET /room/B24 responded 200 in 1401.9805 ms 
+[07:40:04 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[07:40:04 INF] Server running on http://localhost:3000 
+[07:40:05 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[07:40:05 INF] Server running on http://localhost:3000 
+[07:40:07 INF] [127.0.0.1] HTTP GET /room/B4 responded 200 in 1548.2480 ms 
+[07:40:30 INF] [127.0.0.1] HTTP GET /room/B4 responded 200 in 1150.1095 ms 
+[07:40:36 INF] [127.0.0.1] HTTP GET /room/B14 responded 200 in 1232.2498 ms 
+[07:40:41 INF] [127.0.0.1] HTTP GET /room/B21 responded 200 in 1751.2933 ms 
+[07:41:11 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[07:41:11 INF] Server running on http://localhost:3000 
+[07:41:29 INF] [127.0.0.1] HTTP GET /room/B21?rooms=B21%2CB4 responded 200 in 1261.1706 ms 
+[07:41:47 INF] [127.0.0.1] HTTP GET /room/B15?rooms=B15%2CB21%2CB4 responded 200 in 1506.6113 ms 
+[07:41:48 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[07:41:48 INF] Server running on http://localhost:3000 
+[07:41:55 INF] [127.0.0.1] HTTP GET /room/B15?rooms=B15%2CB21%2CB24%2CB4 responded 200 in 1478.1313 ms 
+[07:41:55 INF] [127.0.0.1] HTTP GET / responded 200 in 317.0966 ms 
+[07:41:55 INF] [127.0.0.1] HTTP GET /cdha responded 200 in 39.8182 ms 
+[07:41:56 INF] [127.0.0.1] HTTP GET /room/B1 responded 200 in 938.7745 ms 
+[07:42:05 INF] [127.0.0.1] HTTP GET /room/B1 responded 200 in 1190.4466 ms 
+[07:42:06 INF] [127.0.0.1] HTTP GET /cdha/room/CT responded 200 in 110.1157 ms 
+[07:42:07 INF] [127.0.0.1] HTTP GET /multi?rooms=B1%2CB4 responded 200 in 1382.4409 ms 
+[07:42:22 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20L%C3%AA%20V%C4%83n%20Ch%C4%83m%2C%20v%C3%A0o%20Ph%C3%B2ng%20B15 responded 200 in 459.8029 ms 
+[07:42:27 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Hu%E1%BB%B3nh%20Th%E1%BB%8B%20H%C6%B0%E1%BB%9Dng%2C%20v%C3%A0o%20Ph%C3%B2ng%20B21 responded 200 in 273.6299 ms 
+[07:42:31 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Nguy%E1%BB%85n%20H%E1%BB%93ng%20L%C3%A0i%2C%20v%C3%A0o%20Ph%C3%B2ng%20N%E1%BB%99i%20B4 responded 200 in 253.3976 ms 
+[07:42:39 INF] [127.0.0.1] HTTP GET /room/B15?rooms=B15%2CB21%2CB24%2CB4 responded 304 in 1236.7602 ms 
+[07:42:45 INF] [127.0.0.1] HTTP GET /room/B15?rooms=B15%2CB21%2CB24%2CB4 responded 304 in 1439.1691 ms 
+[07:42:54 INF] [127.0.0.1] HTTP GET /room/B15?rooms=B15%2CB21%2CB4 responded 304 in 1630.5407 ms 
+[07:43:12 INF] [127.0.0.1] HTTP GET /room/B23?rooms=B23%2CB4 responded 200 in 1595.7053 ms 
+[07:43:13 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Ph%E1%BA%A1m%20Th%E1%BB%8B%20Ng%C3%A2n%2C%20v%C3%A0o%20Ph%C3%B2ng%20B23 responded 200 in 412.8937 ms 
+[07:43:49 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[07:43:49 INF] Server running on http://localhost:3000 
+[07:47:09 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Phan%20Duy%20Thanh%2C%20v%C3%A0o%20Ph%C3%B2ng%20N%E1%BB%99i%20B4 responded 200 in 419.5961 ms 
+[07:49:34 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Nguy%E1%BB%85n%20Th%E1%BB%8B%20T%C4%A9nh%2C%20v%C3%A0o%20Ph%C3%B2ng%20N%E1%BB%99i%20B4 responded 200 in 452.4629 ms 
+[07:55:35 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20L%C3%AA%20V%C4%83n%20Gi%C3%A0u%2C%20v%C3%A0o%20Ph%C3%B2ng%20N%E1%BB%99i%20B4 responded 200 in 371.9605 ms 
+[08:14:26 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20%C4%90%E1%BA%B7ng%20Th%E1%BB%8B%20Hu%E1%BB%B3nh%20Trang%2C%20v%C3%A0o%20Ph%C3%B2ng%20B23 responded 200 in 453.1225 ms 
+[08:14:39 INF] [127.0.0.1] HTTP GET /room/B23?rooms=B23%2CB4 responded 200 in 1050.0953 ms 
+[08:25:05 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[08:25:05 INF] Server running on http://localhost:3000 
+[08:25:06 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[08:25:06 INF] Server running on http://localhost:3000 
+[08:25:07 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[08:25:07 INF] Server running on http://localhost:3000 
+[08:25:08 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[08:25:08 INF] Server running on http://localhost:3000 
+[08:25:16 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20L%C3%AA%20Th%E1%BB%8B%20Ng%E1%BB%8Dc%20H%C3%A2n%2C%20v%C3%A0o%20Ph%C3%B2ng%20N%E1%BB%99i%20B4 responded 200 in 456.1064 ms 
+[08:25:22 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Tr%E1%BA%A7n%20Th%E1%BB%8B%20N%C4%83m%2C%20v%C3%A0o%20Ph%C3%B2ng%20N%E1%BB%99i%20B4 responded 200 in 442.5107 ms 
+[08:26:08 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[08:26:08 INF] Server running on http://localhost:3000 
+[08:27:11 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[08:27:11 INF] Server running on http://localhost:3000 
+[08:27:12 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[08:27:12 INF] Server running on http://localhost:3000 
+[08:27:22 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Nguy%E1%BB%85n%20Th%E1%BB%8B%20Thanh%20Loan%2C%20v%C3%A0o%20Ph%C3%B2ng%20N%E1%BB%99i%20B4 responded 200 in 423.4728 ms 
+[08:27:28 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[08:27:28 INF] Server running on http://localhost:3000 
+[08:28:09 INF] [127.0.0.1] HTTP GET /room/B1 responded 200 in 1494.4101 ms 
+[08:28:09 INF] [127.0.0.1] HTTP GET /cdha/room/CT responded 200 in 15.2446 ms 
+[08:28:10 INF] [127.0.0.1] HTTP GET /multi?rooms=B1%2CB4 responded 200 in 1471.4814 ms 
+[08:30:24 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Nguy%E1%BB%85n%20Th%E1%BB%8B%20C%E1%BB%A5c%2C%20v%C3%A0o%20Ph%C3%B2ng%20N%E1%BB%99i%20B4 responded 200 in 453.7872 ms 
+[08:35:13 INF] [127.0.0.1] HTTP GET /room/B23?rooms=B23%2CB4 responded 200 in 1791.9651 ms 

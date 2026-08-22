@@ -1,9 +1,6 @@
 // soundEnabled lưu trong localStorage
 let soundEnabled = localStorage.getItem("soundEnabled") === "true";
 
-// Quản lý danh sách bệnh nhân đã bị bỏ qua (đôn người kế tiếp lên) trong phiên hiển thị
-window.dismissedPatientsSet = window.dismissedPatientsSet || new Set();
-let activeActionPatient = null;
 let lastKnownMultiRoomsData = {}; // Cache dữ liệu các phòng
 
 // ==========================================
@@ -78,6 +75,7 @@ const audioQueue = new AudioQueueManager();
 function updateSoundIcon() {
   const icon = document.getElementById("soundIcon");
   const text = document.getElementById("soundText");
+  const button = document.getElementById("soundToggleBtn");
 
   if (soundEnabled) {
     if (icon) {
@@ -86,12 +84,20 @@ function updateSoundIcon() {
     if (text) {
       text.textContent = "Loa: BẬT";
     }
+    if (button) {
+      button.title = "Loa đang bật";
+      button.setAttribute("aria-label", "Tắt âm thanh");
+    }
   } else {
     if (icon) {
       icon.className = "fas fa-volume-mute text-slate-400 text-sm";
     }
     if (text) {
       text.textContent = "Loa: TẮT";
+    }
+    if (button) {
+      button.title = "Loa đang tắt";
+      button.setAttribute("aria-label", "Bật âm thanh");
     }
   }
 }
@@ -175,22 +181,14 @@ function showToast(message, type = "info", undoCallback = null) {
 // QUẢN LÝ BỎ QUA BỆNH NHÂN & ĐÔN NGƯỜI KẾ TIẾP
 // ==========================================
 function getPatientKey(p) {
-  if (!p) return "";
-  return (p.makb || p.mabn || `${(p.holot || "").trim()}_${(p.ten || "").trim()}_${(p.dobStr || "").trim()}`).trim();
-}
-
-function isPatientDismissed(p) {
-  if (!p) return false;
-  const key = getPatientKey(p);
-  const fullName = `${(p.holot || "").trim()} ${(p.ten || "").trim()}`.trim();
-  return window.dismissedPatientsSet.has(key) || window.dismissedPatientsSet.has(fullName);
+  return window.QueuePolicy ? window.QueuePolicy.getPatientKey(p) : "";
 }
 
 function skipPatient(patientKey, patientName, roomName) {
   if (!patientName) return;
 
-  window.dismissedPatientsSet.add(patientKey);
-  window.dismissedPatientsSet.add(patientName.trim());
+  if (!window.QueuePolicy) return;
+  window.QueuePolicy.demote(patientKey, patientName);
 
   // Rerender lại tất cả các quadrant đang hiển thị
   const quadrants = document.querySelectorAll(".room-quadrant");
@@ -206,9 +204,8 @@ function skipPatient(patientKey, patientName, roomName) {
     checkInitialSpeech(true);
   }, 200);
 
-  showToast(`Đã bỏ qua BN: ${patientName}. Đôn người kế tiếp lên!`, "danger", () => {
-    window.dismissedPatientsSet.delete(patientKey);
-    window.dismissedPatientsSet.delete(patientName.trim());
+  showToast(`Đã hạ ${patientName} xuống 1 STT`, "danger", () => {
+    window.QueuePolicy.restore(patientKey, patientName);
     quadrants.forEach((q) => {
       const rId = q.dataset.roomId;
       if (lastKnownMultiRoomsData[rId]) {
@@ -232,66 +229,20 @@ window.skipPatientFromElement = function (el) {
   skipPatient(patientKey, patientName, roomName);
 };
 
-// ==========================================
-// MODAL TÁC VỤ BỆNH NHÂN (POPUP ACTION)
-// ==========================================
-function openPatientActionModal(el) {
+// Nhấp hoặc nhấn Enter trên dòng để gọi tên ngay.
+function onRowClick(el) {
   if (!el) return;
-  const patientKey = el.dataset.patientKey || el.dataset.patient || "";
-  const patientName = el.dataset.patient || "";
-  const roomName = el.dataset.room || "";
-
+  const patientName = (el.dataset.patient || "").trim();
+  const roomName = (el.dataset.room || "").trim();
   if (!patientName) return;
 
-  activeActionPatient = { patientKey, patientName, roomName, el };
-
-  const modal = document.getElementById("patientActionModal");
-  const nameEl = document.getElementById("modalPatientName");
-  const roomEl = document.getElementById("modalPatientRoom");
-
-  if (nameEl) nameEl.textContent = patientName.toUpperCase();
-  if (roomEl) roomEl.textContent = roomName ? formatRoomSpokenName(roomName).toUpperCase() : "HÀNG CHỜ PHÒNG KHÁM";
-
-  if (modal) {
-    modal.classList.remove("hidden");
-    if (window.TVRemoteNav && typeof window.TVRemoteNav.onModalToggle === "function") {
-      window.TVRemoteNav.onModalToggle(true);
-    }
+  if (!soundEnabled) {
+    soundEnabled = true;
+    localStorage.setItem("soundEnabled", "true");
+    updateSoundIcon();
   }
-}
-window.openPatientActionModal = openPatientActionModal;
 
-function closePatientActionModal() {
-  const modal = document.getElementById("patientActionModal");
-  if (modal) {
-    modal.classList.add("hidden");
-    activeActionPatient = null;
-    if (window.TVRemoteNav && typeof window.TVRemoteNav.onModalToggle === "function") {
-      window.TVRemoteNav.onModalToggle(false);
-    }
-  }
-}
-window.closePatientActionModal = closePatientActionModal;
-
-function triggerModalSpeak() {
-  if (activeActionPatient && activeActionPatient.patientName) {
-    requestSpeak(activeActionPatient.patientName, activeActionPatient.roomName);
-  }
-  closePatientActionModal();
-}
-window.triggerModalSpeak = triggerModalSpeak;
-
-function triggerModalSkip() {
-  if (activeActionPatient && activeActionPatient.patientName) {
-    skipPatient(activeActionPatient.patientKey, activeActionPatient.patientName, activeActionPatient.roomName);
-  }
-  closePatientActionModal();
-}
-window.triggerModalSkip = triggerModalSkip;
-
-// Nhấp vào dòng bệnh nhân
-function onRowClick(el) {
-  openPatientActionModal(el);
+  requestSpeak(patientName, roomName);
 }
 window.onRowClick = onRowClick;
 
@@ -324,9 +275,10 @@ function updateQuadrantDOM(roomId, data) {
   const card = document.getElementById(`room-card-${roomId}`);
   const roomTitle = card ? card.dataset.roomName : (data.tenphong || data.maphong || roomId);
 
-  // Lọc bỏ bệnh nhân đã bị bỏ qua
   const rawList = data.waitingList || [];
-  const waitingList = rawList.filter((p) => !isPatientDismissed(p));
+  const waitingList = window.QueuePolicy
+    ? window.QueuePolicy.applyManualDemotions(rawList)
+    : [...rawList];
   const activeWaitingCount = waitingList.filter((p) => p.dakham == 0).length;
 
   // 1. Cập nhật số liệu Đang Chờ & Tổng Đăng Ký
@@ -403,8 +355,8 @@ function updateQuadrantDOM(roomId, data) {
             ${index + 1}
           </td>
           <td class="py-2.5 px-2 text-blue-900 ${nameClass}">
-            <div class="patient-name-container flex items-center overflow-hidden">
-              <span class="patient-name-text truncate">
+            <div class="patient-name-container">
+              <span class="patient-name-text">
                 ${(currentPatientName || "Chưa cập nhật").toUpperCase()}
               </span>
               ${noteTag}
@@ -435,8 +387,6 @@ function updateQuadrantDOM(roomId, data) {
     localStorage.setItem(storageKey, nextPatientNameToRead);
     requestSpeak(nextPatientNameToRead, roomTitle);
   }
-
-  fitText();
 
   if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
     window.TVRemoteNav.refresh();
@@ -550,28 +500,6 @@ function updateTime() {
 }
 setInterval(updateTime, 1000);
 updateTime();
-
-// FitText
-function fitText() {
-  const containers = document.querySelectorAll(".patient-name-container");
-  containers.forEach((container) => {
-    const textSpan = container.querySelector(".patient-name-text") || container;
-    if (!textSpan) return;
-
-    textSpan.style.transform = "scale(1)";
-    const containerWidth = container.clientWidth;
-    const textWidth = textSpan.scrollWidth;
-
-    if (textWidth > containerWidth && containerWidth > 0) {
-      const scale = containerWidth / textWidth;
-      textSpan.style.transform = `scale(${scale})`;
-      textSpan.style.transformOrigin = "left center";
-    }
-  });
-}
-window.addEventListener("load", fitText);
-window.addEventListener("resize", fitText);
-fitText();
 
 window.addEventListener("DOMContentLoaded", () => {
   updateSoundIcon();

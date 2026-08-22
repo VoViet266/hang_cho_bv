@@ -29,8 +29,8 @@
         outline: none !important;
         border-color: #1e40af !important;
         background-color: #dbeafe !important;
-        box-shadow: 0 0 0 5px #2563eb, 0 12px 30px -4px rgba(30, 64, 175, 0.45) !important;
-        transform: scale(1.04) !important;
+        box-shadow: 0 0 0 3px #2563eb !important;
+        transform: none !important;
         z-index: 50 !important;
         position: relative !important;
       }
@@ -38,7 +38,7 @@
       tr.remote-item.tv-focused {
         outline: none !important;
         background-color: #bfdbfe !important; /* bg-blue-200 đậm rõ nét */
-        box-shadow: inset 0 0 0 4px #1d4ed8, 0 6px 18px rgba(29, 78, 216, 0.4) !important;
+        box-shadow: inset 0 0 0 3px #1d4ed8 !important;
         position: relative !important;
         z-index: 30 !important;
       }
@@ -61,8 +61,6 @@
   }
 
   function getActiveModal() {
-    const patientModal = document.getElementById("patientActionModal");
-    if (patientModal && !patientModal.classList.contains("hidden")) return patientModal;
     const roomModal = document.getElementById("roomModal");
     if (roomModal && !roomModal.classList.contains("hidden")) return roomModal;
     return null;
@@ -82,11 +80,8 @@
     } else {
       // Khi Modal đóng: Điều hướng Header + Bảng bệnh nhân
       const roomModal = document.getElementById("roomModal");
-      const patientModal = document.getElementById("patientActionModal");
-
       rawElements = Array.from(document.querySelectorAll(".remote-item")).filter((el) => {
         if (roomModal && roomModal.contains(el)) return false;
-        if (patientModal && patientModal.contains(el)) return false;
         return true;
       });
     }
@@ -317,9 +312,7 @@
       if (isModalOpen()) {
         e.preventDefault();
         e.stopPropagation();
-        if (typeof closePatientActionModal === "function" && document.getElementById("patientActionModal") && !document.getElementById("patientActionModal").classList.contains("hidden")) {
-          closePatientActionModal();
-        } else if (typeof toggleRoomModal === "function") {
+        if (typeof toggleRoomModal === "function") {
           toggleRoomModal(false);
         }
         setTimeout(() => {
