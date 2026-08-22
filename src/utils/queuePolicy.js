@@ -6,18 +6,33 @@ const parseQueueTime = (value) => {
     return Number.isFinite(time) ? time : null;
 };
 
+const isPatientOverdue = (patient, now = Date.now()) => {
+    if (!patient) return false;
+    const queuedAt = parseQueueTime(patient.ngaydk);
+    if (queuedAt === null) return false;
+    return (now - queuedAt) >= FIFTEEN_MINUTES_MS;
+};
+
+/**
+ * Nếu bệnh nhân đứng đầu (index 0) đã chờ quá 15 phút mà chưa vào khám:
+ * Đẩy bệnh nhân đứng đầu sang vị trí thứ 2 (hoán đổi với bệnh nhân đứng thứ 2).
+ */
 const demoteFirstOverduePatient = (patients = [], now = Date.now()) => {
+    if (!Array.isArray(patients) || patients.length < 2) return patients;
     const ordered = [...patients];
-    if (ordered.length < 2 || ordered[0]?.dakham != 0) return ordered;
 
-    const queuedAt = parseQueueTime(ordered[0].ngaydk);
-    if (queuedAt === null || now - queuedAt < FIFTEEN_MINUTES_MS) return ordered;
+    if (ordered[0] && ordered[0].dakham == 0 && isPatientOverdue(ordered[0], now)) {
+        const first = ordered[0];
+        ordered[0] = ordered[1];
+        ordered[1] = first;
+    }
 
-    [ordered[0], ordered[1]] = [ordered[1], ordered[0]];
     return ordered;
 };
 
 module.exports = {
     FIFTEEN_MINUTES_MS,
+    parseQueueTime,
+    isPatientOverdue,
     demoteFirstOverduePatient,
 };
