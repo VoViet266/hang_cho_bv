@@ -1,5 +1,4 @@
 const psdangkyModel = require('../models/psdangky.model');
-const { demoteFirstOverduePatient } = require('../utils/queuePolicy');
 
 const DinhDangNgaySinh = (dateVal) => {
     if (!dateVal) return 'Chưa cập nhật';
@@ -68,7 +67,7 @@ const buildRoomViewModel = (maphong, data = [], roomInfo = {}, totalDKPlus) => {
         tenphong: roomData.tenphong || roomInfo.tenphong || maphong,
         totalDKPlus: totalDKPlus ?? rawPatients.length,
         totalWaiting: rawPatients.length,
-        waitingList: demoteFirstOverduePatient(waitingList),
+        waitingList,
     };
 };
 

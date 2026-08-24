@@ -2,8 +2,8 @@ const prisma = require('../config/db');
 //getDashboardData
 const LayTongHopDashboard = async () => {
     const rows = await prisma.$queryRaw`
-        SELECT 
-            p.maphong, 
+        SELECT
+            p.maphong,
             p.tenphong,
             COALESCE(dk_counts.count_dk, 0)::int AS "tong_dangky",
             (COALESCE(dk_counts.count_dk, 0) + COALESCE(kb_counts.transfer_in, 0))::int AS "tong_chuyen_sang",
@@ -17,12 +17,13 @@ const LayTongHopDashboard = async () => {
             GROUP BY maphong
         ) dk_counts ON p.maphong = dk_counts.maphong
         LEFT JOIN (
-            SELECT 
+            SELECT
                 COALESCE(kb.maphong, dk.maphong) AS effective_maphong,
                 COUNT(CASE WHEN dk.maphong != COALESCE(kb.maphong, dk.maphong) THEN 1 END) AS transfer_in,
-                COUNT(CASE WHEN (kb.dakham IS NULL OR kb.dakham = 0)
-                    AND COALESCE(kb.ngaykcb, dk.ngaydk) >= CURRENT_TIMESTAMP - INTERVAL '30 minutes'
-                    THEN 1 END) AS waiting
+                        COUNT(CASE WHEN (kb.dakham IS NULL OR kb.dakham = 0)
+                    AND NOT (
+                        EXTRACT(HOUR FROM COALESCE(kb.ngaykcb, dk.ngaydk)) < EXTRACT(HOUR FROM CURRENT_TIMESTAMP) - 2
+                    ) THEN 1 END) AS waiting
             FROM "current".psdangky dk
             INNER JOIN "current".khambenh kb ON dk.makb = kb.makb
             WHERE dk.ngaydk >= current_date AND dk.ngaydk < current_date + interval '1 day'

@@ -1,5 +1,4 @@
 const cdhaModel = require('../models/cdha.model');
-const { demoteFirstOverduePatient } = require('../utils/queuePolicy');
 
 
 
@@ -71,7 +70,7 @@ const LayDanhSachBenhNhanChoCDHA = async (tenphong) => {
     const room = {
         tenphong: tenphong,
         totalWaiting: rawData.length,
-        waitingList: demoteFirstOverduePatient(waitingList),
+        waitingList,
     };
     
     return room;
