@@ -50,6 +50,8 @@ jobs:
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
           REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
           GOOGLE_TTS_API_KEY: ${{secrets.GOOGLE_TTS_API_KEY}}
+          VOICE_NAME: ${{ secrets.VOICE_NAME }}
+          SPEAKING_RATE: ${{ secrets.SPEAKING_RATE }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
@@ -70,7 +72,7 @@ jobs:
           ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-          SSH_CMD_ENV="REGISTRY_TOKEN=$(printf '%q' "$REGISTRY_TOKEN") REGISTRY_USERNAME=$(printf '%q' "$REGISTRY_USERNAME") DATABASE_URL=$(printf '%q' "$DATABASE_URL") IMAGE_NAME=$(printf '%q' "$IMAGE_NAME") CONTAINER_NAME=$(printf '%q' "$CONTAINER_NAME") PORT=$(printf '%q' "$PORT") LOGS_VOLUME=$(printf '%q' "$LOGS_VOLUME") GOOGLE_TTS_API_KEY=$(printf '%q' "$GOOGLE_TTS_API_KEY")"
+          SSH_CMD_ENV="REGISTRY_TOKEN=$(printf '%q' "$REGISTRY_TOKEN") REGISTRY_USERNAME=$(printf '%q' "$REGISTRY_USERNAME") DATABASE_URL=$(printf '%q' "$DATABASE_URL") IMAGE_NAME=$(printf '%q' "$IMAGE_NAME") CONTAINER_NAME=$(printf '%q' "$CONTAINER_NAME") PORT=$(printf '%q' "$PORT") LOGS_VOLUME=$(printf '%q' "$LOGS_VOLUME") GOOGLE_TTS_API_KEY=$(printf '%q' "$GOOGLE_TTS_API_KEY") VOICE_NAME=$(printf '%q' "$VOICE_NAME") SPEAKING_RATE=$(printf '%q' "$SPEAKING_RATE")"
 
           ssh -o BatchMode=yes -p "$SSH_PORT" "$SSH_USERNAME@$SSH_HOST" $SSH_CMD_ENV /bin/bash -s <<'EOF'
             set -e
@@ -109,6 +111,8 @@ jobs:
                 -e TZ="Asia/Ho_Chi_Minh" \
                 -e DATABASE_URL="$DATABASE_URL" \
                 -e GOOGLE_TTS_API_KEY="$GOOGLE_TTS_API_KEY" \
+                -e VOICE_NAME="$VOICE_NAME" \
+                -e SPEAKING_RATE="$SPEAKING_RATE" \
                 -v /etc/localtime:/etc/localtime:ro \
                 -v "$LOGS_VOLUME":/app/logs \
                 -v "$AUDIO_CACHE_VOLUME":/app/public/audio/cache \

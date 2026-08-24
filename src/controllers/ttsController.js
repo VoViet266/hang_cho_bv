@@ -2,6 +2,7 @@ const https = require("node:https");
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const env = require("../config/env");
 
 // Thư mục lưu cache file MP3
 const cacheDir = path.join(__dirname, "../../public/audio/cache");
@@ -85,7 +86,7 @@ async function cleanCacheIfNeeded(force = false) {
 }
 
 // Chạy kiểm tra cache một lần khi khởi động
-cleanCacheIfNeeded(true).catch(() => {});
+cleanCacheIfNeeded(true).catch(() => { });
 
 function httpsRequest(url, options = {}, body = null) {
   return new Promise((resolve, reject) => {
@@ -131,8 +132,8 @@ async function getOrGenerateAudioBuffer(text) {
   }
 
   const normalizedText = text.trim();
-  const voiceName = "vi-VN-Neural2-A";
-  const speakingRate = 1.0;
+  const voiceName = env.VOICE_NAME;
+  const speakingRate = env.SPEAKING_RATE || 1.0;
 
   // Hash bao gồm nội dung, tên giọng và tốc độ để tự động làm mới khi đổi cấu hình
   const hash = crypto
@@ -227,7 +228,7 @@ async function getOrGenerateAudioBuffer(text) {
     if (err) {
       console.error("Lỗi khi ghi TTS cache file:", err);
     } else {
-      cleanCacheIfNeeded().catch(() => {});
+      cleanCacheIfNeeded().catch(() => { });
     }
   });
 
