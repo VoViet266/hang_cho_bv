@@ -29,9 +29,7 @@ const  LayDanhSachBenhNhanChoTheoPhongId = async (maphong) => {
           AND (kb.xoa IS NULL OR kb.xoa = 0)
           AND (dk.xoa IS NULL OR dk.xoa = 0)
           AND (kb.dakham IS NULL OR kb.dakham = 0)
-          AND NOT (
-              EXTRACT(HOUR FROM COALESCE(kb.ngaykcb, dk.ngaydk)) < EXTRACT(HOUR FROM CURRENT_TIMESTAMP) - 2
-          )
+          AND COALESCE(kb.ngaykcb, dk.ngaydk) >= CURRENT_TIMESTAMP - INTERVAL '30 minutes'
         GROUP BY COALESCE(kb.maphong, dk.maphong)
     `;
     return rows;

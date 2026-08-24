@@ -4,8 +4,6 @@
   let hiddenPatientsList = [];
 
   const STORAGE_KEY = "queue_hidden_patients";
-  const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
-  const AUTO_HIDE_AFTER_MS = 30 * 60 * 1000;
 
   // Khôi phục danh sách đã ẩn từ sessionStorage
   function loadHiddenFromStorage() {
@@ -45,23 +43,6 @@
 
   function getPatientName(patient) {
     return `${(patient?.holot || "").trim()} ${(patient?.ten || "").trim()}`.trim();
-  }
-
-  function parseQueueTime(value) {
-    if (!value) return null;
-    const time = new Date(value).getTime();
-    return Number.isFinite(time) ? time : null;
-  }
-
-  function isPatientOverdue(patient, now = Date.now()) {
-    const queuedAt = parseQueueTime(patient?.ngaydk);
-    if (queuedAt === null) return false;
-    return (now - queuedAt) >= FIFTEEN_MINUTES_MS;
-  }
-
-  function shouldAutoHide(patient, now = Date.now()) {
-    const queuedAt = parseQueueTime(patient?.ngaydk);
-    return patient?.dakham == 0 && queuedAt !== null && (now - queuedAt) >= AUTO_HIDE_AFTER_MS;
   }
 
   // ================= ẨN / XÓA BỆNH NHÂN =================
@@ -148,50 +129,9 @@
     return ordered;
   }
 
-  // Đẩy bệnh nhân quá 15 phút xuống dưới bệnh nhân đúng giờ
-  function demoteOverduePatients(patients = [], now = Date.now()) {
-    if (!Array.isArray(patients) || patients.length <= 1) return patients;
-
-    const onTimePatients = [];
-    const overduePatients = [];
-
-    for (const patient of patients) {
-      if (patient.dakham != 0) {
-        onTimePatients.push(patient);
-        continue;
-      }
-
-      if (isPatientOverdue(patient, now)) {
-        overduePatients.push(patient);
-      } else {
-        onTimePatients.push(patient);
-      }
-    }
-
-    if (onTimePatients.length > 0 && overduePatients.length > 0) {
-      return [...onTimePatients, ...overduePatients];
-    }
-
-    if (onTimePatients.length === 0 && overduePatients.length > 1) {
-      const [first, ...rest] = overduePatients;
-      return [...rest, first];
-    }
-
-    return patients;
-  }
-
-  // Áp dụng chính sách phía Client:
-  // 1. Lọc bỏ các bệnh nhân đã bị người dùng xóa/ẩn (hidden)
-  // 2. Áp dụng các đôn thứ tự thủ công của người dùng (manual demotions)
+  // Chỉ xử lý thao tác thủ công tại trình duyệt. Bệnh nhân quá 30 phút đã được SQL loại bỏ.
   function applyQueuePolicy(patients = []) {
-    const now = Date.now();
-    const active = patients.filter((patient) => {
-      if (shouldAutoHide(patient, now)) {
-        hide(getPatientKey(patient), getPatientName(patient));
-        return false;
-      }
-      return !isPatientHidden(patient);
-    });
+    const active = patients.filter((patient) => !isPatientHidden(patient));
     return applyManualDemotions(active);
   }
 
@@ -202,14 +142,12 @@
     applyManualDemotions,
     applyQueuePolicy,
     demote,
-    demoteOverduePatients,
     getHiddenList,
     getPatientKey,
     getPatientName,
     hide,
     isDemoted,
     isPatientHidden,
-    isPatientOverdue,
     restore,
     restoreAll,
   };
