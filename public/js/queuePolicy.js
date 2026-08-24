@@ -5,6 +5,7 @@
 
   const STORAGE_KEY = "queue_hidden_patients";
   const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+  const AUTO_HIDE_AFTER_MS = 30 * 60 * 1000;
 
   // Khôi phục danh sách đã ẩn từ sessionStorage
   function loadHiddenFromStorage() {
@@ -58,6 +59,11 @@
     return (now - queuedAt) >= FIFTEEN_MINUTES_MS;
   }
 
+  function shouldAutoHide(patient, now = Date.now()) {
+    const queuedAt = parseQueueTime(patient?.ngaydk);
+    return patient?.dakham == 0 && queuedAt !== null && (now - queuedAt) >= AUTO_HIDE_AFTER_MS;
+  }
+
   // ================= ẨN / XÓA BỆNH NHÂN =================
   function hide(patientKey, patientName, roomName = "") {
     const key = patientKey ? String(patientKey).trim() : "";
@@ -65,12 +71,12 @@
 
     if (!key && !name) return;
 
-    if (key) hiddenPatientsSet.add(key);
-    if (name) hiddenPatientsSet.add(name);
+    const identity = key || name;
+    hiddenPatientsSet.add(identity);
 
     // Tránh trùng lặp trong list
     hiddenPatientsList = hiddenPatientsList.filter(
-      (item) => item.key !== key && item.name !== name
+      (item) => (item.key || item.name) !== identity
     );
 
     const now = new Date();
@@ -89,18 +95,13 @@
   function restore(patientKey, patientName) {
     const key = patientKey ? String(patientKey).trim() : "";
     const name = patientName ? String(patientName).trim() : "";
+    const identity = key || name;
 
-    if (key) {
-      hiddenPatientsSet.delete(key);
-      demotedPatients.delete(key);
-    }
-    if (name) {
-      hiddenPatientsSet.delete(name);
-      demotedPatients.delete(name);
-    }
+    hiddenPatientsSet.delete(identity);
+    demotedPatients.delete(identity);
 
     hiddenPatientsList = hiddenPatientsList.filter(
-      (item) => item.key !== key && item.name !== name
+      (item) => (item.key || item.name) !== identity
     );
 
     saveHiddenToStorage();
@@ -117,10 +118,7 @@
     if (!patient) return false;
     const key = getPatientKey(patient);
     const name = getPatientName(patient);
-    return (
-      (key && hiddenPatientsSet.has(key)) ||
-      (name && hiddenPatientsSet.has(name))
-    );
+    return hiddenPatientsSet.has(key || name);
   }
 
   function getHiddenList() {
@@ -134,7 +132,8 @@
   }
 
   function isDemoted(patient) {
-    return demotedPatients.has(getPatientKey(patient)) || demotedPatients.has(getPatientName(patient));
+    const key = getPatientKey(patient);
+    return demotedPatients.has(key || getPatientName(patient));
   }
 
   function applyManualDemotions(patients = []) {
@@ -185,7 +184,14 @@
   // 1. Lọc bỏ các bệnh nhân đã bị người dùng xóa/ẩn (hidden)
   // 2. Áp dụng các đôn thứ tự thủ công của người dùng (manual demotions)
   function applyQueuePolicy(patients = []) {
-    const active = patients.filter((p) => !isPatientHidden(p));
+    const now = Date.now();
+    const active = patients.filter((patient) => {
+      if (shouldAutoHide(patient, now)) {
+        hide(getPatientKey(patient), getPatientName(patient));
+        return false;
+      }
+      return !isPatientHidden(patient);
+    });
     return applyManualDemotions(active);
   }
 

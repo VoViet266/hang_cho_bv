@@ -170,3 +170,5 @@
 [10:51:27 INF] [127.0.0.1] HTTP GET /room/B15 responded 200 in 1251.9632 ms 
 [10:51:31 INF] [127.0.0.1] HTTP GET /room/B5 responded 200 in 898.5849 ms 
 [10:51:32 INF] [127.0.0.1] HTTP GET /tts?text=M%E1%BB%9Di%20b%E1%BB%87nh%20nh%C3%A2n%2C%20Nguy%E1%BB%85n%20V%C4%83n%20Ki%E1%BB%87t%2C%20v%C3%A0o%20Ph%C3%B2ng%20N%E1%BB%99i%20B5 responded 200 in 453.0159 ms 
+[10:56:35 INF] [Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms) 
+[10:56:35 INF] Server running on http://localhost:3000 

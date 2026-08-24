@@ -15,105 +15,10 @@ function formatRoomSpokenName(roomName) {
   return `phòng ${clean}`;
 }
 
-// ==========================================
-// AUDIO QUEUE MANAGER (XẾP HÀNG ÂM THANH)
-// ==========================================
-const SPEECH_DEDUP_WINDOW_MS = 4500;
-
-class AudioQueueManager {
-  constructor() {
-    this.queue = [];
-    this.isPlaying = false;
-    this.currentAudio = null;
-    this.currentText = "";
-    this.lastEnqueuedText = "";
-    this.lastEnqueuedAt = 0;
-  }
-
-  enqueue(speakText) {
-    if (!soundEnabled || !speakText || !speakText.trim()) return false;
-
-    const text = speakText.trim();
-    const now = Date.now();
-    const isCurrent = this.isPlaying && this.currentText === text;
-    const isQueued = this.queue.includes(text);
-    const isRecentlyEnqueued = this.lastEnqueuedText === text &&
-      now - this.lastEnqueuedAt < SPEECH_DEDUP_WINDOW_MS;
-
-    // Chặn double-click, click liên tục và các lần gọi trùng từ realtime.
-    if (isCurrent || isQueued || isRecentlyEnqueued) return false;
-
-    this.queue.push(text);
-    this.lastEnqueuedText = text;
-    this.lastEnqueuedAt = now;
-    if (!this.isPlaying) {
-      this.playNext();
-    }
-    return true;
-  }
-
-  playNext() {
-    if (this.queue.length === 0) {
-      this.isPlaying = false;
-      this.currentAudio = null;
-      this.currentText = "";
-      return;
-    }
-
-    this.isPlaying = true;
-    const textToSpeak = this.queue.shift();
-    this.currentText = textToSpeak;
-    const audioUrl = `/api/tts?text=${encodeURIComponent(textToSpeak)}`;
-
-    try {
-      this.currentAudio = new Audio(audioUrl);
-      this.currentAudio.volume = 1.0;
-
-      this.currentAudio.onended = () => {
-        setTimeout(() => this.playNext(), 350);
-      };
-
-      this.currentAudio.onerror = (err) => {
-        console.warn("Lỗi phát audio stream:", err);
-        if ("speechSynthesis" in window) {
-          try {
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = "vi-VN";
-            utterance.onend = () => setTimeout(() => this.playNext(), 350);
-            utterance.onerror = () => setTimeout(() => this.playNext(), 350);
-            window.speechSynthesis.speak(utterance);
-            return;
-          } catch (e) {}
-        }
-        setTimeout(() => this.playNext(), 350);
-      };
-
-      this.currentAudio.play().catch((err) => {
-        console.warn("Không thể autoplay, chuyển câu tiếp theo:", err);
-        setTimeout(() => this.playNext(), 350);
-      });
-    } catch (e) {
-      console.error("Lỗi khởi tạo audio:", e);
-      this.isPlaying = false;
-    }
-  }
-
-  clear() {
-    this.queue = [];
-    if (this.currentAudio) {
-      try {
-        this.currentAudio.pause();
-      } catch (e) {}
-      this.currentAudio = null;
-    }
-    this.isPlaying = false;
-    this.currentText = "";
-    this.lastEnqueuedText = "";
-    this.lastEnqueuedAt = 0;
-  }
-}
-
-const audioQueue = new AudioQueueManager();
+const audioQueue = new window.AudioQueueManager({
+  isEnabled: () => soundEnabled,
+  gapMs: 350,
+});
 
 // ==========================================
 // CÁC HÀM ĐIỀU KHIỂN ÂM THANH
@@ -760,6 +665,12 @@ function updateTime() {
 }
 setInterval(updateTime, 1000);
 updateTime();
+
+setInterval(() => {
+  Object.entries(lastKnownRoomsData).forEach(([roomId, data]) => {
+    updateRoomDOM(roomId, data);
+  });
+}, 30 * 1000);
 
 window.addEventListener("DOMContentLoaded", () => {
   updateSoundIcon();
