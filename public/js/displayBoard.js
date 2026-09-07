@@ -61,7 +61,7 @@ function toggleSound() {
   if (soundEnabled) {
     const unlockAudio = new Audio("/audio/silent.mp3");
     unlockAudio.volume = 0.01;
-    unlockAudio.play().catch(() => {});
+    unlockAudio.play().catch(() => { });
 
     speakCurrentPatients(true);
   } else {
@@ -94,7 +94,7 @@ function showToast(message, type = "info", undoCallback = null) {
   const toast = document.createElement("div");
   const bgClass = type === "danger" ? "bg-red-600 border-red-400" : "bg-blue-800 border-blue-500";
   toast.className = `tv-toast pointer-events-auto flex items-center justify-between gap-4 px-5 py-3.5 rounded-2xl border-2 text-white font-bold shadow-2xl text-sm md:text-base ${bgClass}`;
-  
+
   toast.innerHTML = `
     <div class="flex items-center gap-2.5">
       <i class="${type === 'danger' ? 'fas fa-trash-alt' : 'fas fa-info-circle'} text-lg"></i>
@@ -441,11 +441,11 @@ function updateRoomDOM(roomId, data) {
             : `<span class="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs md:text-base font-bold border border-slate-300 shadow-sm">Chờ khám</span>`;
 
           const deleteBtn = `
-            <button type="button" 
-                    title="Xóa/Ẩn khỏi màn hình" 
-                    aria-label="Xóa bệnh nhân khỏi danh sách hiển thị" 
-                    onclick="removePatientFromElement(this, event)" 
-                    class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer" 
+            <button type="button"
+                    title="Xóa/Ẩn khỏi màn hình"
+                    aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                    onclick="removePatientFromElement(this, event)"
+                    class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer"
                     tabindex="0">
               <i class="fas fa-trash-alt text-xs md:text-sm"></i>
             </button>
@@ -486,15 +486,15 @@ function updateRoomDOM(roomId, data) {
           const dobClass = isNear ? "text-4xl md:text-6xl font-black" : "text-3xl md:text-5xl";
 
           const statusBadge = isNear
-            ? `<span class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl text-xl md:text-3xl font-black uppercase shadow-lg animate-pulse">Tới Lượt Khám</span>`
+            ? `<span class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl text-xl md:text-3xl font-black uppercase shadow-lg animate-pulse">Tới Lượt</span>`
             : `<span class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-lg md:text-2xl font-bold border-2 border-slate-200 shadow-sm">Chờ Lượt khám</span>`;
 
           const deleteBtn = `
-            <button type="button" 
-                    title="Xóa/Ẩn khỏi màn hình" 
-                    aria-label="Xóa bệnh nhân khỏi danh sách hiển thị" 
-                    onclick="removePatientFromElement(this, event)" 
-                    class="btn-hide-patient p-2 text-slate-300 hover:text-danger hover:bg-red-50 rounded-lg transition-colors cursor-pointer" 
+            <button type="button"
+                    title="Xóa/Ẩn khỏi màn hình"
+                    aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                    onclick="removePatientFromElement(this, event)"
+                    class="btn-hide-patient p-2 text-slate-300 hover:text-danger hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                     tabindex="0">
               <i class="fas fa-trash-alt text-lg md:text-2xl"></i>
             </button>
