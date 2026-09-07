@@ -54,7 +54,8 @@
         color: #1e3a8a !important;
         font-weight: 900 !important;
       }
-      tr.remote-item.tv-focused.bg-red-50 td {
+      tr.remote-item.tv-focused.bg-red-50 td,
+      tr.remote-item.tv-focused.bg-yellow-100 td {
         color: #b91c1c !important;
       }
       .tv-toast {

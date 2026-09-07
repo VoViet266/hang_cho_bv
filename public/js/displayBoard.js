@@ -429,7 +429,7 @@ function updateRoomDOM(roomId, data) {
         if (isMulti) {
           // Giao diện ô chia phòng (Split Screen)
           const rowClass = isNear
-            ? "bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md font-black"
+            ? "bg-yellow-100 hover:bg-yellow-200 border-l-8 border-yellow-500 shadow-md font-black"
             : "hover:bg-blue-50 border-b border-slate-200";
 
           const sttClass = isNear ? "text-danger text-2xl md:text-4xl lg:text-5xl font-black" : "text-xl md:text-3xl font-bold";
@@ -478,7 +478,7 @@ function updateRoomDOM(roomId, data) {
         } else {
           // Giao diện 1 phòng toàn màn hình (Single Room)
           const rowClass = isNear
-            ? "bg-red-50 hover:bg-red-100 border-l-8 border-red-500 shadow-md"
+            ? "bg-yellow-100 hover:bg-yellow-200 border-l-8 border-yellow-500 shadow-md"
             : "hover:bg-blue-50 border-b border-slate-200";
 
           const sttClass = isNear ? "text-5xl md:text-7xl font-black text-danger" : "text-4xl md:text-6xl font-bold";

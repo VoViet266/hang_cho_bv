@@ -196,7 +196,7 @@
   box-shadow: none !important;
 }
 
-.patient-table tbody tr:nth-child(even):not(.bg-red-50) {
+.patient-table tbody tr:nth-child(even):not(.bg-red-50):not(.bg-yellow-100) {
   background: #f8fafc;
 }
 
@@ -224,13 +224,14 @@
   line-height: 1.08;
 }
 
-.patient-table tr.bg-red-50 .patient-name-text {
-  display: inline-block !important;
-  padding: .08em .2em;
-  border: 1px solid #fde047;
-  border-radius: 4px;
-  background: #fef9c3;
-  color: #1e3a8a;
+.patient-table tr.bg-yellow-100,
+.patient-table tr.bg-red-50 {
+  background-color: #fef9c3 !important;
+}
+
+.patient-table tr.bg-yellow-100:hover,
+.patient-table tr.bg-red-50:hover {
+  background-color: #fef08a !important;
 }
 
 .patient-table--single td:nth-child(1) {

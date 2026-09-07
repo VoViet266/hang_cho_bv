@@ -6,29 +6,14 @@
     "auditLog": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\.2cfb6859d3fa48f4bc6d6b6db35fcfb168dddf68-audit.json",
     "files": [
         {
-            "date": 1786501624414,
-            "name": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-08-12.log",
-            "hash": "78e5f33d4fdebfbf369dbe380f253a5a7eed5004c49c1b50cf168022f81988c4"
-        },
-        {
-            "date": 1786594292545,
-            "name": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-08-13.log",
-            "hash": "25ef861db6c3ea37db8a5f42085287340375ab8f9311bf320b9f217a49fac9d7"
-        },
-        {
-            "date": 1787277252691,
-            "name": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-08-21.log",
-            "hash": "0097de22272f2b7e7f8cbbd308c63171dd041876e5a5a62a5cae2caa8105acaa"
-        },
-        {
-            "date": 1787362544134,
-            "name": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-08-22.log",
-            "hash": "9881967cfb6ac0346bd4e7e1e196c5d5dd50467480f163787dffd3849a73c9fc"
-        },
-        {
             "date": 1787538539232,
             "name": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-08-24.log",
             "hash": "9dc9cf08c0d572e171d4939199801f3656524e4fea41040a0211d0abb2542aa2"
+        },
+        {
+            "date": 1788745757895,
+            "name": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-09-07.log",
+            "hash": "2e2159b277efcefb48727d00f3ff8b8d8b9dd8ade9eb8d10ed2af6a24ebe1c30"
         }
     ],
     "hashType": "sha256"
