@@ -77,6 +77,54 @@
   gap: 6px !important;
 }
 
+.tv-numbered-room-title,
+.tv-split-room-title {
+  display: flex;
+  align-items: center;
+  gap: .4em;
+}
+
+.tv-numbered-room-title {
+  justify-content: center;
+}
+
+.tv-room-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tv-room-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 1.2em;
+  aspect-ratio: 1;
+  padding: .1em;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.tv-quadrant-header {
+  flex-wrap: wrap;
+}
+
+.tv-split-room-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--board-red);
+  font-size: clamp(18px, 2.4vw, 44px);
+  font-weight: 900;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.tv-room-counts {
+  margin-left: auto;
+}
+
 .tv-board .tv-stat {
   min-width: 70px !important;
   padding: 4px 8px !important;
@@ -174,6 +222,15 @@
   display: inline !important;
   overflow: visible !important;
   line-height: 1.08;
+}
+
+.patient-table tr.bg-red-50 .patient-name-text {
+  display: inline-block !important;
+  padding: .08em .2em;
+  border: 1px solid #fde047;
+  border-radius: 4px;
+  background: #fef9c3;
+  color: #1e3a8a;
 }
 
 .patient-table--single td:nth-child(1) {

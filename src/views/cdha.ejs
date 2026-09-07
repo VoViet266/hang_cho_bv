@@ -49,16 +49,9 @@
 
         <!-- Tiêu đề (chỉ hiện khi xem 1 phòng) -->
         <div class="tv-room-heading flex flex-col flex-1 text-center items-center justify-center">
-            <% if (roomsData.length <= 1) { 
-                let ten = (room && room.tenphong) ? room.tenphong : 'Khoa Chẩn Đoán Hình Ảnh';
-                let words = ten.trim().split(/\s+/);
-                let lastWord = words.pop();
-            %>
-            <h1 class="tv-room-title text-danger text-xl md:text-4xl font-extrabold uppercase tracking-wide">
-                <%= words.join(' ').toUpperCase() %>
-                <span class="inline-block border-4 border-current bg-red-600 text-white rounded-full px-3 py-0.5 ml-1 leading-none">
-                    <%= lastWord.toUpperCase() %>
-                </span>
+            <% if (roomsData.length <= 1) { %>
+            <h1 class="tv-room-title tv-numbered-room-title text-danger text-xl md:text-4xl font-extrabold uppercase tracking-wide">
+                <%- include('partials/room_title', { title: room.tenphong || 'Khoa Chẩn Đoán Hình Ảnh' }) %>
             </h1>
             <% } %>
         </div>
@@ -235,14 +228,12 @@
                  data-room-name="<%= roomTitle %>">
                 
                 <!-- Header ô phòng -->
-                <div class="bg-white px-3 py-1.5 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
-                    <div class="flex items-center gap-1.5 min-w-0">
-                        <h2 class="text-lg md:text-3xl font-black text-danger uppercase truncate tracking-wide">
-                            <%= roomTitle %>
-                        </h2>
-                    </div>
+                <div class="tv-quadrant-header bg-white px-3 py-1.5 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
+                    <h2 class="tv-split-room-title">
+                        <%- include('partials/room_title', { title: roomTitle }) %>
+                    </h2>
 
-                    <div class="flex items-center gap-1.5 text-xs md:text-sm shrink-0">
+                    <div class="tv-room-counts flex items-center gap-1.5 text-xs md:text-sm shrink-0">
                         <div class="bg-red-50 border border-red-200 px-2 py-0.5 rounded text-center">
                             <span class="text-danger font-bold text-[10px] uppercase">Đang chờ:</span>
                             <span id="total-wait-<%= roomId %>" class="text-danger font-black text-sm md:text-base tabular-nums"><%= rData.totalWaiting %></span>

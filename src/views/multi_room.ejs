@@ -124,16 +124,12 @@
 
                             <!-- Quadrant Header -->
                             <div
-                                class="bg-white px-3 py-1.5 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
-                                <div class="flex items-center gap-1.5 min-w-0">
+                                class="tv-quadrant-header bg-white px-3 py-1.5 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
+                                <h2 class="tv-split-room-title">
+                                    <%- include('partials/room_title', { title: roomTitle }) %>
+                                </h2>
 
-                                    <h2
-                                        class="text-base md:text-2xl font-black text-danger uppercase truncate tracking-wide">
-                                        <%= roomTitle %>
-                                    </h2>
-                                </div>
-
-                                <div class="flex items-center gap-1.5 text-xs md:text-sm shrink-0">
+                                <div class="tv-room-counts flex items-center gap-1.5 text-xs md:text-sm shrink-0">
                                     <% if (room.totalDKPlus !==undefined) { %>
                                         <div
                                             class="bg-slate-50 border border-slate-200 px-2 py-0.5 rounded text-center hidden sm:block">
@@ -205,7 +201,7 @@
                                                         <%= pIdx + 1 %>
                                                     </td>
                                                     <td
-                                                        class="py-2.5 px-2 text-blue-900 <%= isNear ? 'text-danger text-2xl md:text-3xl lg:text-4xl font-black tracking-tight' : 'text-xl md:text-2xl lg:text-3xl font-extrabold' %>">
+                                                        class="py-2.5 px-2 text-blue-900 <%= isNear ? 'text-2xl md:text-3xl lg:text-4xl font-black tracking-tight' : 'text-xl md:text-2xl lg:text-3xl font-extrabold' %>">
                                                         <div
                                                             class="patient-name-container flex items-center overflow-hidden">
                                                             <span class="patient-name-text">
@@ -231,11 +227,11 @@
                                                                         Chờ khám
                                                                     </span>
                                                                 <% } %>
-                                                            <button type="button" 
-                                                                    title="Xóa/Ẩn khỏi màn hình" 
-                                                                    aria-label="Xóa bệnh nhân khỏi danh sách hiển thị" 
-                                                                    onclick="removePatientFromElement(this, event)" 
-                                                                    class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer" 
+                                                            <button type="button"
+                                                                    title="Xóa/Ẩn khỏi màn hình"
+                                                                    aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                                                                    onclick="removePatientFromElement(this, event)"
+                                                                    class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer"
                                                                     tabindex="0">
                                                                 <i class="fas fa-trash-alt text-xs md:text-sm"></i>
                                                             </button>

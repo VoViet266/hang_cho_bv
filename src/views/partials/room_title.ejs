@@ -1,0 +1,8 @@
+<%
+    const titleText = String(title || '').trim();
+    const titleParts = titleText.match(/^(.*?)\s+(\d+)$/);
+%>
+<span class="tv-room-label"><%= titleParts ? titleParts[1] : titleText %></span>
+<% if (titleParts) { %>
+    <span class="tv-room-number"><%= titleParts[2] %></span>
+<% } %>
