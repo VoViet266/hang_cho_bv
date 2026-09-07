@@ -432,9 +432,9 @@ function updateRoomDOM(roomId, data) {
             ? "bg-yellow-100 hover:bg-yellow-200 border-l-8 border-yellow-500 shadow-md font-black"
             : "hover:bg-blue-50 border-b border-slate-200";
 
-          const sttClass = isNear ? "text-danger text-2xl md:text-4xl lg:text-5xl font-black" : "text-xl md:text-3xl font-bold";
-          const nameClass = isNear ? "text-danger text-2xl md:text-4xl lg:text-5xl font-black tracking-tight" : "text-xl md:text-3xl lg:text-4xl font-extrabold";
-          const dobClass = isNear ? "text-danger text-xl md:text-3xl lg:text-4xl font-black" : "text-lg md:text-2xl font-bold";
+          const sttClass = isNear ? "text-2xl md:text-4xl lg:text-5xl font-black" : "text-xl md:text-3xl font-bold";
+          const nameClass = isNear ? "text-2xl md:text-4xl lg:text-5xl font-black tracking-tight" : "text-xl md:text-3xl lg:text-4xl font-extrabold";
+          const dobClass = isNear ? "text-xl md:text-3xl lg:text-4xl font-black" : "text-lg md:text-2xl font-bold";
 
           const statusBadge = isNear
             ? `<span class="inline-block bg-red-600 text-white px-2.5 md:px-4 py-1 rounded-xl text-sm md:text-xl font-black uppercase shadow-lg animate-pulse">Tới Lượt</span>`
@@ -481,9 +481,9 @@ function updateRoomDOM(roomId, data) {
             ? "bg-yellow-100 hover:bg-yellow-200 border-l-8 border-yellow-500 shadow-md"
             : "hover:bg-blue-50 border-b border-slate-200";
 
-          const sttClass = isNear ? "text-5xl md:text-7xl font-black text-danger" : "text-4xl md:text-6xl font-bold";
-          const nameClass = isNear ? "text-5xl md:text-7xl font-black tracking-tight text-danger" : "text-4xl md:text-6xl font-black";
-          const dobClass = isNear ? "text-4xl md:text-6xl font-black text-danger" : "text-3xl md:text-5xl";
+          const sttClass = isNear ? "text-5xl md:text-7xl font-black" : "text-4xl md:text-6xl font-bold";
+          const nameClass = isNear ? "text-5xl md:text-7xl font-black tracking-tight" : "text-4xl md:text-6xl font-black";
+          const dobClass = isNear ? "text-4xl md:text-6xl font-black" : "text-3xl md:text-5xl";
 
           const statusBadge = isNear
             ? `<span class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl text-xl md:text-3xl font-black uppercase shadow-lg animate-pulse">Tới Lượt Khám</span>`
