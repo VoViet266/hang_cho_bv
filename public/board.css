@@ -249,9 +249,9 @@
 }
 
 .patient-table--split col:nth-child(1) { width: 6% !important; }
-.patient-table--split col:nth-child(2) { width: 63% !important; }
-.patient-table--split col:nth-child(3) { width: 12% !important; }
-.patient-table--split col:nth-child(4) { width: 19% !important; }
+.patient-table--split col:nth-child(2) { width: 69% !important; }
+.patient-table--split col:nth-child(3) { width: 10% !important; }
+.patient-table--split col:nth-child(4) { width: 15% !important; }
 
 .patient-table--split th {
   padding: 4px 6px !important;
