@@ -247,8 +247,14 @@
   font-size: clamp(22px, 2.7vw, 46px) !important;
 }
 
+.patient-table--split col:nth-child(1) { width: 6% !important; }
+.patient-table--split col:nth-child(2) { width: 71% !important; }
+.patient-table--split col:nth-child(3) { width: 9% !important; }
+.patient-table--split col:nth-child(4) { width: 14% !important; }
+
 .patient-table--split th {
   font-size: clamp(12px, 1.05vw, 18px) !important;
+  white-space: nowrap !important;
 }
 
 .patient-table--split td:nth-child(1) {
@@ -256,21 +262,54 @@
 }
 
 .patient-table--split td:nth-child(2) {
-  font-size: clamp(19px, 2.15vw, 38px) !important;
-  line-height: 1.08;
+  font-size: clamp(20px, 2.45vw, 44px) !important;
+  line-height: 1.12;
+}
+
+.patient-table--split .patient-name-container,
+.patient-table--split .patient-name-text {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .patient-table--split td:nth-child(3) {
-  font-size: clamp(17px, 1.7vw, 30px) !important;
+  font-size: clamp(16px, 1.6vw, 28px) !important;
+  white-space: nowrap !important;
+}
+
+.patient-table--split td:nth-child(4) {
+  white-space: nowrap !important;
+}
+
+.patient-table--split td:nth-child(4) span {
+  font-size: clamp(10px, 1.05vw, 15px) !important;
+  padding: 2px 7px !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.2 !important;
+  border-radius: 6px !important;
+}
+
+.patient-table--split td:nth-child(4) div {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
 }
 
 .patient-table span[class*="bg-red-600"],
 .patient-table span[class*="bg-slate-100"],
 .patient-table span[class*="bg-yellow-100"] {
-  border-radius: 4px !important;
+  border-radius: 6px !important;
   box-shadow: none !important;
   animation: none !important;
   line-height: 1.15;
+  white-space: nowrap !important;
 }
 
 .btn-hide-patient {
@@ -353,8 +392,12 @@ tr.tv-focused .btn-hide-patient,
 
   .patient-table--single td:nth-child(5) span,
   .patient-table--split td:nth-child(4) span {
-    padding: 4px 5px !important;
+    padding: 3px 6px !important;
     font-size: 10px !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 }
 

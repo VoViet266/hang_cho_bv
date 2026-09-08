@@ -127,33 +127,30 @@
 
                 <table class="patient-table patient-table--single w-full text-left border-collapse">
                     <colgroup>
-                        <col style="width: 10%;">
-                        <col style="width: 45%;">
-                        <col style="width: 15%;">
-                        <col style="width: 15%;">
-                        <col style="width: 15%;">
+                        <col style="width: 7%;">
+                        <col style="width: 51%;">
+                        <col style="width: 12%;">
+                        <col style="width: 16%;">
+                        <col style="width: 14%;">
                     </colgroup>
                     <thead
                         class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-2xl md:text-3xl">
                         <tr>
-                            <th class="py-3 px-4 text-center">STT</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">STT</th>
                             <th class="py-3 px-4">Họ và Tên</th>
-                            <th class="py-3 px-4 text-center">Năm Sinh</th>
-                            <th class="py-3 px-4 text-center">Ghi Chú</th>
-                            <th class="py-3 px-4 text-center">Trạng Thái</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">Năm Sinh</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">Đăng Ký</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">Trạng Thái</th>
                         </tr>
                     </thead>
                     <tbody id="patientTableBody" class="divide-y divide-slate-200">
                         <% if (waitingList.length===0) { %>
                             <tr>
                                 <td colspan="5" class="text-center py-16 text-slate-400 text-3xl font-bold italic">
-                                    Phòng trống, không có bệnh nhân.
+                                    Không có bệnh nhân chờ.
                                 </td>
                             </tr>
-                            <% } else { let waitCounter=0; waitingList.forEach(function(patient, index) { let timeStr=''
-                                ; if (patient.isPriority) {
-                                timeStr='<span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-lg md:text-xl">Ưu tiên</span>'
-                                ; } let isNear=false; if (patient.dakham==0) { waitCounter++; if (waitCounter===1) {
+                            <% } else { let waitCounter=0; waitingList.forEach(function(patient, index) { let isNear=false; if (patient.dakham==0) { waitCounter++; if (waitCounter===1) {
                                 isNear=true; nextPatientNameToRead=`${patient.holot || '' } ${patient.ten || ''
                                 }`.trim(); } } const currentPatientName=`${patient.holot || '' } ${patient.ten || ''
                                 }`.trim(); const dobYear=patient.dobStr && patient.dobStr !=='Chưa cập nhật' ?
@@ -180,18 +177,28 @@
                                         <%= dobYear %>
                                     </td>
                                     <td class="py-5 px-4 text-center text-blue-900">
-                                        <%- timeStr %>
+                                        <% if (patient.priorityLabel) { %>
+                                            <span
+                                                class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-lg md:text-xl whitespace-nowrap">
+                                                Ưu tiên: <%= patient.priorityLabel %>
+                                            </span>
+                                            <% } else if (patient.isPriority) { %>
+                                                <span
+                                                    class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-lg md:text-xl whitespace-nowrap">
+                                                    Ưu tiên
+                                                </span>
+                                                <% } %>
                                     </td>
-                                    <td class="py-5 px-4 text-center">
-                                        <div class="flex items-center justify-center gap-2">
+                                    <td class="py-5 px-4 text-center whitespace-nowrap">
+                                        <div class="flex items-center justify-center gap-2 flex-nowrap">
                                             <% if (isNear) { %>
                                                 <span
-                                                    class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl text-xl md:text-3xl font-black uppercase shadow-lg animate-pulse">
+                                                    class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl text-xl md:text-3xl font-black uppercase shadow-lg animate-pulse whitespace-nowrap">
                                                     Tới lượt
                                                 </span>
                                                 <% } else { %>
                                                     <span
-                                                        class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-lg md:text-2xl font-bold border-2 border-slate-200 shadow-sm">
+                                                        class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-lg md:text-2xl font-bold border-2 border-slate-200 shadow-sm whitespace-nowrap">
                                                         Chờ lượt khám
                                                     </span>
                                                     <% } %>
@@ -259,18 +266,18 @@
                             <div class="flex-grow overflow-y-auto no-scrollbar bg-white">
                                 <table class="patient-table patient-table--split w-full text-left border-collapse">
                                     <colgroup>
-                                        <col style="width: 8%;">
-                                        <col style="width: 56%;">
-                                        <col style="width: 13%;">
-                                        <col style="width: 23%;">
+                                        <col style="width: 6%;">
+                                        <col style="width: 71%;">
+                                        <col style="width: 9%;">
+                                        <col style="width: 14%;">
                                     </colgroup>
                                     <thead
                                         class="sticky top-0 bg-slate-200 text-blue-900 font-extrabold border-b-2 border-slate-300 shadow-sm z-10 text-sm md:text-xl uppercase">
                                         <tr>
-                                            <th class="py-1.5 px-2 text-center">STT</th>
+                                            <th class="py-1.5 px-2 text-center whitespace-nowrap">STT</th>
                                             <th class="py-1.5 px-2">Họ và Tên</th>
-                                            <th class="py-1.5 px-2 text-center">Năm</th>
-                                            <th class="py-1.5 px-2 text-center">Trạng Thái</th>
+                                            <th class="py-1.5 px-2 text-center whitespace-nowrap">Năm</th>
+                                            <th class="py-1.5 px-2 text-center whitespace-nowrap">Trạng Thái</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tbody-<%= roomId %>" class="divide-y divide-slate-200">
@@ -288,7 +295,7 @@
                                                 pYear=p.dobStr && p.dobStr !=='Chưa cập nhật' ?
                                                 p.dobStr.split('/').pop() : '' ; let noteTag='' ; if (p.isPriority) {
                                                 noteTag=`<span
-                                                class="inline-block bg-yellow-100 text-yellow-800 text-xs md:text-sm px-1.5 py-0.5 rounded font-extrabold border border-yellow-300 ml-1">
+                                                class="inline-block bg-yellow-100 text-yellow-800 text-xs md:text-sm px-1.5 py-0.5 rounded font-extrabold border border-yellow-300 ml-1 whitespace-nowrap">
                                                 Ưu tiên</span>`;
                                                 }
                                                 %>
@@ -315,16 +322,16 @@
                                                         class="py-2.5 px-2 text-center font-bold text-blue-900 <%= isNear ? 'text-xl md:text-3xl lg:text-4xl font-black' : 'text-lg md:text-2xl font-bold' %>">
                                                         <%= pYear %>
                                                     </td>
-                                                    <td class="py-2.5 px-2 text-center">
-                                                        <div class="flex items-center justify-center gap-1.5">
+                                                    <td class="py-2.5 px-2 text-center whitespace-nowrap">
+                                                        <div class="flex items-center justify-center gap-1.5 flex-nowrap">
                                                             <% if (isNear) { %>
                                                                 <span
-                                                                    class="inline-block bg-red-600 text-white px-2.5 md:px-4 py-1 rounded-xl text-sm md:text-xl font-black uppercase shadow-lg animate-pulse">
+                                                                    class="inline-flex items-center justify-center bg-red-600 text-white px-2 py-0.5 rounded-md text-xs md:text-sm font-black uppercase whitespace-nowrap shadow-none">
                                                                     Tới Lượt
                                                                 </span>
                                                                 <% } else { %>
                                                                     <span
-                                                                        class="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs md:text-base font-bold border border-slate-300 shadow-sm">
+                                                                        class="inline-flex items-center justify-center bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md text-xs font-bold border border-slate-300 whitespace-nowrap shadow-none">
                                                                         Chờ khám
                                                                     </span>
                                                                     <% } %>
@@ -332,10 +339,10 @@
                                                                             title="Xóa/Ẩn khỏi màn hình"
                                                                             aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
                                                                             onclick="removePatientFromElement(this, event)"
-                                                                            class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer"
+                                                                            class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0"
                                                                             tabindex="0">
                                                                             <i
-                                                                                class="fas fa-trash-alt text-xs md:text-sm"></i>
+                                                                                class="fas fa-trash-alt text-xs"></i>
                                                                         </button>
                                                         </div>
                                                     </td>

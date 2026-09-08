@@ -1,8 +1,5 @@
 const cdhaModel = require('../models/cdha.model');
 
-
-
-
 const DinhDangNgaySinh = (dateVal) => {
     if (!dateVal) return 'Chưa cập nhật';
     const d = new Date(dateVal);
@@ -11,6 +8,15 @@ const DinhDangNgaySinh = (dateVal) => {
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
+};
+
+const DinhDangGioPhut = (dateVal) => {
+    if (!dateVal) return '';
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
 };
 
 const LayChuoiGioiTinh = (gioitinh) => {
@@ -39,17 +45,12 @@ const getPriorityLabel = (uutienFromDB) => {
 };
 
 const LayDanhSachBenhNhanChoCDHA = async (tenphong) => {
-    const rawData = await cdhaModel.LayDanhSachHangChoCDHA(tenphong);
-    
-    if (!rawData || rawData.length === 0) {
-        return {
-            tenphong: tenphong,
-            totalWaiting: 0,
-            waitingList: []
-        };
-    }
+    const [rawData, rawHidden] = await Promise.all([
+        cdhaModel.LayDanhSachHangChoCDHA(tenphong),
+        cdhaModel.LayDanhSachBenhNhanDaAnCDHA(tenphong).catch(() => [])
+    ]);
 
-    const waitingList = rawData.map(p => {
+    const waitingList = (rawData || []).map(p => {
         return {
             makb: p.makb,
             mabn: p.mabn,
@@ -67,10 +68,23 @@ const LayDanhSachBenhNhanChoCDHA = async (tenphong) => {
         };
     });
 
+    const hiddenList = (rawHidden || []).map(p => {
+        const pName = `${p.holot || ''} ${p.ten || ''}`.trim();
+        return {
+            makb: p.makb,
+            mabn: p.mabn,
+            name: pName || p.makb || p.mabn,
+            room: p.tenphong || tenphong,
+            time: p.ngaynhap ? DinhDangGioPhut(p.ngaynhap) : '',
+            key: p.makb || p.mabn || pName,
+        };
+    });
+
     const room = {
         tenphong: tenphong,
-        totalWaiting: rawData.length,
+        totalWaiting: waitingList.length,
         waitingList,
+        hiddenList,
     };
     
     return room;
@@ -86,7 +100,39 @@ const LayDanhSachCacPhongCDHA = async () => {
     };
 };
 
+const AnBenhNhanCDHA = async ({ makb, mabn, tenphong }) => {
+    return await cdhaModel.AnBenhNhanCDHA(makb, mabn, tenphong);
+};
+
+const KhoiPhucBenhNhanCDHA = async ({ makb, mabn, tenphong }) => {
+    return await cdhaModel.KhoiPhucBenhNhanCDHA(makb, mabn, tenphong);
+};
+
+const KhoiPhucTatCaCDHA = async ({ tenphong, rooms }) => {
+    const target = rooms || tenphong;
+    return await cdhaModel.KhoiPhucTatCaCDHA(target);
+};
+
+const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
+    const rawHidden = await cdhaModel.LayDanhSachBenhNhanDaAnCDHA(tenphongList);
+    return (rawHidden || []).map(p => {
+        const pName = `${p.holot || ''} ${p.ten || ''}`.trim();
+        return {
+            makb: p.makb,
+            mabn: p.mabn,
+            name: pName || p.makb || p.mabn,
+            room: p.tenphong || '',
+            time: p.ngaynhap ? DinhDangGioPhut(p.ngaynhap) : '',
+            key: p.makb || p.mabn || pName,
+        };
+    });
+};
+
 module.exports = {
     LayDanhSachBenhNhanChoCDHA,
     LayDanhSachCacPhongCDHA,
+    AnBenhNhanCDHA,
+    KhoiPhucBenhNhanCDHA,
+    KhoiPhucTatCaCDHA,
+    LayDanhSachBenhNhanDaAnCDHA
 };

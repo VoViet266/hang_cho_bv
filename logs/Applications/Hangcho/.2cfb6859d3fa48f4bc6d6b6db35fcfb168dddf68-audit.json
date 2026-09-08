@@ -6,14 +6,14 @@
     "auditLog": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\.2cfb6859d3fa48f4bc6d6b6db35fcfb168dddf68-audit.json",
     "files": [
         {
-            "date": 1787538539232,
-            "name": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-08-24.log",
-            "hash": "9dc9cf08c0d572e171d4939199801f3656524e4fea41040a0211d0abb2542aa2"
-        },
-        {
             "date": 1788745757895,
             "name": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-09-07.log",
             "hash": "2e2159b277efcefb48727d00f3ff8b8d8b9dd8ade9eb8d10ed2af6a24ebe1c30"
+        },
+        {
+            "date": 1788851750168,
+            "name": "C:\\Users\\vovie\\Desktop\\Projects\\danhsachcho\\logs\\Applications\\Hangcho\\application-2026-09-08.log",
+            "hash": "2f56fa7f0eb1994e78c16a320cbea67c780144deb5c963e80f04c139b7b98c73"
         }
     ],
     "hashType": "sha256"

@@ -405,17 +405,17 @@ function updateQuadrantDOM(roomId, data) {
       const dobClass = isNear ? "text-xl md:text-3xl lg:text-4xl font-black" : "text-lg md:text-2xl font-bold";
 
       const statusBadge = isNear
-        ? `<span class="inline-block bg-red-600 text-white px-2.5 md:px-4 py-1 rounded-xl text-sm md:text-xl font-black uppercase shadow-lg animate-pulse">Tới Lượt</span>`
-        : `<span class="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs md:text-base font-bold border border-slate-300 shadow-sm">Chờ khám</span>`;
+        ? `<span class="inline-flex items-center justify-center bg-red-600 text-white px-2 py-0.5 rounded-md text-xs md:text-sm font-black uppercase whitespace-nowrap shadow-none animate-pulse">Tới Lượt</span>`
+        : `<span class="inline-flex items-center justify-center bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md text-xs font-bold border border-slate-300 whitespace-nowrap shadow-none">Chờ khám</span>`;
 
       const deleteBtn = `
         <button type="button" 
                 title="Xóa/Ẩn khỏi màn hình" 
                 aria-label="Xóa bệnh nhân khỏi danh sách hiển thị" 
                 onclick="removePatientFromElement(this, event)" 
-                class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer" 
+                class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0" 
                 tabindex="0">
-          <i class="fas fa-trash-alt text-xs md:text-sm"></i>
+          <i class="fas fa-trash-alt text-xs"></i>
         </button>
       `;
 
@@ -439,8 +439,8 @@ function updateQuadrantDOM(roomId, data) {
           <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${dobClass}">
             ${dobYear}
           </td>
-          <td class="py-2.5 px-2 text-center">
-            <div class="flex items-center justify-center gap-1.5">
+          <td class="py-2.5 px-2 text-center whitespace-nowrap">
+            <div class="flex items-center justify-center gap-1.5 flex-nowrap">
               ${statusBadge}
               ${deleteBtn}
             </div>

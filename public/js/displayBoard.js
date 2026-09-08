@@ -130,9 +130,63 @@ function getPatientKey(p) {
   return window.QueuePolicy ? window.QueuePolicy.getPatientKey(p) : "";
 }
 
-function removePatient(patientKey, patientName, roomName) {
+function removePatient(patientKey, patientName, roomName, meta = {}) {
   if (!patientName && !patientKey) return;
 
+  const roomType = meta.roomType || (window.location.pathname.includes("/cdha") ? "cdha" : "room");
+  const isCdha = roomType === "cdha";
+
+  if (isCdha) {
+    const makb = meta.makb || "";
+    const mabn = meta.mabn || "";
+    const tenphong = meta.tenphong || roomName;
+
+    // Optimistic UI: làm mờ dòng ngay lập tức để phản hồi tức thì
+    const rows = document.querySelectorAll(`tr[data-patient-key="${patientKey}"], tr[data-patient="${patientName}"]`);
+    rows.forEach((r) => {
+      if (!tenphong || r.dataset.room === tenphong) {
+        r.style.opacity = "0.3";
+        r.style.pointerEvents = "none";
+      }
+    });
+
+    fetch("/api/cdha/patient/hide", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ makb, mabn, tenphong }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          showToast(`Đã ẩn BN: ${patientName || patientKey}`, "info");
+        } else {
+          showToast(`Không thể ẩn BN: ${data.message || "Lỗi máy chủ"}`, "error");
+          rows.forEach((r) => {
+            r.style.opacity = "1";
+            r.style.pointerEvents = "auto";
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi khi ẩn BN CDHA vào DB:", err);
+        showToast("Lỗi kết nối máy chủ khi ẩn bệnh nhân", "error");
+        rows.forEach((r) => {
+          r.style.opacity = "1";
+          r.style.pointerEvents = "auto";
+        });
+      });
+
+    setTimeout(() => {
+      speakCurrentPatients(true);
+    }, 300);
+
+    if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
+      window.TVRemoteNav.refresh();
+    }
+    return;
+  }
+
+  // Với phòng khám thông thường: giữ nguyên client QueuePolicy
   if (window.QueuePolicy) {
     window.QueuePolicy.hide(patientKey, patientName, roomName);
   }
@@ -172,12 +226,48 @@ function removePatientFromElement(btnOrEl, event) {
   const patientKey = row.dataset.patientKey || row.dataset.patient;
   const patientName = row.dataset.patient || "";
   const roomName = row.dataset.room || "";
+  const makb = row.dataset.makb || "";
+  const mabn = row.dataset.mabn || "";
+  const container = row.closest(".room-container");
+  const roomType = row.dataset.roomType || container?.dataset?.roomType || (window.location.pathname.includes("/cdha") ? "cdha" : "room");
 
-  removePatient(patientKey, patientName, roomName);
+  removePatient(patientKey, patientName, roomName, { makb, mabn, roomType, tenphong: roomName });
 }
 window.removePatientFromElement = removePatientFromElement;
 
-function restorePatient(patientKey, patientName) {
+function restorePatient(patientKey, patientName, roomName, meta = {}) {
+  const isCdha = (meta && meta.roomType === "cdha") || window.location.pathname.includes("/cdha");
+
+  if (isCdha) {
+    const makb = (meta && meta.makb) || patientKey;
+    const mabn = (meta && meta.mabn) || "";
+    const tenphong = (meta && meta.tenphong) || roomName;
+
+    fetch("/api/cdha/patient/restore", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ makb, mabn, tenphong }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          showToast(`Đã khôi phục BN: ${patientName || patientKey}`, "info");
+          renderHiddenModalList();
+        } else {
+          showToast(`Không thể khôi phục: ${data.message || ""}`, "error");
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi khi khôi phục BN CDHA:", err);
+        showToast("Lỗi kết nối máy chủ khi khôi phục", "error");
+      });
+
+    if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
+      window.TVRemoteNav.refresh();
+    }
+    return;
+  }
+
   if (window.QueuePolicy) {
     window.QueuePolicy.restore(patientKey, patientName);
   }
@@ -201,6 +291,37 @@ function restorePatient(patientKey, patientName) {
 window.restorePatient = restorePatient;
 
 function restoreAllHiddenPatients() {
+  const isCdha = window.location.pathname.includes("/cdha");
+
+  if (isCdha) {
+    const roomContainers = document.querySelectorAll(".room-container");
+    const roomIds = Array.from(roomContainers).map((c) => c.dataset.roomId).filter(Boolean);
+
+    fetch("/api/cdha/patient/restore-all", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rooms: roomIds }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          showToast("Đã khôi phục tất cả bệnh nhân", "info");
+          renderHiddenModalList();
+        } else {
+          showToast(`Không thể khôi phục: ${data.message || ""}`, "error");
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi khi khôi phục tất cả BN CDHA:", err);
+        showToast("Lỗi kết nối máy chủ khi khôi phục", "error");
+      });
+
+    if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
+      window.TVRemoteNav.refresh();
+    }
+    return;
+  }
+
   if (window.QueuePolicy) {
     window.QueuePolicy.restoreAll();
   }
@@ -227,6 +348,24 @@ function updateHiddenBadge() {
   const badge = document.getElementById("hiddenBadgeCount");
   if (!badge) return;
 
+  const isCdha = window.location.pathname.includes("/cdha");
+  if (isCdha) {
+    let count = 0;
+    Object.values(lastKnownRoomsData).forEach((r) => {
+      if (r && Array.isArray(r.hiddenList)) {
+        count += r.hiddenList.length;
+      }
+    });
+    if (count > 0) {
+      badge.textContent = count;
+      badge.classList.remove("hidden");
+    } else {
+      badge.textContent = "0";
+      badge.classList.add("hidden");
+    }
+    return;
+  }
+
   const list = window.QueuePolicy ? window.QueuePolicy.getHiddenList() : [];
   if (list.length > 0) {
     badge.textContent = list.length;
@@ -237,9 +376,88 @@ function updateHiddenBadge() {
   }
 }
 
-function renderHiddenModalList() {
+async function renderHiddenModalList() {
   const container = document.getElementById("hiddenPatientsListContainer");
   if (!container) return;
+
+  const isCdha = window.location.pathname.includes("/cdha");
+  if (isCdha) {
+    const roomContainers = document.querySelectorAll(".room-container");
+    const roomIds = Array.from(roomContainers).map((c) => c.dataset.roomId).filter(Boolean);
+    const roomsParam = encodeURIComponent(roomIds.join(","));
+
+    container.innerHTML = `
+      <div class="text-center py-10 text-slate-400">
+        <i class="fas fa-spinner fa-spin text-3xl mb-2 text-brand"></i>
+        <p class="font-bold text-sm">Đang tải danh sách từ cơ sở dữ liệu...</p>
+      </div>
+    `;
+
+    try {
+      const res = await fetch(`/api/cdha/hidden?rooms=${roomsParam}`);
+      const result = await res.json();
+
+      if (!result.success || !result.data || result.data.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-400">
+            <i class="fas fa-check-circle text-4xl mb-2 text-green-500 block"></i>
+            <p class="font-bold text-base">Không có bệnh nhân nào bị xóa/ẩn.</p>
+          </div>
+        `;
+        const badge = document.getElementById("hiddenBadgeCount");
+        if (badge) {
+          badge.textContent = "0";
+          badge.classList.add("hidden");
+        }
+        return;
+      }
+
+      const badge = document.getElementById("hiddenBadgeCount");
+      if (badge) {
+        badge.textContent = result.data.length;
+        badge.classList.remove("hidden");
+      }
+
+      let html = `<div class="divide-y divide-slate-200">`;
+      result.data.forEach((item) => {
+        const safeMakb = (item.makb || "").replace(/"/g, '&quot;');
+        const safeMabn = (item.mabn || "").replace(/"/g, '&quot;');
+        const safeName = (item.name || "").replace(/"/g, '&quot;');
+        const safeRoom = (item.room || "").replace(/"/g, '&quot;');
+
+        html += `
+          <div class="py-3 px-3 flex justify-between items-center hover:bg-blue-50/50 rounded-lg transition-colors gap-3">
+            <div class="min-w-0">
+              <div class="font-black text-slate-800 text-sm md:text-base uppercase truncate">${safeName}</div>
+              <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                ${safeRoom ? `<span class="bg-blue-50 text-brand px-1.5 py-0.5 rounded font-bold border border-blue-200">${safeRoom}</span>` : ""}
+                <span>Đã nhập lúc: ${item.time || "--:--"}</span>
+              </div>
+            </div>
+            <button onclick="restorePatient('${safeMakb}', '${safeName}', '${safeRoom}', { makb: '${safeMakb}', mabn: '${safeMabn}', tenphong: '${safeRoom}', roomType: 'cdha' })"
+                    class="remote-item bg-green-50 hover:bg-green-600 hover:text-white text-green-700 font-black px-3 py-1.5 rounded-lg text-xs md:text-sm border border-green-300 transition-all shrink-0 cursor-pointer"
+                    tabindex="0">
+              <i class="fas fa-undo mr-1"></i> Khôi phục
+            </button>
+          </div>
+        `;
+      });
+      html += `</div>`;
+      container.innerHTML = html;
+
+      if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
+        window.TVRemoteNav.refresh();
+      }
+    } catch (e) {
+      console.error("Lỗi lấy danh sách ẩn CDHA:", e);
+      container.innerHTML = `
+        <div class="text-center py-8 text-red-500 font-bold">
+          Không thể kết nối máy chủ để lấy danh sách đã ẩn.
+        </div>
+      `;
+    }
+    return;
+  }
 
   const list = window.QueuePolicy ? window.QueuePolicy.getHiddenList() : [];
 
@@ -353,12 +571,14 @@ function updateRoomDOM(roomId, data) {
 
   const roomContainer = document.getElementById(`room-card-${roomId}`);
   const roomName = (roomContainer ? roomContainer.dataset.roomName : "") || (data.tenphong || data.maphong || roomId);
+  const roomType = (roomContainer ? roomContainer.dataset.roomType : "") || (data.tenphong ? "cdha" : "room");
 
   const rawList = data.waitingList || [];
   // Lọc bỏ bệnh nhân đã bị xóa/ẩn và áp dụng đôn thứ tự
-  const waitingList = window.QueuePolicy
+  // Với CDHA: Server đã lọc trực tiếp trong database (xoa = 0), không lọc qua QueuePolicy sessionStorage
+  const waitingList = (window.QueuePolicy && roomType !== "cdha")
     ? window.QueuePolicy.applyQueuePolicy(rawList)
-    : [...rawList];
+    : (window.QueuePolicy ? window.QueuePolicy.applyManualDemotions(rawList) : [...rawList]);
   const activeWaitingCount = waitingList.filter((p) => p.dakham == 0).length;
 
   let nextPatientNameToRead = "";
@@ -425,6 +645,8 @@ function updateRoomDOM(roomId, data) {
         const safePatientName = currentPatientName.replace(/"/g, '&quot;');
         const safeRoomName = roomName.replace(/"/g, '&quot;');
         const safeKey = pKey.replace(/"/g, '&quot;');
+        const safeMakb = (patient.makb || "").replace(/"/g, '&quot;');
+        const safeMabn = (patient.mabn || "").replace(/"/g, '&quot;');
 
         if (isMulti) {
           // Giao diện ô chia phòng (Split Screen)
@@ -437,22 +659,22 @@ function updateRoomDOM(roomId, data) {
           const dobClass = isNear ? "text-xl md:text-3xl lg:text-4xl font-black" : "text-lg md:text-2xl font-bold";
 
           const statusBadge = isNear
-            ? `<span class="inline-block bg-red-600 text-white px-2.5 md:px-4 py-1 rounded-xl text-sm md:text-xl font-black uppercase shadow-lg animate-pulse">Tới Lượt</span>`
-            : `<span class="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-xs md:text-base font-bold border border-slate-300 shadow-sm">Chờ khám</span>`;
+            ? `<span class="inline-flex items-center justify-center bg-red-600 text-white px-2 py-0.5 rounded-md text-xs md:text-sm font-black uppercase whitespace-nowrap shadow-none">Tới Lượt</span>`
+            : `<span class="inline-flex items-center justify-center bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md text-xs font-bold border border-slate-300 whitespace-nowrap shadow-none">Chờ khám</span>`;
 
           const deleteBtn = `
             <button type="button"
                     title="Xóa/Ẩn khỏi màn hình"
                     aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
                     onclick="removePatientFromElement(this, event)"
-                    class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer"
+                    class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0"
                     tabindex="0">
-              <i class="fas fa-trash-alt text-xs md:text-sm"></i>
+              <i class="fas fa-trash-alt text-xs"></i>
             </button>
           `;
 
           rowsHtml += `
-            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-room="${safeRoomName}" onclick="onRowClick(this)" class="remote-item cursor-pointer transition-all ${rowClass}" tabindex="0">
+            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${roomType}" onclick="onRowClick(this)" class="remote-item cursor-pointer transition-all ${rowClass}" tabindex="0">
               <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${sttClass}">
                 ${index + 1}
               </td>
@@ -467,8 +689,8 @@ function updateRoomDOM(roomId, data) {
               <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${dobClass}">
                 ${dobYear}
               </td>
-              <td class="py-2.5 px-2 text-center">
-                <div class="flex items-center justify-center gap-1.5">
+              <td class="py-2.5 px-2 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1.5 flex-nowrap">
                   ${statusBadge}
                   ${deleteBtn}
                 </div>
@@ -486,8 +708,8 @@ function updateRoomDOM(roomId, data) {
           const dobClass = isNear ? "text-4xl md:text-6xl font-black" : "text-3xl md:text-5xl";
 
           const statusBadge = isNear
-            ? `<span class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl text-xl md:text-3xl font-black uppercase shadow-lg animate-pulse">Tới Lượt</span>`
-            : `<span class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-lg md:text-2xl font-bold border-2 border-slate-200 shadow-sm">Chờ Lượt khám</span>`;
+            ? `<span class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl text-xl md:text-3xl font-black uppercase shadow-lg animate-pulse whitespace-nowrap">Tới Lượt</span>`
+            : `<span class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-lg md:text-2xl font-bold border-2 border-slate-200 shadow-sm whitespace-nowrap">Chờ Lượt khám</span>`;
 
           const deleteBtn = `
             <button type="button"
@@ -501,7 +723,7 @@ function updateRoomDOM(roomId, data) {
           `;
 
           rowsHtml += `
-            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-room="${safeRoomName}" onclick="onRowClick(this)" class="remote-item transition-all cursor-pointer ${rowClass}" tabindex="0">
+            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${roomType}" onclick="onRowClick(this)" class="remote-item transition-all cursor-pointer ${rowClass}" tabindex="0">
               <td class="py-5 px-4 font-bold text-center text-blue-900 ${sttClass}">
                 ${index + 1}
               </td>
@@ -530,6 +752,8 @@ function updateRoomDOM(roomId, data) {
       tbody.innerHTML = rowsHtml;
     }
   }
+
+  updateHiddenBadge();
 
   // 3. Cập nhật speech tracker và phát âm thanh nếu có bệnh nhân mới
   const tracker = document.getElementById(`speech-track-${roomId}`) || document.getElementById("speechData");
