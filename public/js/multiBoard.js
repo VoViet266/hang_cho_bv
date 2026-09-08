@@ -429,7 +429,7 @@ function updateQuadrantDOM(roomId, data) {
             ${index + 1}
           </td>
           <td class="py-2.5 px-2 text-blue-900 ${nameClass}">
-            <div class="patient-name-container flex items-center overflow-hidden">
+            <div class="patient-name-container flex flex-col items-start justify-center">
               <span class="patient-name-text">
                 ${(currentPatientName || "Chưa cập nhật").toUpperCase()}
               </span>
