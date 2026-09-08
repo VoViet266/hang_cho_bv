@@ -49,6 +49,10 @@ const LayDanhSachPhongCDHA = async () => {
             SELECT 'Phòng Siêu âm 3' AS tenphong
             UNION
             SELECT 'Phòng Siêu âm 4' AS tenphong
+            UNION
+            SELECT 'Phòng Siêu âm 5' AS tenphong
+            UNION
+            SELECT 'Phòng Siêu âm 6' AS tenphong
         )
         SELECT 
             r.tenphong,
