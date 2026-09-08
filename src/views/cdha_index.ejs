@@ -37,14 +37,19 @@
             <div class="text-xl text-brand font-bold mt-1">KHOA CHẨN ĐOÁN HÌNH ẢNH</div>
         </div>
         
-        <div class="flex flex-col gap-2 min-w-[250px]">
-            <div class="bg-white border-2 gap-3 border-red-300 px-3 py-2 rounded-lg text-danger text-lg font-extrabold flex justify-between items-center">
+        <div class="flex flex-col gap-2 min-w-[260px]">
+            <div class="bg-white border-2 gap-3 border-red-300 px-3 py-1.5 rounded-lg text-danger text-base font-extrabold flex justify-between items-center">
                 <span>TỔNG ĐANG CHỜ:</span>
                 <span id="cdha_tong_cho_kham" class="text-2xl tabular-nums"><%= data.overview.tong_cho_kham %></span>
             </div>
-            <a href="/" class="bg-slate-200 border-2 gap-3 border-slate-300 px-3 py-2 rounded-lg text-slate-700 hover:text-brand hover:border-brand text-center font-bold text-lg transition-colors inline-block mt-1">
-                <i class="fas fa-home mr-1"></i> Trở về phòng khám
-            </a>
+            <div class="flex gap-2">
+                <a href="/cdha/room" class="flex-1 bg-brand hover:bg-blue-800 text-white px-3 py-2 rounded-lg text-center font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-tv"></i> Mở TV phòng chờ
+                </a>
+                <a href="/" class="bg-slate-200 border-2 border-slate-300 px-3 py-2 rounded-lg text-slate-700 hover:text-brand hover:border-brand text-center font-bold text-sm transition-colors inline-flex items-center justify-center cursor-pointer" title="Trở về phòng khám">
+                    <i class="fas fa-home"></i>
+                </a>
+            </div>
         </div>
     </div>
 

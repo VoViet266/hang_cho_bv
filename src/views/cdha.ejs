@@ -37,7 +37,7 @@
 <body class="tv-board bg-slate-100 text-slate-900 font-sans flex flex-col h-screen overflow-hidden select-none">
 
     <!-- Top Bar Header -->
-    <header class="tv-header flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-2 border-2 border-slate-300 shadow-sm gap-2 shrink-0">
+    <header class="tv-header flex flex-col md:flex-row justify-between items-start md:items-center bg-white py-1 px-2.5 border-2 border-slate-300 shadow-sm gap-2 shrink-0">
         <!-- Logo & Đồng hồ -->
         <div class="tv-brand flex items-center bg-white gap-3">
             <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-12 md:h-14 object-contain">
@@ -233,7 +233,7 @@
                  data-room-name="<%= roomTitle %>">
                 
                 <!-- Header ô phòng -->
-                <div class="tv-quadrant-header bg-white px-3 py-1.5 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
+                <div class="tv-quadrant-header bg-white px-3 py-1 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
                     <h2 class="tv-split-room-title">
                         <%- include('partials/room_title', { title: roomTitle }) %>
                     </h2>
@@ -251,9 +251,9 @@
                     <table class="patient-table patient-table--split w-full text-left border-collapse">
                         <colgroup>
                             <col style="width: 6%;">
-                            <col style="width: 71%;">
-                            <col style="width: 9%;">
-                            <col style="width: 14%;">
+                            <col style="width: 63%;">
+                            <col style="width: 12%;">
+                            <col style="width: 19%;">
                         </colgroup>
                         <thead class="sticky top-0 bg-slate-200 text-blue-900 font-extrabold border-b-2 border-slate-300 shadow-sm z-10 text-sm md:text-xl uppercase">
                             <tr>
@@ -308,7 +308,7 @@
                                 <td class="py-2.5 px-2 text-center whitespace-nowrap">
                                     <div class="flex items-center justify-center gap-1.5 flex-nowrap">
                                         <% if (isNear) { %>
-                                        <span class="inline-flex items-center justify-center bg-red-600 text-white px-2 py-0.5 rounded-md text-xs md:text-sm font-black uppercase whitespace-nowrap">
+                                        <span class="inline-flex items-center justify-center bg-red-600 text-white px-1.5 py-0.5 rounded text-xs font-black uppercase whitespace-nowrap">
                                             Tới Lượt
                                         </span>
                                         <% } else { %>

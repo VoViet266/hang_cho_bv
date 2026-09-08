@@ -659,8 +659,8 @@ function updateRoomDOM(roomId, data) {
           const dobClass = isNear ? "text-xl md:text-3xl lg:text-4xl font-black" : "text-lg md:text-2xl font-bold";
 
           const statusBadge = isNear
-            ? `<span class="inline-flex items-center justify-center bg-red-600 text-white px-2 py-0.5 rounded-md text-xs md:text-sm font-black uppercase whitespace-nowrap shadow-none">Tới Lượt</span>`
-            : `<span class="inline-flex items-center justify-center bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md text-xs font-bold border border-slate-300 whitespace-nowrap shadow-none">Chờ khám</span>`;
+            ? `<span class="inline-flex items-center justify-center bg-red-600 text-white px-1.5 py-0.5 rounded text-xs font-black uppercase whitespace-nowrap shadow-none">Tới Lượt</span>`
+            : `<span class="inline-flex items-center justify-center bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs font-bold border border-slate-300 whitespace-nowrap shadow-none">Chờ khám</span>`;
 
           const deleteBtn = `
             <button type="button"
@@ -851,7 +851,7 @@ function applyRoomSelection(basePath = "/room") {
   }
 
   if (selected.length > 4) {
-    alert("Hệ thống chỉ hỗ trợ tối đa 4 phòng trên một màn hình TV!");
+    alert("Màn hình chia chỉ hỗ trợ tối đa 4 phòng trên một màn hình TV!");
     return;
   }
 

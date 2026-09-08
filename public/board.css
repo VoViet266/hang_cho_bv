@@ -17,19 +17,19 @@
 }
 
 .tv-board .tv-header {
-  min-height: 64px;
+  min-height: 48px !important;
   display: grid !important;
-  grid-template-columns: minmax(190px, auto) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(170px, auto) minmax(0, 1fr) auto;
   align-items: center !important;
-  gap: 12px !important;
-  padding: 6px 10px !important;
+  gap: 8px !important;
+  padding: 3px 10px !important;
   border: 0 !important;
   border-bottom: 1px solid var(--board-line) !important;
   box-shadow: none !important;
 }
 
 .tv-board .tv-header--compact {
-  grid-template-columns: minmax(190px, 1fr) auto;
+  grid-template-columns: minmax(170px, 1fr) auto;
 }
 
 .tv-brand,
@@ -44,7 +44,7 @@
 
 .tv-brand img {
   width: auto;
-  height: 48px;
+  height: 38px;
 }
 
 .tv-clock-date {
@@ -108,6 +108,7 @@
 }
 
 .tv-quadrant-header {
+  padding: 3px 8px !important;
   flex-wrap: wrap;
 }
 
@@ -126,8 +127,8 @@
 }
 
 .tv-board .tv-stat {
-  min-width: 70px !important;
-  padding: 4px 8px !important;
+  min-width: 65px !important;
+  padding: 2px 6px !important;
   border: 1px solid var(--board-line) !important;
   border-radius: 4px !important;
   background: #f8fafc !important;
@@ -139,8 +140,8 @@
 }
 
 .tv-board .icon-button {
-  width: 44px;
-  height: 44px;
+  width: 38px !important;
+  height: 38px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -150,7 +151,7 @@
   background: var(--board-surface) !important;
   box-shadow: none !important;
   color: var(--board-blue) !important;
-  font-size: 18px !important;
+  font-size: 15px !important;
 }
 
 .tv-board .icon-button:hover,
@@ -181,8 +182,8 @@
 }
 
 .patient-table th {
-  padding: 9px 10px !important;
-  font-size: clamp(14px, 1.35vw, 23px) !important;
+  padding: 5px 8px !important;
+  font-size: clamp(13px, 1.2vw, 20px) !important;
   letter-spacing: .02em;
 }
 
@@ -248,49 +249,69 @@
 }
 
 .patient-table--split col:nth-child(1) { width: 6% !important; }
-.patient-table--split col:nth-child(2) { width: 71% !important; }
-.patient-table--split col:nth-child(3) { width: 9% !important; }
-.patient-table--split col:nth-child(4) { width: 14% !important; }
+.patient-table--split col:nth-child(2) { width: 63% !important; }
+.patient-table--split col:nth-child(3) { width: 12% !important; }
+.patient-table--split col:nth-child(4) { width: 19% !important; }
 
 .patient-table--split th {
-  font-size: clamp(12px, 1.05vw, 18px) !important;
+  padding: 4px 6px !important;
+  font-size: clamp(12px, 1.05vw, 17px) !important;
   white-space: nowrap !important;
 }
 
 .patient-table--split td:nth-child(1) {
-  font-size: clamp(19px, 2vw, 36px) !important;
+  font-size: clamp(18px, 1.9vw, 34px) !important;
 }
 
 .patient-table--split td:nth-child(2) {
-  font-size: clamp(20px, 2.45vw, 44px) !important;
-  line-height: 1.12;
+  font-size: clamp(18px, 2.05vw, 36px) !important;
+  line-height: 1.15;
+  padding-left: 6px !important;
+  padding-right: 4px !important;
 }
 
-.patient-table--split .patient-name-container,
+.patient-table--split .patient-name-container {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
 .patient-table--split .patient-name-text {
+  display: inline-block !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  max-width: 100% !important;
+  letter-spacing: -0.01em;
 }
 
 .patient-table--split td:nth-child(3) {
-  font-size: clamp(16px, 1.6vw, 28px) !important;
+  font-size: clamp(15px, 1.45vw, 24px) !important;
   white-space: nowrap !important;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  text-align: center !important;
 }
 
 .patient-table--split td:nth-child(4) {
   white-space: nowrap !important;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  overflow: hidden !important;
 }
 
 .patient-table--split td:nth-child(4) span {
-  font-size: clamp(10px, 1.05vw, 15px) !important;
-  padding: 2px 7px !important;
+  font-size: clamp(10px, 0.85vw, 13px) !important;
+  padding: 1.5px 5px !important;
   white-space: nowrap !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   line-height: 1.2 !important;
-  border-radius: 6px !important;
+  border-radius: 4px !important;
+  font-weight: 800 !important;
 }
 
 .patient-table--split td:nth-child(4) div {
@@ -299,13 +320,26 @@
   flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 4px !important;
+  gap: 3px !important;
+  max-width: 100% !important;
+}
+
+.patient-table--split .btn-hide-patient {
+  padding: 2px 3px !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+  border-radius: 4px !important;
+  flex-shrink: 0 !important;
+}
+
+.patient-table--split .btn-hide-patient i {
+  font-size: clamp(10px, 0.8vw, 12px) !important;
 }
 
 .patient-table span[class*="bg-red-600"],
 .patient-table span[class*="bg-slate-100"],
 .patient-table span[class*="bg-yellow-100"] {
-  border-radius: 6px !important;
+  border-radius: 4px !important;
   box-shadow: none !important;
   animation: none !important;
   line-height: 1.15;

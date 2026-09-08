@@ -37,15 +37,30 @@ const LayDanhSachHangChoCDHA = async (tenphong) => {
 
 const LayDanhSachPhongCDHA = async () => {
     const rows = await prisma.$queryRaw`
+        WITH all_cdha_rooms AS (
+            SELECT DISTINCT tenphong 
+            FROM "current".hangchocdha_tmd 
+            WHERE tenphong IS NOT NULL AND TRIM(tenphong) != ''
+            UNION
+            SELECT 'Phòng Siêu âm 1' AS tenphong
+            UNION
+            SELECT 'Phòng Siêu âm 2' AS tenphong
+            UNION
+            SELECT 'Phòng Siêu âm 3' AS tenphong
+            UNION
+            SELECT 'Phòng Siêu âm 4' AS tenphong
+        )
         SELECT 
-            tenphong,
-            COUNT(mabn)::int AS tong_cho_kham
-        FROM "current".hangchocdha_tmd
-        WHERE (xoa = 0 OR xoa IS NULL)
-          AND ngaykq IS NULL
-        AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '30 minutes'
-        GROUP BY tenphong
-        ORDER BY tenphong ASC
+            r.tenphong,
+            COALESCE(COUNT(cdha.mabn), 0)::int AS tong_cho_kham
+        FROM all_cdha_rooms r
+        LEFT JOIN "current".hangchocdha_tmd cdha
+            ON cdha.tenphong = r.tenphong
+            AND (cdha.xoa = 0 OR cdha.xoa IS NULL)
+            AND cdha.ngaykq IS NULL
+            AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '30 minutes'
+        GROUP BY r.tenphong
+        ORDER BY r.tenphong ASC
     `;
     return rows;
 };

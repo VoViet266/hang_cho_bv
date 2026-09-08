@@ -7,6 +7,7 @@ router.get('/multi', viewController.getMultiRoomView);
 router.get('/split', viewController.getMultiRoomView);
 router.get('/room/:id', viewController.getRoom);
 router.get('/cdha', viewController.getCdhaDashboard);
+router.get('/cdha/room', viewController.getCdhaRoom);
 router.get('/cdha/room/:tenphong', viewController.getCdhaRoom);
 
 module.exports = router;

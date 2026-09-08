@@ -63,6 +63,7 @@ const getCdhaRoom = async (req, res) => {
     try {
         const currentRoomId = req.params.tenphong;
         const rawRoomsParam = req.query.rooms || req.query.r || '';
+        const isSingleExplicit = req.query.single === '1' || req.query.single === 'true';
         
         const cdhaStats = await cdhaService.LayDanhSachCacPhongCDHA();
         const allAvailableRooms = (cdhaStats.rooms || []).map(r => ({
@@ -70,10 +71,20 @@ const getCdhaRoom = async (req, res) => {
             name: r.tenphong
         }));
 
-        let selectedRoomIds = rawRoomsParam
-            ? rawRoomsParam.split(',').map(s => s.trim()).filter(Boolean)
-            : [currentRoomId];
+        let selectedRoomIds = [];
+        if (rawRoomsParam) {
+            selectedRoomIds = rawRoomsParam.split(',').map(s => s.trim()).filter(Boolean);
+        } else if (isSingleExplicit && currentRoomId) {
+            selectedRoomIds = [currentRoomId];
+        } else {
+            // Mặc định luôn hiển thị 4 phòng chính trên màn hình TV (chỉ chia tối đa 4)
+            selectedRoomIds = allAvailableRooms.map(r => r.id).slice(0, 4);
+            if (selectedRoomIds.length === 0) {
+                selectedRoomIds = ['Phòng Siêu âm 1', 'Phòng Siêu âm 2', 'Phòng Siêu âm 3', 'Phòng Siêu âm 4'];
+            }
+        }
 
+        // Trên TV chia màn hình tối đa chỉ 4 phòng
         selectedRoomIds = Array.from(new Set(selectedRoomIds)).slice(0, 4);
 
         const roomsData = await Promise.all(
@@ -83,7 +94,7 @@ const getCdhaRoom = async (req, res) => {
         );
 
         res.render('cdha', {
-            currentRoomId,
+            currentRoomId: currentRoomId || selectedRoomIds[0] || 'CDHA',
             selectedRoomIds,
             allAvailableRooms,
             room: roomsData[0] || {},
