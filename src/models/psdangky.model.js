@@ -1,6 +1,6 @@
 const prisma = require('../config/db');
 
-const  LayDanhSachBenhNhanChoTheoPhongId = async (maphong) => {
+const LayDanhSachBenhNhanChoTheoPhongId = async (maphong) => {
     const rows = await prisma.$queryRaw`
         SELECT 
             COALESCE(kb.maphong, dk.maphong) AS maphong, 
@@ -29,7 +29,7 @@ const  LayDanhSachBenhNhanChoTheoPhongId = async (maphong) => {
           AND (kb.xoa IS NULL OR kb.xoa = 0)
           AND (dk.xoa IS NULL OR dk.xoa = 0)
           AND (kb.dakham IS NULL OR kb.dakham = 0)
-          AND COALESCE(kb.ngaykcb, dk.ngaydk) >= CURRENT_TIMESTAMP - INTERVAL '30 minutes'
+          AND COALESCE(kb.ngaykcb, dk.ngaydk) >= CURRENT_TIMESTAMP - INTERVAL '90 minutes'
         GROUP BY COALESCE(kb.maphong, dk.maphong)
     `;
     return rows;
