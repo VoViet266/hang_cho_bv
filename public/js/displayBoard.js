@@ -575,7 +575,7 @@ function updateRoomDOM(roomId, data) {
 
   const rawList = data.waitingList || [];
   // Lọc bỏ bệnh nhân đã bị xóa/ẩn và áp dụng đôn thứ tự
-  // Với CDHA: Server đã lọc trực tiếp trong database (xoa = 0), không lọc qua QueuePolicy sessionStorage
+  // Với CDHA: Server đã lọc trực tiếp trong database (an = '0'), không lọc qua QueuePolicy sessionStorage
   const waitingList = (window.QueuePolicy && roomType !== "cdha")
     ? window.QueuePolicy.applyQueuePolicy(rawList)
     : (window.QueuePolicy ? window.QueuePolicy.applyManualDemotions(rawList) : [...rawList]);

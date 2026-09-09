@@ -13,6 +13,7 @@ const LayDanhSachHangChoCDHA = async (tenphong) => {
             cdha.maloai, 
             cdha.tenphong, 
             cdha.xoa, 
+            cdha.an,
             cdha.phongchidinh, 
             cdha.ghichu,
             bn.holot,
@@ -22,9 +23,10 @@ const LayDanhSachHangChoCDHA = async (tenphong) => {
         FROM "current".hangchocdha_tmd cdha
         LEFT JOIN "current".dmbenhnhan bn ON cdha.mabn = bn.mabn
         WHERE (cdha.xoa = 0 OR cdha.xoa IS NULL)
-        AND cdha.ngaykq IS NULL 
-        AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '90 minutes'
-        AND cdha.tenphong = ${tenphong}
+          AND (cdha.an = '0' OR cdha.an IS NULL)
+          AND cdha.ngaykq IS NULL 
+          AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '90 minutes'
+          AND cdha.tenphong = ${tenphong}
         ORDER BY 
             CASE 
                 WHEN cdha.uutien IN ('1', '2', '3', '4', '5', '6') THEN CAST(cdha.uutien AS INTEGER)
@@ -61,6 +63,7 @@ const LayDanhSachPhongCDHA = async () => {
         LEFT JOIN "current".hangchocdha_tmd cdha
             ON cdha.tenphong = r.tenphong
             AND (cdha.xoa = 0 OR cdha.xoa IS NULL)
+            AND (cdha.an = '0' OR cdha.an IS NULL)
             AND cdha.ngaykq IS NULL
             AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '90 minutes'
         GROUP BY r.tenphong
@@ -79,26 +82,26 @@ const AnBenhNhanCDHA = async (makb, mabn, tenphong) => {
     if (cleanMakb && cleanMabn) {
         return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
-            SET xoa = 1
+            SET an = '1'
             WHERE (makb = ${cleanMakb} OR mabn = ${cleanMabn})
               AND tenphong = ${cleanTenphong}
-              AND (xoa = 0 OR xoa IS NULL)
+              AND (an = '0' OR an IS NULL)
         `;
     } else if (cleanMakb) {
         return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
-            SET xoa = 1
+            SET an = '1'
             WHERE makb = ${cleanMakb}
               AND tenphong = ${cleanTenphong}
-              AND (xoa = 0 OR xoa IS NULL)
+              AND (an = '0' OR an IS NULL)
         `;
     } else if (cleanMabn) {
         return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
-            SET xoa = 1
+            SET an = '1'
             WHERE mabn = ${cleanMabn}
               AND tenphong = ${cleanTenphong}
-              AND (xoa = 0 OR xoa IS NULL)
+              AND (an = '0' OR an IS NULL)
         `;
     }
     return 0;
@@ -114,26 +117,26 @@ const KhoiPhucBenhNhanCDHA = async (makb, mabn, tenphong) => {
     if (cleanMakb && cleanMabn) {
         return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
-            SET xoa = 0
+            SET an = '0'
             WHERE (makb = ${cleanMakb} OR mabn = ${cleanMabn})
               AND tenphong = ${cleanTenphong}
-              AND xoa = 1
+              AND an = '1'
         `;
     } else if (cleanMakb) {
         return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
-            SET xoa = 0
+            SET an = '0'
             WHERE makb = ${cleanMakb}
               AND tenphong = ${cleanTenphong}
-              AND xoa = 1
+              AND an = '1'
         `;
     } else if (cleanMabn) {
         return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
-            SET xoa = 0
+            SET an = '0'
             WHERE mabn = ${cleanMabn}
               AND tenphong = ${cleanTenphong}
-              AND xoa = 1
+              AND an = '1'
         `;
     }
     return 0;
@@ -150,8 +153,8 @@ const KhoiPhucTatCaCDHA = async (tenphongList) => {
     if (rooms.length > 1) {
         return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
-            SET xoa = 0
-            WHERE xoa = 1
+            SET an = '0'
+            WHERE an = '1'
               AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
               AND tenphong IN (${Prisma.join(rooms)})
         `;
@@ -159,8 +162,8 @@ const KhoiPhucTatCaCDHA = async (tenphongList) => {
         const room = rooms[0];
         return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
-            SET xoa = 0
-            WHERE xoa = 1
+            SET an = '0'
+            WHERE an = '1'
               AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
               AND tenphong = ${room}
         `;
@@ -168,8 +171,8 @@ const KhoiPhucTatCaCDHA = async (tenphongList) => {
 
     return await prisma.$executeRaw`
         UPDATE "current".hangchocdha_tmd
-        SET xoa = 0
-        WHERE xoa = 1
+        SET an = '0'
+        WHERE an = '1'
           AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
     `;
 };
@@ -191,13 +194,15 @@ const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
                 cdha.ngaynhap, 
                 cdha.tenphong, 
                 cdha.xoa, 
+                cdha.an,
                 bn.holot, 
                 bn.ten, 
                 bn.ngaysinh,
                 bn.gioitinh
             FROM "current".hangchocdha_tmd cdha
             LEFT JOIN "current".dmbenhnhan bn ON cdha.mabn = bn.mabn
-            WHERE cdha.xoa = 1
+            WHERE cdha.an = '1'
+              AND (cdha.xoa = 0 OR cdha.xoa IS NULL)
               AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
               AND cdha.tenphong IN (${Prisma.join(rooms)})
             ORDER BY cdha.ngaynhap DESC
@@ -212,13 +217,15 @@ const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
                 cdha.ngaynhap, 
                 cdha.tenphong, 
                 cdha.xoa, 
+                cdha.an,
                 bn.holot, 
                 bn.ten, 
                 bn.ngaysinh,
                 bn.gioitinh
             FROM "current".hangchocdha_tmd cdha
             LEFT JOIN "current".dmbenhnhan bn ON cdha.mabn = bn.mabn
-            WHERE cdha.xoa = 1
+            WHERE cdha.an = '1'
+              AND (cdha.xoa = 0 OR cdha.xoa IS NULL)
               AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
               AND cdha.tenphong = ${room}
             ORDER BY cdha.ngaynhap DESC
@@ -233,13 +240,15 @@ const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
             cdha.ngaynhap, 
             cdha.tenphong, 
             cdha.xoa, 
+            cdha.an,
             bn.holot, 
             bn.ten, 
             bn.ngaysinh,
             bn.gioitinh
         FROM "current".hangchocdha_tmd cdha
         LEFT JOIN "current".dmbenhnhan bn ON cdha.mabn = bn.mabn
-        WHERE cdha.xoa = 1
+        WHERE cdha.an = '1'
+          AND (cdha.xoa = 0 OR cdha.xoa IS NULL)
           AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
         ORDER BY cdha.ngaynhap DESC
     `;
