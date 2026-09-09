@@ -406,14 +406,14 @@ function updateQuadrantDOM(roomId, data) {
 
       const statusBadge = isNear
         ? `<span class="inline-flex items-center justify-center bg-red-600 text-white px-1.5 py-0.5 rounded text-xs font-black uppercase whitespace-nowrap shadow-none animate-pulse">Tới Lượt</span>`
-        : `<span class="inline-flex items-center justify-center bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs font-bold border border-slate-300 whitespace-nowrap shadow-none">Chờ khám</span>`;
+        : `<span class="inline-flex items-center justify-center bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs font-bold border border-slate-300 whitespace-nowrap shadow-none">Chờ</span>`;
 
       const deleteBtn = `
-        <button type="button" 
-                title="Xóa/Ẩn khỏi màn hình" 
-                aria-label="Xóa bệnh nhân khỏi danh sách hiển thị" 
-                onclick="removePatientFromElement(this, event)" 
-                class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0" 
+        <button type="button"
+                title="Xóa/Ẩn khỏi màn hình"
+                aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                onclick="removePatientFromElement(this, event)"
+                class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0"
                 tabindex="0">
           <i class="fas fa-trash-alt text-xs"></i>
         </button>

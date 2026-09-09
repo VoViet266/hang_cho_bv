@@ -68,7 +68,7 @@
             <% } %>
 
             <!-- Nút xem danh sách bệnh nhân đã xóa/ẩn -->
-            <% 
+            <%
                 const initHiddenCount = (typeof roomsData !== 'undefined' && roomsData.length > 0)
                     ? roomsData.reduce((acc, r) => acc + ((r.hiddenList && r.hiddenList.length) || 0), 0)
                     : ((room && room.hiddenList && room.hiddenList.length) || 0);
@@ -101,7 +101,7 @@
             </button>
 
             <!-- Nút quay lại -->
-            <a href="/cdha" class="remote-item icon-button bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1" tabindex="0" aria-label="Về danh sách CDHA" title="Về danh sách CDHA">
+            <a href="/" class="remote-item icon-button bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1" tabindex="0" aria-label="Về trang chủ" title="Về trang chủ">
                 <i class="fas fa-arrow-left"></i>
             </a>
         </div>
@@ -109,17 +109,17 @@
 
     <!-- MAIN BODY -->
     <main class="flex-grow p-1.5 overflow-hidden flex flex-col">
-        <% if (roomsData.length <= 1) { 
+        <% if (roomsData.length <= 1) {
             const waitingList = room.waitingList || [];
             let nextPatientNameToRead = '';
         %>
         <!-- ================= CHẾ ĐỘ 1 PHÒNG CDHA ================= -->
-        <div id="room-card-<%= room.tenphong %>" 
+        <div id="room-card-<%= room.tenphong %>"
              class="room-container flex-grow overflow-y-auto bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm"
              data-room-type="cdha"
              data-room-id="<%= room.tenphong %>"
              data-room-name="<%= room.tenphong %>">
-            
+
             <table class="patient-table patient-table--single w-full text-left border-collapse">
                 <colgroup>
                     <col style="width: 7%;">
@@ -144,20 +144,20 @@
                             Không có bệnh nhân chờ chẩn đoán hình ảnh.
                         </td>
                     </tr>
-                    <% } else { 
-                        let waitCounter = 0; 
-                        waitingList.forEach(function(patient, index) { 
+                    <% } else {
+                        let waitCounter = 0;
+                        waitingList.forEach(function(patient, index) {
                             let timeStr = '';
                             if (patient.priorityLabel) {
                                 timeStr = `<span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-lg md:text-xl">Ưu tiên: ${patient.priorityLabel}</span>`;
                             }
-                            let isNear = false; 
-                            if (patient.dakham == 0) { 
-                                waitCounter++; 
+                            let isNear = false;
+                            if (patient.dakham == 0) {
+                                waitCounter++;
                                 if (waitCounter === 1) {
-                                    isNear = true; 
-                                    nextPatientNameToRead = `${patient.holot || ''} ${patient.ten || ''}`.trim(); 
-                                } 
+                                    isNear = true;
+                                    nextPatientNameToRead = `${patient.holot || ''} ${patient.ten || ''}`.trim();
+                                }
                             }
                             const currentPatientName = `${patient.holot || ''} ${patient.ten || ''}`.trim();
                             const dobYear = patient.dobStr && patient.dobStr !== 'Chưa cập nhật' ? patient.dobStr.split('/').pop() : '';
@@ -186,14 +186,14 @@
                                 </span>
                                 <% } else { %>
                                 <span class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-lg md:text-2xl font-bold border-2 border-slate-200 shadow-sm whitespace-nowrap">
-                                    Chờ lượt 
+                                    Chờ lượt
                                 </span>
                                 <% } %>
-                                <button type="button" 
-                                        title="Xóa/Ẩn khỏi màn hình" 
-                                        aria-label="Xóa bệnh nhân khỏi danh sách hiển thị" 
-                                        onclick="removePatientFromElement(this, event)" 
-                                        class="btn-hide-patient p-2 text-slate-300 hover:text-danger hover:bg-red-50 rounded-lg transition-colors cursor-pointer" 
+                                <button type="button"
+                                        title="Xóa/Ẩn khỏi màn hình"
+                                        aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                                        onclick="removePatientFromElement(this, event)"
+                                        class="btn-hide-patient p-2 text-slate-300 hover:text-danger hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                         tabindex="0">
                                     <i class="fas fa-trash-alt text-lg md:text-2xl"></i>
                                 </button>
@@ -204,34 +204,34 @@
                 </tbody>
             </table>
 
-            <div id="speechData" 
-                 data-room-type="cdha" 
-                 data-room-id="<%= room.tenphong %>" 
-                 data-patient="<%= nextPatientNameToRead %>" 
+            <div id="speechData"
+                 data-room-type="cdha"
+                 data-room-id="<%= room.tenphong %>"
+                 data-patient="<%= nextPatientNameToRead %>"
                  data-room="<%= room.tenphong %>"
                  style="display: none;"></div>
         </div>
 
-        <% } else { 
+        <% } else {
             const isSplit2 = roomsData.length === 2;
-            const gridClass = isSplit2 
-                ? 'grid grid-cols-1 md:grid-cols-2 gap-2 h-full' 
+            const gridClass = isSplit2
+                ? 'grid grid-cols-1 md:grid-cols-2 gap-2 h-full'
                 : 'grid grid-cols-2 grid-rows-2 gap-2 h-full';
         %>
         <!-- ================= CHẾ ĐỘ CHIA 2 HOẶC CHIA 4 CDHA ================= -->
         <div class="<%= gridClass %>">
-            <% roomsData.forEach(function(rData, rIdx) { 
+            <% roomsData.forEach(function(rData, rIdx) {
                 const roomId = rData.tenphong;
                 const roomTitle = rData.tenphong;
                 const waitingList = rData.waitingList || [];
                 let nextPatient = '';
             %>
-            <div id="room-card-<%= roomId %>" 
+            <div id="room-card-<%= roomId %>"
                  class="room-container bg-white text-slate-900 rounded-xl shadow-sm border-2 border-slate-300 flex flex-col overflow-hidden h-full"
                  data-room-type="cdha"
                  data-room-id="<%= roomId %>"
                  data-room-name="<%= roomTitle %>">
-                
+
                 <!-- Header ô phòng -->
                 <div class="tv-quadrant-header bg-white px-3 py-1 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
                     <h2 class="tv-split-room-title">
@@ -270,7 +270,7 @@
                                     Không có bệnh nhân chờ.
                                 </td>
                             </tr>
-                            <% } else { 
+                            <% } else {
                                 let waitCount = 0;
                                 waitingList.forEach(function(p, pIdx) {
                                     let isNear = false;
@@ -283,13 +283,13 @@
                                     }
                                     const pName = `${p.holot || ''} ${p.ten || ''}`.trim();
                                     const pYear = p.dobStr && p.dobStr !== 'Chưa cập nhật' ? p.dobStr.split('/').pop() : '';
-                                    
+
                                     let noteTag = '';
                                     if (p.priorityLabel) {
                                         noteTag = `<span class="inline-block bg-yellow-100 text-yellow-800 text-xs md:text-sm px-1.5 py-0.5 rounded font-extrabold border border-yellow-300 ml-1 whitespace-nowrap">Ưu tiên: ${p.priorityLabel}</span>`;
                                     }
                             %>
-                            <tr data-patient="<%= pName %>" data-patient-key="<%= (p.makb || p.mabn || pName + '_' + (p.dobStr || '')).trim() %>" data-makb="<%= p.makb || '' %>" data-mabn="<%= p.mabn || '' %>" data-room="<%= roomTitle %>" data-room-type="cdha" onclick="onRowClick(this)" 
+                            <tr data-patient="<%= pName %>" data-patient-key="<%= (p.makb || p.mabn || pName + '_' + (p.dobStr || '')).trim() %>" data-makb="<%= p.makb || '' %>" data-mabn="<%= p.mabn || '' %>" data-room="<%= roomTitle %>" data-room-type="cdha" onclick="onRowClick(this)"
                                 class="remote-item cursor-pointer transition-all <%= isNear ? 'bg-yellow-100 hover:bg-yellow-200 border-l-8 border-yellow-500 shadow-md font-black' : 'hover:bg-blue-50 border-b border-slate-200' %>" tabindex="0">
                                 <td class="py-2.5 px-2 text-center font-bold text-blue-900 <%= isNear ? 'text-2xl md:text-4xl lg:text-5xl font-black' : 'text-xl md:text-3xl font-bold' %>">
                                     <%= pIdx + 1 %>
@@ -313,14 +313,14 @@
                                         </span>
                                         <% } else { %>
                                         <span class="inline-flex items-center justify-center bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md text-xs font-bold border border-slate-300 whitespace-nowrap">
-                                            Chờ khám
+                                            Chờ
                                         </span>
                                         <% } %>
-                                        <button type="button" 
-                                                title="Xóa/Ẩn khỏi màn hình" 
-                                                aria-label="Xóa bệnh nhân khỏi danh sách hiển thị" 
-                                                onclick="removePatientFromElement(this, event)" 
-                                                class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0" 
+                                        <button type="button"
+                                                title="Xóa/Ẩn khỏi màn hình"
+                                                aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                                                onclick="removePatientFromElement(this, event)"
+                                                class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0"
                                                 tabindex="0">
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
@@ -332,9 +332,9 @@
                     </table>
                 </div>
 
-                <div id="speech-track-<%= roomId %>" 
-                     data-patient="<%= nextPatient %>" 
-                     data-room="<%= roomTitle %>" 
+                <div id="speech-track-<%= roomId %>"
+                     data-patient="<%= nextPatient %>"
+                     data-room="<%= roomTitle %>"
                      style="display:none;"></div>
             </div>
             <% }); %>
@@ -368,7 +368,7 @@
 
                 <!-- Checkbox list -->
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto p-2 bg-slate-50 rounded-xl border-2 border-slate-200 flex-grow">
-                    <% allAvailableRooms.forEach(function(r) { 
+                    <% allAvailableRooms.forEach(function(r) {
                         const isChecked = selectedRoomIds.includes(r.id);
                     %>
                     <label class="remote-item flex items-center gap-2 p-2 bg-white hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border border-slate-300 shadow-2xs" tabindex="0">

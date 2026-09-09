@@ -435,12 +435,10 @@
         }
       }
 
-      // Khi không trong modal: Quay lại trang trước
       if (window.history && window.history.length > 1) {
         window.history.back();
       } else {
-        const isCdha = window.location.pathname.includes("/cdha");
-        window.location.href = isCdha ? "/cdha" : "/";
+        window.location.href = "/";
       }
     }
   }

@@ -4,9 +4,10 @@ const viewController = require('../controllers/viewController');
 
 router.get('/', viewController.getDashboard);
 router.get('/multi', viewController.getMultiRoomView);
-router.get('/split', viewController.getMultiRoomView);
+router.get('/room', viewController.getRoom);
 router.get('/room/:id', viewController.getRoom);
-router.get('/cdha', viewController.getCdhaDashboard);
+router.get('/cdha', viewController.getCdhaRoom);
+router.get('/cdha/dashboard', viewController.getCdhaDashboard);
 router.get('/cdha/room', viewController.getCdhaRoom);
 router.get('/cdha/room/:tenphong', viewController.getCdhaRoom);
 

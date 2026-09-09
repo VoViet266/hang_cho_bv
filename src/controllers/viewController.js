@@ -88,13 +88,18 @@ const getCdhaRoom = async (req, res) => {
         .map((s) => s.trim())
         .filter(Boolean);
     } else if (currentRoomId) {
-      // Mặc định hiển thị 1 phòng đã chọn, sau đó người dùng có thể bấm M để chọn thêm tối đa 4 phòng
       selectedRoomIds = [currentRoomId];
     } else {
+      // Mặc định hiển thị 4 phòng (chia 4 hình) ở CDHA
       selectedRoomIds =
         allAvailableRooms.length > 0
-          ? [allAvailableRooms[0].id]
-          : ["Phòng Siêu âm 1"];
+          ? allAvailableRooms.slice(0, 4).map((r) => r.id)
+          : [
+              "Phòng Siêu âm 1",
+              "Phòng Siêu âm 2",
+              "Phòng Siêu âm 3",
+              "Phòng Siêu âm 4",
+            ];
     }
 
     // Trên TV chia màn hình tối đa chỉ 4 phòng
@@ -149,7 +154,9 @@ const getMultiRoomView = async (req, res) => {
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean)
-      : [];
+      : (roomType === "cdha" && allAvailableRooms.length > 0
+          ? allAvailableRooms.slice(0, 4).map((r) => r.id)
+          : []);
 
     if (selectedRoomIds.length > 4) {
       selectedRoomIds = selectedRoomIds.slice(0, 4);
