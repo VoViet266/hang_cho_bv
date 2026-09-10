@@ -28,10 +28,6 @@ const LayDanhSachHangChoCDHA = async (tenphong) => {
           AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '90 minutes'
           AND cdha.tenphong = ${tenphong}
         ORDER BY 
-            CASE 
-                WHEN cdha.uutien IN ('1', '2', '3', '4', '5', '6') THEN CAST(cdha.uutien AS INTEGER)
-                ELSE 999 
-            END ASC, 
             cdha.ngaynhap ASC
     `;
     return rows;
