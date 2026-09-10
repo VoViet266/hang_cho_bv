@@ -86,6 +86,7 @@ const AnBenhNhanCDHA = async (makb, mabn, tenphong) => {
             WHERE (makb = ${cleanMakb} OR mabn = ${cleanMabn})
               AND tenphong = ${cleanTenphong}
               AND (an = '0' OR an IS NULL)
+              AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
     } else if (cleanMakb) {
         return await prisma.$executeRaw`
@@ -94,6 +95,7 @@ const AnBenhNhanCDHA = async (makb, mabn, tenphong) => {
             WHERE makb = ${cleanMakb}
               AND tenphong = ${cleanTenphong}
               AND (an = '0' OR an IS NULL)
+              AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
     } else if (cleanMabn) {
         return await prisma.$executeRaw`
@@ -102,6 +104,7 @@ const AnBenhNhanCDHA = async (makb, mabn, tenphong) => {
             WHERE mabn = ${cleanMabn}
               AND tenphong = ${cleanTenphong}
               AND (an = '0' OR an IS NULL)
+              AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
     }
     return 0;
@@ -121,6 +124,7 @@ const KhoiPhucBenhNhanCDHA = async (makb, mabn, tenphong) => {
             WHERE (makb = ${cleanMakb} OR mabn = ${cleanMabn})
               AND tenphong = ${cleanTenphong}
               AND an = '1'
+              AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
     } else if (cleanMakb) {
         return await prisma.$executeRaw`
@@ -129,6 +133,7 @@ const KhoiPhucBenhNhanCDHA = async (makb, mabn, tenphong) => {
             WHERE makb = ${cleanMakb}
               AND tenphong = ${cleanTenphong}
               AND an = '1'
+              AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
     } else if (cleanMabn) {
         return await prisma.$executeRaw`
@@ -137,6 +142,7 @@ const KhoiPhucBenhNhanCDHA = async (makb, mabn, tenphong) => {
             WHERE mabn = ${cleanMabn}
               AND tenphong = ${cleanTenphong}
               AND an = '1'
+              AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
     }
     return 0;
@@ -155,7 +161,7 @@ const KhoiPhucTatCaCDHA = async (tenphongList) => {
             UPDATE "current".hangchocdha_tmd
             SET an = '0'
             WHERE an = '1'
-              AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
+              AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
               AND tenphong IN (${Prisma.join(rooms)})
         `;
     } else if (rooms.length === 1) {
@@ -164,7 +170,7 @@ const KhoiPhucTatCaCDHA = async (tenphongList) => {
             UPDATE "current".hangchocdha_tmd
             SET an = '0'
             WHERE an = '1'
-              AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
+              AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
               AND tenphong = ${room}
         `;
     }
@@ -173,7 +179,7 @@ const KhoiPhucTatCaCDHA = async (tenphongList) => {
         UPDATE "current".hangchocdha_tmd
         SET an = '0'
         WHERE an = '1'
-          AND ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
+          AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
     `;
 };
 
@@ -203,7 +209,7 @@ const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
             LEFT JOIN "current".dmbenhnhan bn ON cdha.mabn = bn.mabn
             WHERE cdha.an = '1'
               AND (cdha.xoa = 0 OR cdha.xoa IS NULL)
-              AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
+              AND cdha.ngaynhap >= CURRENT_DATE AND cdha.ngaynhap < CURRENT_DATE + INTERVAL '1 day'
               AND cdha.tenphong IN (${Prisma.join(rooms)})
             ORDER BY cdha.ngaynhap DESC
         `;
@@ -226,7 +232,7 @@ const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
             LEFT JOIN "current".dmbenhnhan bn ON cdha.mabn = bn.mabn
             WHERE cdha.an = '1'
               AND (cdha.xoa = 0 OR cdha.xoa IS NULL)
-              AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
+              AND cdha.ngaynhap >= CURRENT_DATE AND cdha.ngaynhap < CURRENT_DATE + INTERVAL '1 day'
               AND cdha.tenphong = ${room}
             ORDER BY cdha.ngaynhap DESC
         `;
@@ -249,7 +255,7 @@ const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
         LEFT JOIN "current".dmbenhnhan bn ON cdha.mabn = bn.mabn
         WHERE cdha.an = '1'
           AND (cdha.xoa = 0 OR cdha.xoa IS NULL)
-          AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '48 hours'
+          AND cdha.ngaynhap >= CURRENT_DATE AND cdha.ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         ORDER BY cdha.ngaynhap DESC
     `;
 };
