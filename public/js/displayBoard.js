@@ -62,10 +62,10 @@ function toggleSound() {
     const unlockAudio = new Audio("/audio/silent.mp3");
     unlockAudio.volume = 0.01;
     unlockAudio.play().catch(() => { });
-
-    speakCurrentPatients(true);
+    // Bật loa chỉ mở khóa âm thanh cho trình duyệt, KHÔNG tự động phát tiếng bệnh nhân hiện tại
   } else {
     audioQueue.clear();
+    Object.keys(pendingSpeakTimers).forEach(cancelPendingSpeak);
   }
 }
 window.toggleSound = toggleSound;
@@ -78,6 +78,69 @@ function requestSpeak(patientName, roomName) {
   audioQueue.enqueue(speakText);
 }
 window.requestSpeak = requestSpeak;
+
+// ==========================================
+// CẤU HÌNH ĐỘ TRỄ 30S KHI BỆNH NHÂN LÊN TÊN
+// ==========================================
+const PATIENT_SPEAK_DELAY_MS = 30 * 1000;
+const pendingSpeakTimers = {};
+
+function cancelPendingSpeak(roomId) {
+  if (pendingSpeakTimers[roomId]) {
+    clearTimeout(pendingSpeakTimers[roomId].timerId);
+    delete pendingSpeakTimers[roomId];
+  }
+}
+
+function scheduleSpeakPatient(roomId, patientName, roomName, delayMs = PATIENT_SPEAK_DELAY_MS) {
+  if (!patientName || !patientName.trim()) {
+    cancelPendingSpeak(roomId);
+    return;
+  }
+
+  const cleanName = patientName.trim();
+  const storageKey = `lastSpoken_${roomId}`;
+  const lastSpoken = sessionStorage.getItem(storageKey);
+
+  // Nếu bệnh nhân này đã được đọc rồi, không lên lịch lại
+  if (cleanName === lastSpoken) {
+    cancelPendingSpeak(roomId);
+    return;
+  }
+
+  // Nếu đang có một timer đang chạy đúng cho bệnh nhân này, giữ nguyên để đếm tiếp
+  if (pendingSpeakTimers[roomId] && pendingSpeakTimers[roomId].patientName === cleanName) {
+    return;
+  }
+
+  // Nếu là bệnh nhân khác đang chờ thì hủy timer cũ
+  cancelPendingSpeak(roomId);
+
+  // Đặt hẹn giờ 30s mới đọc tên
+  const timerId = setTimeout(() => {
+    delete pendingSpeakTimers[roomId];
+
+    // Xác nhận lại: kiểm tra tracker trên màn hình xem bệnh nhân ở lượt này còn đúng là cleanName không
+    const tracker =
+      document.getElementById(`speech-track-${roomId}`) ||
+      document.getElementById("speechData");
+    const currentOnBoard = tracker ? (tracker.dataset.patient || "").trim() : "";
+
+    if (currentOnBoard === cleanName && soundEnabled) {
+      sessionStorage.setItem(storageKey, cleanName);
+      requestSpeak(cleanName, roomName);
+    }
+  }, delayMs);
+
+  pendingSpeakTimers[roomId] = {
+    timerId,
+    patientName: cleanName,
+    scheduledAt: Date.now(),
+    delayMs,
+  };
+}
+window.scheduleSpeakPatient = scheduleSpeakPatient;
+window.cancelPendingSpeak = cancelPendingSpeak;
 
 // ==========================================
 // TOAST NOTIFICATION TRÊN MÀN HÌNH TV
@@ -176,9 +239,7 @@ function removePatient(patientKey, patientName, roomName, meta = {}) {
         });
       });
 
-    setTimeout(() => {
-      speakCurrentPatients(true);
-    }, 300);
+    // Không ép gọi âm thanh ngay lập tức, dữ liệu cập nhật tiếp theo sẽ tuân thủ độ trễ 30s
 
     if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
       window.TVRemoteNav.refresh();
@@ -202,10 +263,7 @@ function removePatient(patientKey, patientName, roomName, meta = {}) {
 
   updateHiddenBadge();
 
-  // Tự động gọi đọc bệnh nhân mới vừa được đôn lên
-  setTimeout(() => {
-    speakCurrentPatients(true);
-  }, 200);
+  // Bệnh nhân mới đôn lên đã được updateRoomDOM lên lịch đọc sau 30 giây
 
   if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
     window.TVRemoteNav.refresh();
@@ -528,6 +586,14 @@ function onRowClick(el) {
     updateSoundIcon();
   }
 
+  // Khi click thủ công: hủy timer chờ 30s của phòng và gọi ngay
+  const roomContainer = el.closest(".room-container, .room-card, [data-room-id]") || document.querySelector(".room-container");
+  const roomId = roomContainer ? roomContainer.dataset.roomId : null;
+  if (roomId) {
+    cancelPendingSpeak(roomId);
+    sessionStorage.setItem(`lastSpoken_${roomId}`, patientName);
+  }
+
   requestSpeak(patientName, roomName);
 }
 window.onRowClick = onRowClick;
@@ -555,9 +621,12 @@ function speakCurrentPatients(force = false) {
     const storageKey = `lastSpoken_${roomId}`;
     const lastSpoken = sessionStorage.getItem(storageKey);
 
-    if (force || currentPatient !== lastSpoken) {
-      requestSpeak(currentPatient, roomName);
+    if (force) {
+      cancelPendingSpeak(roomId);
       sessionStorage.setItem(storageKey, currentPatient);
+      requestSpeak(currentPatient, roomName);
+    } else if (currentPatient !== lastSpoken) {
+      scheduleSpeakPatient(roomId, currentPatient, roomName, PATIENT_SPEAK_DELAY_MS);
     }
   });
 }
@@ -755,7 +824,7 @@ function updateRoomDOM(roomId, data) {
 
   updateHiddenBadge();
 
-  // 3. Cập nhật speech tracker và phát âm thanh nếu có bệnh nhân mới
+  // 3. Cập nhật speech tracker và phát âm thanh nếu có bệnh nhân mới (chờ 30s mới đọc)
   const tracker = document.getElementById(`speech-track-${roomId}`) || document.getElementById("speechData");
   if (tracker) {
     tracker.dataset.patient = nextPatientNameToRead;
@@ -764,9 +833,12 @@ function updateRoomDOM(roomId, data) {
   const storageKey = `lastSpoken_${roomId}`;
   const lastSpoken = sessionStorage.getItem(storageKey);
 
-  if (nextPatientNameToRead && nextPatientNameToRead !== lastSpoken) {
-    sessionStorage.setItem(storageKey, nextPatientNameToRead);
-    requestSpeak(nextPatientNameToRead, roomName);
+  if (nextPatientNameToRead) {
+    if (nextPatientNameToRead !== lastSpoken) {
+      scheduleSpeakPatient(roomId, nextPatientNameToRead, roomName, PATIENT_SPEAK_DELAY_MS);
+    }
+  } else {
+    cancelPendingSpeak(roomId);
   }
 
   if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
@@ -910,5 +982,13 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  setTimeout(() => speakCurrentPatients(false), 1500);
+  // Ghi nhận bệnh nhân hiện tại lúc mở trang để không tự phát tiếng bệnh nhân cũ (chỉ có mới mới phát)
+  const trackers = document.querySelectorAll("[id^='speech-track-'], #speechData");
+  trackers.forEach((tracker) => {
+    const rId = tracker.dataset.roomId || (tracker.id.startsWith("speech-track-") ? tracker.id.replace("speech-track-", "") : "");
+    const pName = (tracker.dataset.patient || "").trim();
+    if (rId && pName) {
+      sessionStorage.setItem(`lastSpoken_${rId}`, pName);
+    }
+  });
 });
