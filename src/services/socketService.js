@@ -127,6 +127,23 @@ function init(server) {
       const channelName = getRoomKey(params.roomType, params.roomId);
       socket.leave(channelName);
     });
+
+    socket.on("broadcast_speak", (params) => {
+      if (!params || !params.patientName) return;
+      const { roomType, roomId, patientName, roomName } = params;
+      const channelName = getRoomKey(roomType || "room", roomId);
+      logger.info(
+        `[Socket] Phát loa gọi bệnh nhân phòng ${channelName}: "${patientName}" -> "${roomName || ""}"`,
+      );
+      // Chuyển tiếp tới tất cả các màn hình khác trong cùng phòng khám
+      socket.to(channelName).emit("trigger_speak", {
+        roomType: roomType || "room",
+        roomId: roomId || "",
+        patientName,
+        roomName: roomName || "",
+        timestamp: Date.now(),
+      });
+    });
   });
 
   // Chạy chu kỳ quét các phòng đang active mỗi 3 giây
@@ -138,7 +155,20 @@ function init(server) {
   return io;
 }
 
+function close() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+  if (io) {
+    io.close();
+    io = null;
+  }
+  roomDataCache.clear();
+}
+
 module.exports = {
   init,
   checkAndBroadcastRoom,
+  close,
 };

@@ -365,12 +365,18 @@ function onRowClick(el) {
   // Khi click thủ công: hủy timer chờ 30s của phòng và gọi ngay
   const quadrant = el.closest(".room-quadrant, .room-container, .room-card, [data-room-id]");
   const roomId = quadrant ? quadrant.dataset.roomId : null;
+  const roomType = quadrant ? (quadrant.dataset.roomType || "room") : "room";
   if (roomId) {
     cancelPendingSpeakMulti(roomId);
     localStorage.setItem(`lastSpokenMulti_${roomId}`, patientName);
   }
 
   requestSpeak(patientName, roomName);
+
+  // Phát tín hiệu Socket.IO để các máy khác cùng phòng đồng thời phát loa
+  if (typeof emitBroadcastSpeakMulti === "function") {
+    emitBroadcastSpeakMulti(roomType, roomId, patientName, roomName);
+  }
 }
 window.onRowClick = onRowClick;
 
@@ -548,31 +554,57 @@ function updateQuadrantDOM(roomId, data) {
 window.updateQuadrantDOM = updateQuadrantDOM;
 
 // ==========================================
-// SOCKET.IO REALTIME LISTENER
+// SOCKET.IO REALTIME LISTENER & BROADCAST SPEAK
 // ==========================================
+let boardSocketMulti = null;
+
+function emitBroadcastSpeakMulti(roomType, roomId, patientName, roomName) {
+  if (boardSocketMulti && typeof boardSocketMulti.emit === "function") {
+    boardSocketMulti.emit("broadcast_speak", {
+      roomType: roomType || "room",
+      roomId: roomId || "",
+      patientName,
+      roomName,
+    });
+  }
+}
+window.emitBroadcastSpeakMulti = emitBroadcastSpeakMulti;
+
 function initSocket() {
   if (typeof io === "undefined") return;
 
-  const socket = io({
+  boardSocketMulti = io({
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     reconnectionAttempts: Infinity,
   });
+  window.boardSocketMulti = boardSocketMulti;
 
   const quadrants = document.querySelectorAll(".room-quadrant, .room-container");
 
-  socket.on("connect", () => {
+  boardSocketMulti.on("connect", () => {
     quadrants.forEach((q) => {
       const roomType = q.dataset.roomType || "room";
       const roomId = q.dataset.roomId;
-      socket.emit("join_room", { roomType, roomId });
+      boardSocketMulti.emit("join_room", { roomType, roomId });
     });
   });
 
-  socket.on("room_data_updated", (payload) => {
+  boardSocketMulti.on("room_data_updated", (payload) => {
     if (!payload || !payload.roomId) return;
     updateQuadrantDOM(payload.roomId, payload.data);
+  });
+
+  // Lắng nghe tín hiệu phát thanh loa từ máy khác cùng phòng
+  boardSocketMulti.on("trigger_speak", (payload) => {
+    if (!payload || !payload.patientName) return;
+    const { roomId, patientName, roomName } = payload;
+    if (roomId) {
+      cancelPendingSpeakMulti(roomId);
+      localStorage.setItem(`lastSpokenMulti_${roomId}`, patientName);
+    }
+    requestSpeak(patientName, roomName);
   });
 }
 

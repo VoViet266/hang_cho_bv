@@ -589,12 +589,18 @@ function onRowClick(el) {
   // Khi click thủ công: hủy timer chờ 30s của phòng và gọi ngay
   const roomContainer = el.closest(".room-container, .room-card, [data-room-id]") || document.querySelector(".room-container");
   const roomId = roomContainer ? roomContainer.dataset.roomId : null;
+  const roomType = (roomContainer ? roomContainer.dataset.roomType : "") || (el.dataset.roomType || "room");
   if (roomId) {
     cancelPendingSpeak(roomId);
     sessionStorage.setItem(`lastSpoken_${roomId}`, patientName);
   }
 
   requestSpeak(patientName, roomName);
+
+  // Phát tín hiệu Socket.IO để các máy khác cùng phòng đồng thời phát loa
+  if (typeof emitBroadcastSpeak === "function") {
+    emitBroadcastSpeak(roomType, roomId, patientName, roomName);
+  }
 }
 window.onRowClick = onRowClick;
 
@@ -848,31 +854,57 @@ function updateRoomDOM(roomId, data) {
 window.updateRoomDOM = updateRoomDOM;
 
 // ==========================================
-// SOCKET.IO REALTIME LISTENER
+// SOCKET.IO REALTIME LISTENER & BROADCAST SPEAK
 // ==========================================
+let boardSocket = null;
+
+function emitBroadcastSpeak(roomType, roomId, patientName, roomName) {
+  if (boardSocket && typeof boardSocket.emit === "function") {
+    boardSocket.emit("broadcast_speak", {
+      roomType: roomType || "room",
+      roomId: roomId || "",
+      patientName,
+      roomName,
+    });
+  }
+}
+window.emitBroadcastSpeak = emitBroadcastSpeak;
+
 function initSocket() {
   if (typeof io === "undefined") return;
 
-  const socket = io({
+  boardSocket = io({
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     reconnectionAttempts: Infinity,
   });
+  window.boardSocket = boardSocket;
 
   const roomContainers = document.querySelectorAll(".room-container");
 
-  socket.on("connect", () => {
+  boardSocket.on("connect", () => {
     roomContainers.forEach((container) => {
       const roomType = container.dataset.roomType;
       const roomId = container.dataset.roomId;
-      socket.emit("join_room", { roomType, roomId });
+      boardSocket.emit("join_room", { roomType, roomId });
     });
   });
 
-  socket.on("room_data_updated", (payload) => {
+  boardSocket.on("room_data_updated", (payload) => {
     if (!payload || !payload.roomId) return;
     updateRoomDOM(payload.roomId, payload.data);
+  });
+
+  // Lắng nghe tín hiệu phát thanh loa từ máy khác cùng phòng
+  boardSocket.on("trigger_speak", (payload) => {
+    if (!payload || !payload.patientName) return;
+    const { roomId, patientName, roomName } = payload;
+    if (roomId) {
+      cancelPendingSpeak(roomId);
+      sessionStorage.setItem(`lastSpoken_${roomId}`, patientName);
+    }
+    requestSpeak(patientName, roomName);
   });
 }
 
