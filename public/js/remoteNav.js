@@ -18,6 +18,9 @@
   let currentIndex = 0;
   let items = [];
   let isInitialized = false;
+  let focusedKey = "";
+  let refreshTimer = null;
+  let resetFocusOnRefresh = false;
 
   const FOCUS_CLASS = "tv-focused";
 
@@ -110,6 +113,27 @@
     });
   }
 
+  function getItemKey(el) {
+    if (!el) return "";
+    if (el.dataset && el.dataset.patientKey) {
+      const room = el.closest("[data-room-id]");
+      return JSON.stringify([
+        room?.dataset.roomType || el.dataset.roomType || "room",
+        room?.dataset.roomId || el.dataset.room || "",
+        el.dataset.patientKey,
+      ]);
+    }
+    return el.id ? `id:${el.id}` : "";
+  }
+
+  function refreshItems() {
+    items = getNavItems();
+    const matchingIndex = focusedKey ? items.findIndex((el) => getItemKey(el) === focusedKey) : -1;
+    if (matchingIndex >= 0) currentIndex = matchingIndex;
+    else currentIndex = Math.min(currentIndex, Math.max(0, items.length - 1));
+    return items;
+  }
+
   function setFocus(index, shouldScroll = true) {
     items = getNavItems();
     if (items.length === 0) return;
@@ -137,13 +161,14 @@
     });
 
     currentIndex = index;
+    focusedKey = getItemKey(items[index]);
   }
 
   /**
    * Tính toán ô mục tiêu theo hướng di chuyển 2D Spatial Navigation
    */
   function moveFocus(direction) {
-    items = getNavItems();
+    refreshItems();
     if (items.length === 0) return;
 
     const currentEl = items[currentIndex];
@@ -237,7 +262,7 @@
     const key = rawKey.toLowerCase();
     const code = e.keyCode || e.which || 0;
 
-    items = getNavItems();
+    refreshItems();
     const currentEl = items[currentIndex];
 
     if (key === "m" || code === 77) {
@@ -443,16 +468,24 @@
     }
   }
 
-  function bindMouseEvents() {
-    items = getNavItems();
-    items.forEach((el, idx) => {
-      el.addEventListener("mouseenter", () => {
-        setFocus(idx, false);
-      });
-      el.addEventListener("click", () => {
-        currentIndex = idx;
-      });
-    });
+  function handlePointerEvent(event) {
+    const el = event.target?.closest?.(".remote-item");
+    if (!el || (event.type === "mouseover" && event.relatedTarget && el.contains(event.relatedTarget))) return;
+    refreshItems();
+    const index = items.indexOf(el);
+    if (index >= 0) setFocus(index, false);
+  }
+
+  function scheduleRefresh(resetFocus = false) {
+    resetFocusOnRefresh = resetFocusOnRefresh || resetFocus;
+    if (refreshTimer !== null) return;
+    refreshTimer = setTimeout(() => {
+      refreshTimer = null;
+      refreshItems();
+      const shouldReset = resetFocusOnRefresh;
+      resetFocusOnRefresh = false;
+      setFocus(shouldReset ? 0 : currentIndex, shouldReset);
+    }, 50);
   }
 
   function init() {
@@ -461,15 +494,15 @@
 
     injectFocusStyles();
     items = getNavItems();
-    bindMouseEvents();
+    // Delegation also covers replacement rows without retaining old callbacks.
+    document.addEventListener("mouseover", handlePointerEvent);
+    document.addEventListener("click", handlePointerEvent, true);
 
     if (items.length > 0) {
       setFocus(0, false);
     }
 
     window.addEventListener("keydown", handleKeyDown, true);
-    document.addEventListener("keydown", handleKeyDown, true);
-    document.body.addEventListener("keydown", handleKeyDown, true);
 
     try {
       window.focus();
@@ -490,23 +523,10 @@
   // Hook toàn cục
   window.TVRemoteNav = {
     setFocus,
-    onModalToggle: (isOpen) => {
-      setTimeout(() => {
-        items = getNavItems();
-        bindMouseEvents();
-        setFocus(0);
-      }, 50);
-    },
-    refresh: () => {
-      setTimeout(() => {
-        items = getNavItems();
-        bindMouseEvents();
-        if (currentIndex >= items.length) currentIndex = Math.max(0, items.length - 1);
-        setFocus(currentIndex, false);
-      }, 50);
-    },
+    onModalToggle: () => scheduleRefresh(true),
+    refresh: () => scheduleRefresh(),
     getCurrentElement: () => {
-      items = getNavItems();
+      refreshItems();
       return items[currentIndex] || null;
     }
   };

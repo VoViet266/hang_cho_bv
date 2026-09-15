@@ -3,6 +3,20 @@ let soundEnabled = localStorage.getItem("soundEnabled") === "true";
 
 let lastKnownMultiRoomsData = {}; // Cache dữ liệu các phòng
 
+// ==========================================
+// HÀM TIỆN ÍCH CHỐNG XSS (HTML ESCAPING)
+// ==========================================
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+window.escapeHtml = escapeHtml;
+
 const audioQueue = new window.AudioQueueManager({
   isEnabled: () => soundEnabled,
   gapMs: 300,
@@ -53,7 +67,6 @@ function toggleSound() {
     // Bật loa chỉ mở khóa âm thanh cho trình duyệt, KHÔNG tự động phát tiếng bệnh nhân hiện tại
   } else {
     audioQueue.clear();
-    Object.keys(pendingSpeakTimersMulti).forEach(cancelPendingSpeakMulti);
   }
 }
 window.toggleSound = toggleSound;
@@ -74,66 +87,6 @@ function requestSpeak(patientName, roomName) {
   audioQueue.enqueue(speakText);
 }
 window.requestSpeak = requestSpeak;
-
-// ==========================================
-// CẤU HÌNH ĐỘ TRỄ 30S KHI BỆNH NHÂN LÊN TÊN
-// ==========================================
-const PATIENT_SPEAK_DELAY_MS = 30 * 1000;
-const pendingSpeakTimersMulti = {};
-
-function cancelPendingSpeakMulti(roomId) {
-  if (pendingSpeakTimersMulti[roomId]) {
-    clearTimeout(pendingSpeakTimersMulti[roomId].timerId);
-    delete pendingSpeakTimersMulti[roomId];
-  }
-}
-
-function scheduleSpeakPatientMulti(roomId, patientName, roomName, delayMs = PATIENT_SPEAK_DELAY_MS) {
-  if (!patientName || !patientName.trim()) {
-    cancelPendingSpeakMulti(roomId);
-    return;
-  }
-
-  const cleanName = patientName.trim();
-  const storageKey = `lastSpokenMulti_${roomId}`;
-  const lastSpoken = localStorage.getItem(storageKey);
-
-  // Nếu bệnh nhân này đã được đọc rồi, không lên lịch lại
-  if (cleanName === lastSpoken) {
-    cancelPendingSpeakMulti(roomId);
-    return;
-  }
-
-  // Nếu đang có một timer đang chạy đúng cho bệnh nhân này, giữ nguyên để đếm tiếp
-  if (pendingSpeakTimersMulti[roomId] && pendingSpeakTimersMulti[roomId].patientName === cleanName) {
-    return;
-  }
-
-  // Nếu là bệnh nhân khác đang chờ thì hủy timer cũ
-  cancelPendingSpeakMulti(roomId);
-
-  // Đặt hẹn giờ 30s mới đọc tên
-  const timerId = setTimeout(() => {
-    delete pendingSpeakTimersMulti[roomId];
-
-    const tracker = document.getElementById(`speech-track-${roomId}`);
-    const currentOnBoard = tracker ? (tracker.dataset.patient || "").trim() : "";
-
-    if (currentOnBoard === cleanName && soundEnabled) {
-      localStorage.setItem(storageKey, cleanName);
-      requestSpeak(cleanName, roomName);
-    }
-  }, delayMs);
-
-  pendingSpeakTimersMulti[roomId] = {
-    timerId,
-    patientName: cleanName,
-    scheduledAt: Date.now(),
-    delayMs,
-  };
-}
-window.scheduleSpeakPatientMulti = scheduleSpeakPatientMulti;
-window.cancelPendingSpeakMulti = cancelPendingSpeakMulti;
 
 // ==========================================
 // TOAST NOTIFICATION TRÊN TV
@@ -202,8 +155,6 @@ function removePatient(patientKey, patientName, roomName) {
   });
 
   updateHiddenBadge();
-
-  // Bệnh nhân mới đôn lên đã được updateQuadrantDOM lên lịch đọc sau 30 giây
 
   if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
     window.TVRemoteNav.refresh();
@@ -362,15 +313,10 @@ function onRowClick(el) {
     updateSoundIcon();
   }
 
-  // Khi click thủ công: hủy timer chờ 30s của phòng và gọi ngay
+  // Gọi ngay khi người dùng chọn bệnh nhân.
   const quadrant = el.closest(".room-quadrant, .room-container, .room-card, [data-room-id]");
   const roomId = quadrant ? quadrant.dataset.roomId : null;
   const roomType = quadrant ? (quadrant.dataset.roomType || "room") : "room";
-  if (roomId) {
-    cancelPendingSpeakMulti(roomId);
-    localStorage.setItem(`lastSpokenMulti_${roomId}`, patientName);
-  }
-
   requestSpeak(patientName, roomName);
 
   // Phát tín hiệu Socket.IO để các máy khác cùng phòng đồng thời phát loa
@@ -381,7 +327,7 @@ function onRowClick(el) {
 window.onRowClick = onRowClick;
 
 function checkInitialSpeech(force = false) {
-  if (!soundEnabled) return;
+  if (!force || !soundEnabled) return;
   const quadrants = document.querySelectorAll(".room-quadrant, .room-container");
   quadrants.forEach((q) => {
     const roomId = q.dataset.roomId;
@@ -389,22 +335,82 @@ function checkInitialSpeech(force = false) {
     const tracker = document.getElementById(`speech-track-${roomId}`);
     if (tracker && tracker.dataset.patient) {
       const pName = tracker.dataset.patient.trim();
-      const storageKey = `lastSpokenMulti_${roomId}`;
-      const lastSpoken = localStorage.getItem(storageKey);
       if (pName) {
-        if (force) {
-          cancelPendingSpeakMulti(roomId);
-          localStorage.setItem(storageKey, pName);
-          requestSpeak(pName, roomName);
-        } else if (pName !== lastSpoken) {
-          scheduleSpeakPatientMulti(roomId, pName, roomName, PATIENT_SPEAK_DELAY_MS);
-        }
+        requestSpeak(pName, roomName);
       }
     }
   });
 }
 window.checkInitialSpeech = checkInitialSpeech;
 window.speakCurrentPatients = checkInitialSpeech; // Tương thích với phím Space từ remoteNav.js
+
+// ==========================================
+// TỰ ĐỘNG CUỘN MƯỢT DANH SÁCH (SMOOTH AUTO-SCROLL)
+// ==========================================
+let lastUserInteractionAtMulti = 0;
+
+function registerUserActivityMulti() {
+  lastUserInteractionAtMulti = Date.now();
+}
+document.addEventListener("mousemove", registerUserActivityMulti, { passive: true });
+document.addEventListener("keydown", registerUserActivityMulti, { passive: true });
+document.addEventListener("touchstart", registerUserActivityMulti, { passive: true });
+
+const multiScrollStates = {};
+
+function stepAutoScrollMulti() {
+  requestAnimationFrame(stepAutoScrollMulti);
+
+  // Tạm dừng 15 giây khi người dùng thao tác chuột / bàn phím / remote
+  if (Date.now() - lastUserInteractionAtMulti < 15000) return;
+
+  const containers = document.querySelectorAll(".overflow-y-auto");
+  const now = Date.now();
+
+  containers.forEach((container, idx) => {
+    const maxScroll = container.scrollHeight - container.clientHeight;
+    if (maxScroll <= 15) return; // Danh sách vừa vặn màn hình thì không cần cuộn
+
+    const id = container.id || `multi-scroll-box-${idx}`;
+    if (!multiScrollStates[id]) {
+      multiScrollStates[id] = {
+        direction: 1,
+        pauseUntil: now + 5000, // Dừng 5 giây ở đầu danh sách để quan sát
+        lastStep: now,
+      };
+    }
+
+    const state = multiScrollStates[id];
+    if (now < state.pauseUntil) {
+      state.lastStep = now;
+      return;
+    }
+
+    const elapsed = Math.min(100, now - (state.lastStep || now));
+    state.lastStep = now;
+
+    // Tốc độ cuộn êm dịu, dễ đọc (~32px / giây)
+    const pxToMove = (32 * elapsed) / 1000;
+
+    if (state.direction === 1) {
+      container.scrollTop += pxToMove;
+      if (container.scrollTop >= maxScroll - 2) {
+        container.scrollTop = maxScroll;
+        state.direction = -1;
+        state.pauseUntil = now + 4000; // Dừng 4 giây ở đáy danh sách
+      }
+    } else {
+      // Cuộn ngược lên đầu trang
+      container.scrollTop -= pxToMove * 1.5;
+      if (container.scrollTop <= 2) {
+        container.scrollTop = 0;
+        state.direction = 1;
+        state.pauseUntil = now + 5000; // Dừng 5 giây ở đầu trang
+      }
+    }
+  });
+}
+requestAnimationFrame(stepAutoScrollMulti);
 
 // ==========================================
 // CẬP NHẬT GIAO DIỆN TỪNG Ô PHÒNG (QUADRANT)
@@ -439,6 +445,7 @@ function updateQuadrantDOM(roomId, data) {
   if (!tbody) return;
 
   let nextPatientNameToRead = "";
+  let nextPatientKeyToRead = "";
 
   if (waitingList.length === 0) {
     tbody.innerHTML = `
@@ -448,20 +455,31 @@ function updateQuadrantDOM(roomId, data) {
         </td>
       </tr>
     `;
+    const existingBadge = document.getElementById(`page-badge-${roomId}`);
+    if (existingBadge) existingBadge.remove();
   } else {
     let waitCounter = 0;
-    let rowsHtml = "";
+    let nextPatientIndex = -1;
 
-    waitingList.forEach((patient, index) => {
-      let isNear = false;
+    waitingList.forEach((patient, idx) => {
       if (patient.dakham == 0) {
         waitCounter++;
         if (waitCounter === 1) {
-          isNear = true;
+          nextPatientIndex = idx;
           nextPatientNameToRead = `${patient.holot || ""} ${patient.ten || ""}`.trim();
+          nextPatientKeyToRead = getPatientKey(patient);
         }
       }
+    });
 
+    const existingBadge = document.getElementById(`page-badge-${roomId}`);
+    if (existingBadge) existingBadge.remove();
+
+    let rowsHtml = "";
+
+    waitingList.forEach((patient, index) => {
+      const isNear = (index === nextPatientIndex);
+      const sttDisplay = index + 1;
       const currentPatientName = `${patient.holot || ""} ${patient.ten || ""}`.trim();
       const pKey = getPatientKey(patient);
       const dobYear = patient.dobStr && patient.dobStr !== "Chưa cập nhật"
@@ -470,7 +488,7 @@ function updateQuadrantDOM(roomId, data) {
 
       let noteTag = "";
       if (patient.priorityLabel) {
-        noteTag = `<span class="inline-block bg-yellow-100 text-yellow-800 text-xs md:text-sm px-1.5 py-0.5 rounded font-extrabold border border-yellow-300 ml-1">Ưu tiên: ${patient.priorityLabel}</span>`;
+        noteTag = `<span class="inline-block bg-yellow-100 text-yellow-800 text-xs md:text-sm px-1.5 py-0.5 rounded font-extrabold border border-yellow-300 ml-1">Ưu tiên: ${escapeHtml(patient.priorityLabel)}</span>`;
       } else if (patient.isPriority) {
         noteTag = `<span class="inline-block bg-yellow-100 text-yellow-800 text-xs md:text-sm px-1.5 py-0.5 rounded font-extrabold border border-yellow-300 ml-1">Ưu tiên</span>`;
       }
@@ -498,25 +516,27 @@ function updateQuadrantDOM(roomId, data) {
         </button>
       `;
 
-      const safePatientName = currentPatientName.replace(/"/g, '&quot;');
-      const safeRoomTitle = roomTitle.replace(/"/g, '&quot;');
-      const safeKey = pKey.replace(/"/g, '&quot;');
+      const safePatientName = escapeHtml(currentPatientName);
+      const safeRoomTitle = escapeHtml(roomTitle);
+      const safeKey = escapeHtml(pKey);
+      const safeDobYear = escapeHtml(dobYear);
+      const displayPatientName = escapeHtml((currentPatientName || "Chưa cập nhật").toUpperCase());
 
       rowsHtml += `
         <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-room="${safeRoomTitle}" onclick="onRowClick(this)" class="remote-item cursor-pointer transition-all ${rowClass}" tabindex="0">
           <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${sttClass}">
-            ${index + 1}
+            ${sttDisplay}
           </td>
           <td class="py-2.5 px-2 text-blue-900 ${nameClass}">
             <div class="patient-name-container flex flex-col items-start justify-center">
               <span class="patient-name-text">
-                ${(currentPatientName || "Chưa cập nhật").toUpperCase()}
+                ${displayPatientName}
               </span>
               ${noteTag}
             </div>
           </td>
           <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${dobClass}">
-            ${dobYear}
+            ${safeDobYear}
           </td>
           <td class="py-2.5 px-2 text-center whitespace-nowrap">
             <div class="flex items-center justify-center gap-1.5 flex-nowrap">
@@ -531,20 +551,11 @@ function updateQuadrantDOM(roomId, data) {
     tbody.innerHTML = rowsHtml;
   }
 
-  // 3. Cập nhật speech tracker và phát âm thanh nếu có bệnh nhân mới (chờ 30s mới đọc)
+  // 3. Cập nhật bệnh nhân tới lượt để gọi bằng phím Space khi cần.
   const tracker = document.getElementById(`speech-track-${roomId}`);
   if (tracker) {
     tracker.dataset.patient = nextPatientNameToRead;
-  }
-
-  const storageKey = `lastSpokenMulti_${roomId}`;
-  const lastSpoken = localStorage.getItem(storageKey);
-  if (nextPatientNameToRead) {
-    if (nextPatientNameToRead !== lastSpoken) {
-      scheduleSpeakPatientMulti(roomId, nextPatientNameToRead, roomTitle, PATIENT_SPEAK_DELAY_MS);
-    }
-  } else {
-    cancelPendingSpeakMulti(roomId);
+    tracker.dataset.patientKey = nextPatientKeyToRead;
   }
 
   if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
@@ -583,7 +594,35 @@ function initSocket() {
 
   const quadrants = document.querySelectorAll(".room-quadrant, .room-container");
 
+  function updateConnectionStatus(connected, lastSyncTime = null) {
+    let indicator = document.getElementById("connectionStatusIndicator");
+    if (!indicator) {
+      const clock = document.querySelector(".tv-clock");
+      if (clock) {
+        indicator = document.createElement("div");
+        indicator.id = "connectionStatusIndicator";
+        indicator.className = "flex items-center gap-1 text-[10px] font-bold ml-1 pl-2 border-l border-slate-200";
+        clock.appendChild(indicator);
+      }
+    }
+    if (!indicator) return;
+
+    if (connected) {
+      const timeText = lastSyncTime ? lastSyncTime.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "";
+      indicator.innerHTML = `
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500" title="Kết nối máy chủ thời gian thực"></span>
+        <span class="text-emerald-700 hidden sm:inline">${timeText ? timeText : 'Trực tiếp'}</span>
+      `;
+    } else {
+      indicator.innerHTML = `
+        <span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping" title="Mất kết nối máy chủ"></span>
+        <span class="text-red-600 font-extrabold text-[10px]">Mất kết nối...</span>
+      `;
+    }
+  }
+
   boardSocketMulti.on("connect", () => {
+    updateConnectionStatus(true, new Date());
     quadrants.forEach((q) => {
       const roomType = q.dataset.roomType || "room";
       const roomId = q.dataset.roomId;
@@ -591,19 +630,24 @@ function initSocket() {
     });
   });
 
+  boardSocketMulti.on("disconnect", () => {
+    updateConnectionStatus(false);
+  });
+
+  boardSocketMulti.on("connect_error", () => {
+    updateConnectionStatus(false);
+  });
+
   boardSocketMulti.on("room_data_updated", (payload) => {
     if (!payload || !payload.roomId) return;
+    updateConnectionStatus(true, new Date());
     updateQuadrantDOM(payload.roomId, payload.data);
   });
 
   // Lắng nghe tín hiệu phát thanh loa từ máy khác cùng phòng
   boardSocketMulti.on("trigger_speak", (payload) => {
     if (!payload || !payload.patientName) return;
-    const { roomId, patientName, roomName } = payload;
-    if (roomId) {
-      cancelPendingSpeakMulti(roomId);
-      localStorage.setItem(`lastSpokenMulti_${roomId}`, patientName);
-    }
+    const { patientName, roomName } = payload;
     requestSpeak(patientName, roomName);
   });
 }
@@ -691,11 +735,6 @@ function updateTime() {
 setInterval(updateTime, 1000);
 updateTime();
 
-setInterval(() => {
-  Object.entries(lastKnownMultiRoomsData).forEach(([roomId, data]) => {
-    updateQuadrantDOM(roomId, data);
-  });
-}, 30 * 1000);
 
 window.addEventListener("DOMContentLoaded", () => {
   updateSoundIcon();
@@ -707,16 +746,6 @@ window.addEventListener("DOMContentLoaded", () => {
     const rId = q.dataset.roomId;
     if (lastKnownMultiRoomsData[rId]) {
       updateQuadrantDOM(rId, lastKnownMultiRoomsData[rId]);
-    }
-  });
-
-  // Ghi nhận bệnh nhân hiện tại lúc mở trang để không tự phát tiếng bệnh nhân cũ (chỉ có mới mới phát)
-  const trackers = document.querySelectorAll("[id^='speech-track-']");
-  trackers.forEach((tracker) => {
-    const rId = tracker.id.replace("speech-track-", "");
-    const pName = (tracker.dataset.patient || "").trim();
-    if (rId && pName) {
-      localStorage.setItem(`lastSpokenMulti_${rId}`, pName);
     }
   });
 });

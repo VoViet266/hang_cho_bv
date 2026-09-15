@@ -7,7 +7,9 @@ const dashboardService = require("./dashboardService");
 
 let io = null;
 const roomDataCache = new Map(); // key -> hash of JSON
-let pollingInterval = null;
+let pollingTimeout = null;
+let isPolling = false;
+const POLLING_INTERVAL_MS = 3000;
 
 function getRoomKey(roomType, roomId) {
   return `${roomType}:${roomId || ""}`;
@@ -34,6 +36,14 @@ async function fetchRoomData(roomType, roomId) {
     return await cdhaService.LayDanhSachCacPhongCDHA();
   }
   return null;
+}
+
+function cleanupIfEmpty(channelName) {
+  if (!io) return;
+  const room = io.sockets.adapter.rooms.get(channelName);
+  if (!room || room.size === 0) {
+    roomDataCache.delete(channelName);
+  }
 }
 
 async function checkAndBroadcastRoom(roomType, roomId, force = false) {
@@ -74,6 +84,15 @@ async function pollActiveRooms() {
   if (!io) return;
   const adapterRooms = io.sockets.adapter.rooms;
 
+  // 1. Quét dọn các cache của phòng không còn ai kết nối
+  for (const cachedChannel of roomDataCache.keys()) {
+    const activeRoom = adapterRooms.get(cachedChannel);
+    if (!activeRoom || activeRoom.size === 0) {
+      roomDataCache.delete(cachedChannel);
+    }
+  }
+
+  // 2. Cập nhật dữ liệu cho các phòng đang có client hoạt động
   for (const [channelName, sockets] of adapterRooms.entries()) {
     if (!sockets || sockets.size === 0) continue;
     // Bỏ qua room ID mặc định của từng socket connection
@@ -82,6 +101,22 @@ async function pollActiveRooms() {
     const [roomType, ...rest] = channelName.split(":");
     const roomId = rest.join(":");
     await checkAndBroadcastRoom(roomType, roomId);
+  }
+}
+
+async function runPollingCycle() {
+  if (isPolling || !io) return;
+  isPolling = true;
+  try {
+    await pollActiveRooms();
+  } catch (err) {
+    logger.error(`[Socket] Lỗi trong chu kỳ polling: ${err.message}`);
+  } finally {
+    isPolling = false;
+    // Chỉ hẹn giờ chu kỳ tiếp theo sau khi chu kỳ trước đã hoàn tất 100% (chống dồn toa/overlap)
+    if (io) {
+      pollingTimeout = setTimeout(runPollingCycle, POLLING_INTERVAL_MS);
+    }
   }
 }
 
@@ -102,7 +137,9 @@ function init(server) {
 
       socket.join(channelName);
 
-      // Gửi ngay dữ liệu hiện tại tới client vừa kết nối
+      // Gửi ngay dữ liệu hiện tại tới riêng client vừa kết nối.
+      // LƯU Ý: KHÔNG gán roomDataCache.set ở đây để tránh làm mất vết thay đổi
+      // của các TV khác đang mở trong chu kỳ broadcast tiếp theo.
       try {
         const data = await fetchRoomData(roomType, roomId);
         if (data) {
@@ -112,8 +149,6 @@ function init(server) {
             data,
             timestamp: Date.now(),
           });
-          const hash = hashData(data);
-          roomDataCache.set(channelName, hash);
         }
       } catch (e) {
         logger.error(
@@ -126,6 +161,16 @@ function init(server) {
       if (!params || !params.roomType) return;
       const channelName = getRoomKey(params.roomType, params.roomId);
       socket.leave(channelName);
+      cleanupIfEmpty(channelName);
+    });
+
+    socket.on("disconnecting", () => {
+      for (const roomName of socket.rooms) {
+        if (roomName !== socket.id && roomName.includes(":")) {
+          // Kiểm tra và dọn dẹp sau khi socket ngắt kết nối
+          setTimeout(() => cleanupIfEmpty(roomName), 50);
+        }
+      }
     });
 
     socket.on("broadcast_speak", (params) => {
@@ -146,20 +191,21 @@ function init(server) {
     });
   });
 
-  // Chạy chu kỳ quét các phòng đang active mỗi 3 giây
-  if (!pollingInterval) {
-    pollingInterval = setInterval(pollActiveRooms, 3000);
+  // Khởi chạy chu kỳ polling không chồng chéo
+  if (!pollingTimeout) {
+    pollingTimeout = setTimeout(runPollingCycle, POLLING_INTERVAL_MS);
   }
 
-  logger.info("[Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s cho Active Rooms)");
+  logger.info("[Socket.IO] Dịch vụ Real-time khởi tạo thành công (polling 3s không chồng chéo cho Active Rooms)");
   return io;
 }
 
 function close() {
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-    pollingInterval = null;
+  if (pollingTimeout) {
+    clearTimeout(pollingTimeout);
+    pollingTimeout = null;
   }
+  isPolling = false;
   if (io) {
     io.close();
     io = null;
@@ -171,4 +217,6 @@ module.exports = {
   init,
   checkAndBroadcastRoom,
   close,
+  _getRoomDataCache: () => roomDataCache,
+  _runPollingCycle: runPollingCycle,
 };

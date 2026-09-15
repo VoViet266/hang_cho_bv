@@ -1,11 +1,21 @@
 (function (global) {
   const DEFAULT_DEDUP_WINDOW_MS = 4500;
+  const DEFAULT_MAX_QUEUE_SIZE = 10;
+  const DEFAULT_WATCHDOG_TIMEOUT_MS = 15000;
 
   class AudioQueueManager {
-    constructor({ isEnabled, gapMs = 350, dedupWindowMs = DEFAULT_DEDUP_WINDOW_MS } = {}) {
+    constructor({
+      isEnabled,
+      gapMs = 350,
+      dedupWindowMs = DEFAULT_DEDUP_WINDOW_MS,
+      maxQueueSize = DEFAULT_MAX_QUEUE_SIZE,
+      watchdogTimeoutMs = DEFAULT_WATCHDOG_TIMEOUT_MS,
+    } = {}) {
       this.isEnabled = typeof isEnabled === "function" ? isEnabled : () => true;
       this.gapMs = gapMs;
       this.dedupWindowMs = dedupWindowMs;
+      this.maxQueueSize = maxQueueSize;
+      this.watchdogTimeoutMs = watchdogTimeoutMs;
       this.queue = [];
       this.isPlaying = false;
       this.currentAudio = null;
@@ -13,6 +23,7 @@
       this.lastEnqueuedText = "";
       this.lastEnqueuedAt = 0;
       this.generation = 0;
+      this.watchdogTimer = null;
     }
 
     enqueue(speakText) {
@@ -26,6 +37,11 @@
         now - this.lastEnqueuedAt < this.dedupWindowMs;
 
       if (isCurrent || isQueued || isRecentlyEnqueued) return false;
+
+      // Giới hạn độ dài hàng đợi: nếu quá tải thì loại bỏ phần tử cũ nhất
+      if (this.queue.length >= this.maxQueueSize) {
+        this.queue.shift();
+      }
 
       this.queue.push(text);
       this.lastEnqueuedText = text;
@@ -49,9 +65,21 @@
       let advanced = false;
       let fallbackStarted = false;
 
+      // Watchdog bảo vệ: nếu audio bị stall (treo) quá thời gian quy định thì tự chuyển tiếp
+      if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
+      this.watchdogTimer = setTimeout(() => {
+        if (!advanced && generation === this.generation) {
+          advance();
+        }
+      }, this.watchdogTimeoutMs);
+
       const advance = () => {
         if (advanced || generation !== this.generation) return;
         advanced = true;
+        if (this.watchdogTimer) {
+          clearTimeout(this.watchdogTimer);
+          this.watchdogTimer = null;
+        }
         setTimeout(() => {
           if (generation === this.generation) this.playNext();
         }, this.gapMs);
@@ -91,6 +119,10 @@
     clear() {
       this.generation += 1;
       this.queue = [];
+      if (this.watchdogTimer) {
+        clearTimeout(this.watchdogTimer);
+        this.watchdogTimer = null;
+      }
       if (this.currentAudio) {
         try {
           this.currentAudio.pause();

@@ -65,7 +65,6 @@ function toggleSound() {
     // Bật loa chỉ mở khóa âm thanh cho trình duyệt, KHÔNG tự động phát tiếng bệnh nhân hiện tại
   } else {
     audioQueue.clear();
-    Object.keys(pendingSpeakTimers).forEach(cancelPendingSpeak);
   }
 }
 window.toggleSound = toggleSound;
@@ -78,69 +77,6 @@ function requestSpeak(patientName, roomName) {
   audioQueue.enqueue(speakText);
 }
 window.requestSpeak = requestSpeak;
-
-// ==========================================
-// CẤU HÌNH ĐỘ TRỄ 30S KHI BỆNH NHÂN LÊN TÊN
-// ==========================================
-const PATIENT_SPEAK_DELAY_MS = 30 * 1000;
-const pendingSpeakTimers = {};
-
-function cancelPendingSpeak(roomId) {
-  if (pendingSpeakTimers[roomId]) {
-    clearTimeout(pendingSpeakTimers[roomId].timerId);
-    delete pendingSpeakTimers[roomId];
-  }
-}
-
-function scheduleSpeakPatient(roomId, patientName, roomName, delayMs = PATIENT_SPEAK_DELAY_MS) {
-  if (!patientName || !patientName.trim()) {
-    cancelPendingSpeak(roomId);
-    return;
-  }
-
-  const cleanName = patientName.trim();
-  const storageKey = `lastSpoken_${roomId}`;
-  const lastSpoken = sessionStorage.getItem(storageKey);
-
-  // Nếu bệnh nhân này đã được đọc rồi, không lên lịch lại
-  if (cleanName === lastSpoken) {
-    cancelPendingSpeak(roomId);
-    return;
-  }
-
-  // Nếu đang có một timer đang chạy đúng cho bệnh nhân này, giữ nguyên để đếm tiếp
-  if (pendingSpeakTimers[roomId] && pendingSpeakTimers[roomId].patientName === cleanName) {
-    return;
-  }
-
-  // Nếu là bệnh nhân khác đang chờ thì hủy timer cũ
-  cancelPendingSpeak(roomId);
-
-  // Đặt hẹn giờ 30s mới đọc tên
-  const timerId = setTimeout(() => {
-    delete pendingSpeakTimers[roomId];
-
-    // Xác nhận lại: kiểm tra tracker trên màn hình xem bệnh nhân ở lượt này còn đúng là cleanName không
-    const tracker =
-      document.getElementById(`speech-track-${roomId}`) ||
-      document.getElementById("speechData");
-    const currentOnBoard = tracker ? (tracker.dataset.patient || "").trim() : "";
-
-    if (currentOnBoard === cleanName && soundEnabled) {
-      sessionStorage.setItem(storageKey, cleanName);
-      requestSpeak(cleanName, roomName);
-    }
-  }, delayMs);
-
-  pendingSpeakTimers[roomId] = {
-    timerId,
-    patientName: cleanName,
-    scheduledAt: Date.now(),
-    delayMs,
-  };
-}
-window.scheduleSpeakPatient = scheduleSpeakPatient;
-window.cancelPendingSpeak = cancelPendingSpeak;
 
 // ==========================================
 // TOAST NOTIFICATION TRÊN MÀN HÌNH TV
@@ -239,8 +175,6 @@ function removePatient(patientKey, patientName, roomName, meta = {}) {
         });
       });
 
-    // Không ép gọi âm thanh ngay lập tức, dữ liệu cập nhật tiếp theo sẽ tuân thủ độ trễ 30s
-
     if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
       window.TVRemoteNav.refresh();
     }
@@ -262,8 +196,6 @@ function removePatient(patientKey, patientName, roomName, meta = {}) {
   });
 
   updateHiddenBadge();
-
-  // Bệnh nhân mới đôn lên đã được updateRoomDOM lên lịch đọc sau 30 giây
 
   if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
     window.TVRemoteNav.refresh();
@@ -586,15 +518,10 @@ function onRowClick(el) {
     updateSoundIcon();
   }
 
-  // Khi click thủ công: hủy timer chờ 30s của phòng và gọi ngay
+  // Gọi ngay khi người dùng chọn bệnh nhân.
   const roomContainer = el.closest(".room-container, .room-card, [data-room-id]") || document.querySelector(".room-container");
   const roomId = roomContainer ? roomContainer.dataset.roomId : null;
   const roomType = (roomContainer ? roomContainer.dataset.roomType : "") || (el.dataset.roomType || "room");
-  if (roomId) {
-    cancelPendingSpeak(roomId);
-    sessionStorage.setItem(`lastSpoken_${roomId}`, patientName);
-  }
-
   requestSpeak(patientName, roomName);
 
   // Phát tín hiệu Socket.IO để các máy khác cùng phòng đồng thời phát loa
@@ -605,10 +532,10 @@ function onRowClick(el) {
 window.onRowClick = onRowClick;
 
 // ==========================================
-// PHÁT ÂM THANH BỆNH NHÂN HIỆN TẠI
+// GỌI BỆNH NHÂN HIỆN TẠI BẰNG PHÍM SPACE
 // ==========================================
 function speakCurrentPatients(force = false) {
-  if (!soundEnabled) return;
+  if (!force || !soundEnabled) return;
 
   const roomContainers = document.querySelectorAll(".room-container");
   roomContainers.forEach((container) => {
@@ -624,18 +551,88 @@ function speakCurrentPatients(force = false) {
     const currentPatient = (tracker.dataset.patient || "").trim();
     if (!currentPatient) return;
 
-    const storageKey = `lastSpoken_${roomId}`;
-    const lastSpoken = sessionStorage.getItem(storageKey);
+    requestSpeak(currentPatient, roomName);
+  });
+}
 
-    if (force) {
-      cancelPendingSpeak(roomId);
-      sessionStorage.setItem(storageKey, currentPatient);
-      requestSpeak(currentPatient, roomName);
-    } else if (currentPatient !== lastSpoken) {
-      scheduleSpeakPatient(roomId, currentPatient, roomName, PATIENT_SPEAK_DELAY_MS);
+// ==========================================
+// ==========================================
+// TỰ ĐỘNG CUỘN MƯỢT DANH SÁCH (SMOOTH AUTO-SCROLL)
+// ==========================================
+let lastUserInteractionAt = 0;
+
+function registerUserActivity() {
+  lastUserInteractionAt = Date.now();
+}
+document.addEventListener("mousemove", registerUserActivity, { passive: true });
+document.addEventListener("keydown", registerUserActivity, { passive: true });
+document.addEventListener("touchstart", registerUserActivity, { passive: true });
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+const scrollStates = {};
+
+function stepAutoScroll() {
+  requestAnimationFrame(stepAutoScroll);
+
+  // Tạm dừng 15 giây khi người dùng thao tác chuột / bàn phím / remote
+  if (Date.now() - lastUserInteractionAt < 15000) return;
+
+  const containers = document.querySelectorAll(".overflow-y-auto");
+  const now = Date.now();
+
+  containers.forEach((container, idx) => {
+    const maxScroll = container.scrollHeight - container.clientHeight;
+    if (maxScroll <= 15) return; // Danh sách vừa vặn màn hình thì không cần cuộn
+
+    const id = container.id || `scroll-box-${idx}`;
+    if (!scrollStates[id]) {
+      scrollStates[id] = {
+        direction: 1,
+        pauseUntil: now + 5000, // Dừng 5 giây ở đầu danh sách để người xem đọc người tới lượt
+        lastStep: now,
+      };
+    }
+
+    const state = scrollStates[id];
+    if (now < state.pauseUntil) {
+      state.lastStep = now;
+      return;
+    }
+
+    const elapsed = Math.min(100, now - (state.lastStep || now));
+    state.lastStep = now;
+
+    // Tốc độ cuộn êm dịu, dễ đọc (~32px / giây)
+    const pxToMove = (32 * elapsed) / 1000;
+
+    if (state.direction === 1) {
+      container.scrollTop += pxToMove;
+      if (container.scrollTop >= maxScroll - 2) {
+        container.scrollTop = maxScroll;
+        state.direction = -1;
+        state.pauseUntil = now + 4000; // Dừng 4 giây ở đáy danh sách
+      }
+    } else {
+      // Cuộn ngược lên đầu trang
+      container.scrollTop -= pxToMove * 1.5;
+      if (container.scrollTop <= 2) {
+        container.scrollTop = 0;
+        state.direction = 1;
+        state.pauseUntil = now + 5000; // Dừng 5 giây ở đầu trang
+      }
     }
   });
 }
+requestAnimationFrame(stepAutoScroll);
 
 // ==========================================
 // CẬP NHẬT GIAO DIỆN DOM PHÒNG KHÁM
@@ -657,6 +654,7 @@ function updateRoomDOM(roomId, data) {
   const activeWaitingCount = waitingList.filter((p) => p.dakham == 0).length;
 
   let nextPatientNameToRead = "";
+  let nextPatientKeyToRead = "";
 
   // 1. Cập nhật các badge số đếm
   const singleDk = document.getElementById("totalDKPlus");
@@ -690,20 +688,32 @@ function updateRoomDOM(roomId, data) {
           </td>
         </tr>
       `;
+      const existingBadge = document.getElementById(`page-badge-${roomId}`);
+      if (existingBadge) existingBadge.remove();
     } else {
+      // Xác định bệnh nhân tới lượt khám
       let waitCounter = 0;
-      let rowsHtml = "";
+      let nextPatientIndex = -1;
 
-      waitingList.forEach((patient, index) => {
-        let isNear = false;
+      waitingList.forEach((patient, idx) => {
         if (patient.dakham == 0) {
           waitCounter++;
           if (waitCounter === 1) {
-            isNear = true;
+            nextPatientIndex = idx;
             nextPatientNameToRead = `${patient.holot || ""} ${patient.ten || ""}`.trim();
+            nextPatientKeyToRead = getPatientKey(patient);
           }
         }
+      });
 
+      const existingBadge = document.getElementById(`page-badge-${roomId}`);
+      if (existingBadge) existingBadge.remove();
+
+      let rowsHtml = "";
+
+      waitingList.forEach((patient, index) => {
+        const isNear = (index === nextPatientIndex);
+        const sttDisplay = index + 1;
         const currentPatientName = `${patient.holot || ""} ${patient.ten || ""}`.trim();
         const pKey = getPatientKey(patient);
         const dobYear = patient.dobStr && patient.dobStr !== "Chưa cập nhật"
@@ -712,16 +722,19 @@ function updateRoomDOM(roomId, data) {
 
         let noteBadge = "";
         if (patient.priorityLabel) {
-          noteBadge = `<span class="inline-block bg-yellow-100 text-yellow-800 text-xs md:text-sm px-1.5 py-0.5 rounded font-extrabold border border-yellow-300 ml-1">Ưu tiên: ${patient.priorityLabel}</span>`;
+          noteBadge = `<span class="inline-block bg-yellow-100 text-yellow-800 text-xs md:text-sm px-1.5 py-0.5 rounded font-extrabold border border-yellow-300 ml-1">Ưu tiên: ${escapeHtml(patient.priorityLabel)}</span>`;
         } else if (patient.isPriority) {
           noteBadge = `<span class="inline-block bg-yellow-100 text-yellow-800 ${isMulti ? 'text-xs md:text-sm px-1.5 py-0.5' : 'px-3 py-1 text-lg md:text-xl'} rounded font-extrabold border border-yellow-300 ml-1">Ưu tiên</span>`;
         }
 
-        const safePatientName = currentPatientName.replace(/"/g, '&quot;');
-        const safeRoomName = roomName.replace(/"/g, '&quot;');
-        const safeKey = pKey.replace(/"/g, '&quot;');
-        const safeMakb = (patient.makb || "").replace(/"/g, '&quot;');
-        const safeMabn = (patient.mabn || "").replace(/"/g, '&quot;');
+        const safePatientName = escapeHtml(currentPatientName);
+        const safeRoomName = escapeHtml(roomName);
+        const safeKey = escapeHtml(pKey);
+        const safeMakb = escapeHtml(patient.makb || "");
+        const safeMabn = escapeHtml(patient.mabn || "");
+        const safeRoomType = escapeHtml(roomType || "room");
+        const safeDobYear = escapeHtml(dobYear);
+        const displayPatientName = escapeHtml((currentPatientName || "Chưa cập nhật").toUpperCase());
 
         if (isMulti) {
           // Giao diện ô chia phòng (Split Screen)
@@ -749,20 +762,20 @@ function updateRoomDOM(roomId, data) {
           `;
 
           rowsHtml += `
-            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${roomType}" onclick="onRowClick(this)" class="remote-item cursor-pointer transition-all ${rowClass}" tabindex="0">
+            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item cursor-pointer transition-all ${rowClass}" tabindex="0">
               <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${sttClass}">
-                ${index + 1}
+                ${sttDisplay}
               </td>
               <td class="py-2.5 px-2 text-blue-900 ${nameClass}">
                 <div class="patient-name-container flex flex-col items-start justify-center">
                   <span class="patient-name-text">
-                    ${(currentPatientName || "Chưa cập nhật").toUpperCase()}
+                    ${displayPatientName}
                   </span>
                   ${noteBadge}
                 </div>
               </td>
               <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${dobClass}">
-                ${dobYear}
+                ${safeDobYear}
               </td>
               <td class="py-2.5 px-2 text-center whitespace-nowrap">
                 <div class="flex items-center justify-center gap-1.5 flex-nowrap">
@@ -798,17 +811,17 @@ function updateRoomDOM(roomId, data) {
           `;
 
           rowsHtml += `
-            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${roomType}" onclick="onRowClick(this)" class="remote-item transition-all cursor-pointer ${rowClass}" tabindex="0">
+            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item transition-all cursor-pointer ${rowClass}" tabindex="0">
               <td class="py-5 px-4 font-bold text-center text-blue-900 ${sttClass}">
-                ${index + 1}
+                ${sttDisplay}
               </td>
               <td class="py-5 px-4 text-blue-900 overflow-hidden ${nameClass}">
                 <div class="patient-name-container">
-                  <span class="patient-name-text">${(currentPatientName || "Chưa cập nhật").toUpperCase()}</span>
+                  <span class="patient-name-text">${displayPatientName}</span>
                 </div>
               </td>
               <td class="py-5 px-4 font-bold text-center text-blue-900 ${dobClass}">
-                ${dobYear}
+                ${safeDobYear}
               </td>
               <td class="py-5 px-4 text-center text-blue-900">
                 ${noteBadge}
@@ -830,21 +843,11 @@ function updateRoomDOM(roomId, data) {
 
   updateHiddenBadge();
 
-  // 3. Cập nhật speech tracker và phát âm thanh nếu có bệnh nhân mới (chờ 30s mới đọc)
+  // 3. Cập nhật bệnh nhân tới lượt để gọi bằng phím Space khi cần.
   const tracker = document.getElementById(`speech-track-${roomId}`) || document.getElementById("speechData");
   if (tracker) {
     tracker.dataset.patient = nextPatientNameToRead;
-  }
-
-  const storageKey = `lastSpoken_${roomId}`;
-  const lastSpoken = sessionStorage.getItem(storageKey);
-
-  if (nextPatientNameToRead) {
-    if (nextPatientNameToRead !== lastSpoken) {
-      scheduleSpeakPatient(roomId, nextPatientNameToRead, roomName, PATIENT_SPEAK_DELAY_MS);
-    }
-  } else {
-    cancelPendingSpeak(roomId);
+    tracker.dataset.patientKey = nextPatientKeyToRead;
   }
 
   if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
@@ -883,7 +886,35 @@ function initSocket() {
 
   const roomContainers = document.querySelectorAll(".room-container");
 
+  function updateConnectionStatus(connected, lastSyncTime = null) {
+    let indicator = document.getElementById("connectionStatusIndicator");
+    if (!indicator) {
+      const clock = document.querySelector(".tv-clock");
+      if (clock) {
+        indicator = document.createElement("div");
+        indicator.id = "connectionStatusIndicator";
+        indicator.className = "flex items-center gap-1 text-[10px] font-bold ml-1 pl-2 border-l border-slate-200";
+        clock.appendChild(indicator);
+      }
+    }
+    if (!indicator) return;
+
+    if (connected) {
+      const timeText = lastSyncTime ? lastSyncTime.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "";
+      indicator.innerHTML = `
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500" title="Kết nối máy chủ thời gian thực"></span>
+        <span class="text-emerald-700 hidden sm:inline">${timeText ? timeText : 'Trực tiếp'}</span>
+      `;
+    } else {
+      indicator.innerHTML = `
+        <span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping" title="Mất kết nối máy chủ"></span>
+        <span class="text-red-600 font-extrabold text-[10px]">Mất kết nối...</span>
+      `;
+    }
+  }
+
   boardSocket.on("connect", () => {
+    updateConnectionStatus(true, new Date());
     roomContainers.forEach((container) => {
       const roomType = container.dataset.roomType;
       const roomId = container.dataset.roomId;
@@ -891,19 +922,24 @@ function initSocket() {
     });
   });
 
+  boardSocket.on("disconnect", () => {
+    updateConnectionStatus(false);
+  });
+
+  boardSocket.on("connect_error", () => {
+    updateConnectionStatus(false);
+  });
+
   boardSocket.on("room_data_updated", (payload) => {
     if (!payload || !payload.roomId) return;
+    updateConnectionStatus(true, new Date());
     updateRoomDOM(payload.roomId, payload.data);
   });
 
   // Lắng nghe tín hiệu phát thanh loa từ máy khác cùng phòng
   boardSocket.on("trigger_speak", (payload) => {
     if (!payload || !payload.patientName) return;
-    const { roomId, patientName, roomName } = payload;
-    if (roomId) {
-      cancelPendingSpeak(roomId);
-      sessionStorage.setItem(`lastSpoken_${roomId}`, patientName);
-    }
+    const { patientName, roomName } = payload;
     requestSpeak(patientName, roomName);
   });
 }
@@ -994,11 +1030,6 @@ function updateTime() {
 setInterval(updateTime, 1000);
 updateTime();
 
-setInterval(() => {
-  Object.entries(lastKnownRoomsData).forEach(([roomId, data]) => {
-    updateRoomDOM(roomId, data);
-  });
-}, 30 * 1000);
 
 window.addEventListener("DOMContentLoaded", () => {
   updateSoundIcon();
@@ -1011,16 +1042,6 @@ window.addEventListener("DOMContentLoaded", () => {
     const rId = container.dataset.roomId;
     if (lastKnownRoomsData[rId]) {
       updateRoomDOM(rId, lastKnownRoomsData[rId]);
-    }
-  });
-
-  // Ghi nhận bệnh nhân hiện tại lúc mở trang để không tự phát tiếng bệnh nhân cũ (chỉ có mới mới phát)
-  const trackers = document.querySelectorAll("[id^='speech-track-'], #speechData");
-  trackers.forEach((tracker) => {
-    const rId = tracker.dataset.roomId || (tracker.id.startsWith("speech-track-") ? tracker.id.replace("speech-track-", "") : "");
-    const pName = (tracker.dataset.patient || "").trim();
-    if (rId && pName) {
-      sessionStorage.setItem(`lastSpoken_${rId}`, pName);
     }
   });
 });

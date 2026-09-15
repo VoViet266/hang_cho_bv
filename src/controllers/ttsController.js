@@ -123,6 +123,8 @@ function httpsRequest(url, options = {}, body = null) {
   });
 }
 
+const inFlightTTS = new Map(); // hash -> Promise
+
 /**
  * Lấy audio buffer từ Cache hoặc gọi Google TTS nếu chưa có.
  */
@@ -142,103 +144,121 @@ async function getOrGenerateAudioBuffer(text) {
     .digest("hex");
   const filePath = path.join(cacheDir, `${hash}.mp3`);
 
-  // 1. Kiểm tra cache trên đĩa
-  if (fs.existsSync(filePath)) {
-    const audioBuffer = fs.readFileSync(filePath);
-    return {
-      audioBuffer,
-      hash,
-      fromCache: true,
-      source: "Disk-Cache",
-      filePath,
-    };
+  // Tránh dồn nhiều request đồng thời cho cùng một nội dung (In-flight Mutex)
+  if (inFlightTTS.has(hash)) {
+    return await inFlightTTS.get(hash);
   }
 
-  let audioBuffer = null;
-  let source = "Google-Translate-Free";
-  const googleApiKey = process.env.GOOGLE_TTS_API_KEY;
-
-  // 2. Thử Official Google Cloud TTS nếu có API key
-  if (googleApiKey) {
+  const generatePromise = (async () => {
+    // 1. Kiểm tra cache trên đĩa bất đồng bộ (không chặn event loop)
     try {
-      const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${googleApiKey}`;
-      const payload = JSON.stringify({
-        input: { text: normalizedText },
-        voice: { languageCode: "vi-VN", name: voiceName },
-        audioConfig: { audioEncoding: "MP3", speakingRate: speakingRate },
-      });
+      const cachedBuffer = await fs.promises.readFile(filePath);
+      return {
+        audioBuffer: cachedBuffer,
+        hash,
+        fromCache: true,
+        source: "Disk-Cache",
+        filePath,
+      };
+    } catch (e) {
+      // File chưa tồn tại, tiếp tục tạo mới
+    }
 
-      const response = await httpsRequest(
-        url,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Content-Length": Buffer.byteLength(payload),
+    let audioBuffer = null;
+    let source = "Google-Translate-Free";
+    const googleApiKey = process.env.GOOGLE_TTS_API_KEY;
+
+    // 2. Thử Official Google Cloud TTS nếu có API key
+    if (googleApiKey) {
+      try {
+        const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${googleApiKey}`;
+        const payload = JSON.stringify({
+          input: { text: normalizedText },
+          voice: { languageCode: "vi-VN", name: voiceName },
+          audioConfig: { audioEncoding: "MP3", speakingRate: speakingRate },
+        });
+
+        const response = await httpsRequest(
+          url,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Content-Length": Buffer.byteLength(payload),
+            },
+            timeoutMs: 20000,
           },
-          timeoutMs: 20000,
-        },
-        payload,
-      );
-
-      if (response.ok) {
-        const responseData = JSON.parse(
-          (await response.arrayBuffer()).toString("utf-8"),
+          payload,
         );
-        if (responseData.audioContent) {
-          audioBuffer = Buffer.from(responseData.audioContent, "base64");
-          source = `Google-Cloud (${voiceName})`;
+
+        if (response.ok) {
+          const responseData = JSON.parse(
+            (await response.arrayBuffer()).toString("utf-8"),
+          );
+          if (responseData.audioContent) {
+            audioBuffer = Buffer.from(responseData.audioContent, "base64");
+            source = `Google-Cloud (${voiceName})`;
+          } else {
+            console.warn(
+              "Google Cloud TTS trả về OK nhưng không có audioContent. Đang thử fallback...",
+            );
+          }
         } else {
+          const errorMsg = (await response.arrayBuffer()).toString("utf-8");
           console.warn(
-            "Google Cloud TTS trả về OK nhưng không có audioContent. Đang thử fallback...",
+            `Google Cloud TTS thất bại (${response.status}): ${errorMsg}. Đang thử fallback...`,
           );
         }
-      } else {
-        const errorMsg = (await response.arrayBuffer()).toString("utf-8");
+      } catch (googleError) {
         console.warn(
-          `Google Cloud TTS thất bại (${response.status}): ${errorMsg}. Đang thử fallback...`,
+          "Google Cloud TTS request lỗi:",
+          googleError.message,
+          "- Đang thử fallback...",
         );
       }
-    } catch (googleError) {
-      console.warn(
-        "Google Cloud TTS request lỗi:",
-        googleError.message,
-        "- Đang thử fallback...",
-      );
     }
+
+    // 3. Fallback sang Google Translate TTS (miễn phí)
+    if (!audioBuffer) {
+      const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=${encodeURIComponent(normalizedText)}`;
+      const response = await httpsRequest(googleUrl, {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        timeoutMs: 15000,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Google Translate TTS trả về mã lỗi: ${response.status}`);
+      }
+      audioBuffer = await response.arrayBuffer();
+      source = "Google-Translate (Free)";
+    }
+
+    // 4. Ghi file nguyên tử (Atomic write) qua file tạm để tránh đọc file dở dang
+    if (audioBuffer) {
+      const tempPath = `${filePath}.tmp.${Date.now()}`;
+      try {
+        await fs.promises.writeFile(tempPath, audioBuffer);
+        await fs.promises.rename(tempPath, filePath);
+        cleanCacheIfNeeded().catch(() => { });
+      } catch (writeErr) {
+        console.error("Lỗi khi ghi TTS cache file:", writeErr);
+        try {
+          await fs.promises.unlink(tempPath);
+        } catch (_) { }
+      }
+    }
+
+    return { audioBuffer, hash, fromCache: false, source, filePath };
+  })();
+
+  inFlightTTS.set(hash, generatePromise);
+  try {
+    return await generatePromise;
+  } finally {
+    inFlightTTS.delete(hash);
   }
-
-  // 3. Fallback sang Google Translate TTS (miễn phí)
-  if (!audioBuffer) {
-    const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=${encodeURIComponent(normalizedText)}`;
-    const response = await httpsRequest(googleUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      timeoutMs: 15000,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Google Translate TTS trả về mã lỗi: ${response.status}`);
-    }
-    audioBuffer = await response.arrayBuffer();
-    source = "Google-Translate (Free)";
-  }
-
-  // 4. Ghi file vào bộ nhớ đệm (Cache) và kích hoạt kiểm tra giới hạn dung lượng
-  fs.writeFile(filePath, audioBuffer, (err) => {
-    if (err) {
-      console.error("Lỗi khi ghi TTS cache file:", err);
-    } else {
-      cleanCacheIfNeeded().catch(() => { });
-    }
-  });
-
-  return { audioBuffer, hash, fromCache: false, source, filePath };
 }
 
-/**
- * Endpoint GET /api/tts?text=...
- * Trả trực tiếp file MP3 (Content-Type: audio/mpeg)
- */
 const streamSpeech = async (req, res) => {
   try {
     const text = req.query.text || req.query.q;
