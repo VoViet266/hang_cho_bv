@@ -1,8 +1,12 @@
-const { Prisma } = require('@prisma/client');
-const prisma = require('../config/db');
+const { Prisma } = require("@prisma/client");
+const prisma = require("../config/db");
+const roomHelper = require("../utils/roomHelper");
 
 const LayDanhSachHangChoCDHA = async (tenphong) => {
-    const rows = await prisma.$queryRaw`
+  const canonicalName = roomHelper.resolveCdhaRoomName(tenphong);
+  const alias = roomHelper.resolveCdhaRoomAlias(canonicalName);
+
+  const rows = await prisma.$queryRaw`
         SELECT 
             cdha.mabn, 
             cdha.makb, 
@@ -26,152 +30,157 @@ const LayDanhSachHangChoCDHA = async (tenphong) => {
           AND (cdha.an = '0' OR cdha.an IS NULL)
           AND cdha.ngaykq IS NULL 
           AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '90 minutes'
-          AND cdha.tenphong = ${tenphong}
+          AND (cdha.tenphong = ${canonicalName} OR cdha.tenphong = ${alias})
         ORDER BY 
             cdha.ngaynhap ASC
     `;
-    return rows;
+  return rows;
 };
 
 const LayDanhSachPhongCDHA = async () => {
-    const rows = await prisma.$queryRaw`
-        WITH all_cdha_rooms AS (
-            SELECT DISTINCT tenphong 
-            FROM "current".hangchocdha_tmd 
-            WHERE tenphong IS NOT NULL AND TRIM(tenphong) != ''
-            UNION
-            SELECT 'Phòng Siêu âm 1' AS tenphong
-            UNION
-            SELECT 'Phòng Siêu âm 2' AS tenphong
-            UNION
-            SELECT 'Phòng Siêu âm 3' AS tenphong
-            UNION
-            SELECT 'Phòng Siêu âm 4' AS tenphong
-            UNION
-            SELECT 'Phòng Siêu âm 5' AS tenphong
-            UNION
-            SELECT 'Phòng Siêu âm 6' AS tenphong
+  const rows = await prisma.$queryRaw`
+        WITH base_rooms AS (
+            SELECT '1' AS id, 'Phòng Siêu âm 1' AS tenphong, '1' AS alias, 1 AS sort_order
+            UNION ALL SELECT '2', 'Phòng Siêu âm 2', '2', 2
+            UNION ALL SELECT '3', 'Phòng Siêu âm 3', '3', 3
+            UNION ALL SELECT '4', 'Phòng Siêu âm 4', '4', 4
+            UNION ALL SELECT '5', 'Phòng Siêu âm 5', '5', 5
+            UNION ALL SELECT '6', 'Phòng Siêu âm 6', '6', 6
         )
         SELECT 
             r.tenphong,
             COALESCE(COUNT(cdha.mabn), 0)::int AS tong_cho_kham
-        FROM all_cdha_rooms r
+        FROM base_rooms r
         LEFT JOIN "current".hangchocdha_tmd cdha
-            ON cdha.tenphong = r.tenphong
+            ON (cdha.tenphong = r.tenphong OR cdha.tenphong = r.alias)
             AND (cdha.xoa = 0 OR cdha.xoa IS NULL)
             AND (cdha.an = '0' OR cdha.an IS NULL)
             AND cdha.ngaykq IS NULL
             AND cdha.ngaynhap >= CURRENT_TIMESTAMP - INTERVAL '90 minutes'
-        GROUP BY r.tenphong
-        ORDER BY r.tenphong ASC
+        GROUP BY r.tenphong, r.sort_order
+        ORDER BY r.sort_order ASC
     `;
-    return rows;
+  return rows;
 };
 
 const AnBenhNhanCDHA = async (makb, mabn, tenphong) => {
-    const cleanMakb = (makb || '').trim();
-    const cleanMabn = (mabn || '').trim();
-    const cleanTenphong = (tenphong || '').trim();
+  const cleanMakb = (makb || "").trim();
+  const cleanMabn = (mabn || "").trim();
+  const canonicalName = roomHelper.resolveCdhaRoomName(tenphong);
+  const alias = roomHelper.resolveCdhaRoomAlias(canonicalName);
 
-    if (!cleanTenphong) return 0;
+  if (!canonicalName) return 0;
 
-    if (cleanMakb && cleanMabn) {
-        return await prisma.$executeRaw`
+  if (cleanMakb && cleanMabn) {
+    return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
             SET an = '1'
             WHERE (makb = ${cleanMakb} OR mabn = ${cleanMabn})
-              AND tenphong = ${cleanTenphong}
+              AND (tenphong = ${canonicalName} OR tenphong = ${alias})
               AND (an = '0' OR an IS NULL)
               AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
-    } else if (cleanMakb) {
-        return await prisma.$executeRaw`
+  } else if (cleanMakb) {
+    return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
             SET an = '1'
             WHERE makb = ${cleanMakb}
-              AND tenphong = ${cleanTenphong}
+              AND (tenphong = ${canonicalName} OR tenphong = ${alias})
               AND (an = '0' OR an IS NULL)
               AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
-    } else if (cleanMabn) {
-        return await prisma.$executeRaw`
+  } else if (cleanMabn) {
+    return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
             SET an = '1'
             WHERE mabn = ${cleanMabn}
-              AND tenphong = ${cleanTenphong}
+              AND (tenphong = ${canonicalName} OR tenphong = ${alias})
               AND (an = '0' OR an IS NULL)
               AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
-    }
-    return 0;
+  }
+  return 0;
 };
 
 const KhoiPhucBenhNhanCDHA = async (makb, mabn, tenphong) => {
-    const cleanMakb = (makb || '').trim();
-    const cleanMabn = (mabn || '').trim();
-    const cleanTenphong = (tenphong || '').trim();
+  const cleanMakb = (makb || "").trim();
+  const cleanMabn = (mabn || "").trim();
+  const canonicalName = roomHelper.resolveCdhaRoomName(tenphong);
+  const alias = roomHelper.resolveCdhaRoomAlias(canonicalName);
 
-    if (!cleanTenphong) return 0;
+  if (!canonicalName) return 0;
 
-    if (cleanMakb && cleanMabn) {
-        return await prisma.$executeRaw`
+  if (cleanMakb && cleanMabn) {
+    return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
             SET an = '0'
             WHERE (makb = ${cleanMakb} OR mabn = ${cleanMabn})
-              AND tenphong = ${cleanTenphong}
+              AND (tenphong = ${canonicalName} OR tenphong = ${alias})
               AND an = '1'
               AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
-    } else if (cleanMakb) {
-        return await prisma.$executeRaw`
+  } else if (cleanMakb) {
+    return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
             SET an = '0'
             WHERE makb = ${cleanMakb}
-              AND tenphong = ${cleanTenphong}
+              AND (tenphong = ${canonicalName} OR tenphong = ${alias})
               AND an = '1'
               AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
-    } else if (cleanMabn) {
-        return await prisma.$executeRaw`
+  } else if (cleanMabn) {
+    return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
             SET an = '0'
             WHERE mabn = ${cleanMabn}
-              AND tenphong = ${cleanTenphong}
+              AND (tenphong = ${canonicalName} OR tenphong = ${alias})
               AND an = '1'
               AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
         `;
-    }
-    return 0;
+  }
+  return 0;
 };
 
 const KhoiPhucTatCaCDHA = async (tenphongList) => {
-    let rooms = [];
-    if (Array.isArray(tenphongList)) {
-        rooms = tenphongList.map(r => String(r).trim()).filter(Boolean);
-    } else if (typeof tenphongList === 'string' && tenphongList.trim()) {
-        rooms = tenphongList.split(',').map(r => r.trim()).filter(Boolean);
-    }
+  let rooms = [];
+  if (Array.isArray(tenphongList)) {
+    rooms = tenphongList.map((r) => String(r).trim()).filter(Boolean);
+  } else if (typeof tenphongList === "string" && tenphongList.trim()) {
+    rooms = tenphongList
+      .split(",")
+      .map((r) => r.trim())
+      .filter(Boolean);
+  }
 
-    if (rooms.length > 1) {
-        return await prisma.$executeRaw`
+  const expandedRooms = [];
+  for (const r of rooms) {
+    const cName = roomHelper.resolveCdhaRoomName(r);
+    const alias = roomHelper.resolveCdhaRoomAlias(cName);
+    if (cName) expandedRooms.push(cName);
+    if (alias && alias !== cName) expandedRooms.push(alias);
+  }
+  rooms = Array.from(new Set(expandedRooms));
+
+  if (rooms.length > 1) {
+    return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
             SET an = '0'
             WHERE an = '1'
               AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
               AND tenphong IN (${Prisma.join(rooms)})
         `;
-    } else if (rooms.length === 1) {
-        const room = rooms[0];
-        return await prisma.$executeRaw`
+  } else if (rooms.length === 1) {
+    const room = rooms[0];
+    return await prisma.$executeRaw`
             UPDATE "current".hangchocdha_tmd
             SET an = '0'
             WHERE an = '1'
               AND ngaynhap >= CURRENT_DATE AND ngaynhap < CURRENT_DATE + INTERVAL '1 day'
               AND tenphong = ${room}
         `;
-    }
+  }
 
-    return await prisma.$executeRaw`
+  return await prisma.$executeRaw`
         UPDATE "current".hangchocdha_tmd
         SET an = '0'
         WHERE an = '1'
@@ -180,15 +189,27 @@ const KhoiPhucTatCaCDHA = async (tenphongList) => {
 };
 
 const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
-    let rooms = [];
-    if (Array.isArray(tenphongList)) {
-        rooms = tenphongList.map(r => String(r).trim()).filter(Boolean);
-    } else if (typeof tenphongList === 'string' && tenphongList.trim()) {
-        rooms = tenphongList.split(',').map(r => r.trim()).filter(Boolean);
-    }
+  let rooms = [];
+  if (Array.isArray(tenphongList)) {
+    rooms = tenphongList.map((r) => String(r).trim()).filter(Boolean);
+  } else if (typeof tenphongList === "string" && tenphongList.trim()) {
+    rooms = tenphongList
+      .split(",")
+      .map((r) => r.trim())
+      .filter(Boolean);
+  }
 
-    if (rooms.length > 1) {
-        return await prisma.$queryRaw`
+  const expandedRooms = [];
+  for (const r of rooms) {
+    const cName = roomHelper.resolveCdhaRoomName(r);
+    const alias = roomHelper.resolveCdhaRoomAlias(cName);
+    if (cName) expandedRooms.push(cName);
+    if (alias && alias !== cName) expandedRooms.push(alias);
+  }
+  rooms = Array.from(new Set(expandedRooms));
+
+  if (rooms.length > 1) {
+    return await prisma.$queryRaw`
             SELECT 
                 cdha.mabn, 
                 cdha.makb, 
@@ -209,9 +230,9 @@ const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
               AND cdha.tenphong IN (${Prisma.join(rooms)})
             ORDER BY cdha.ngaynhap DESC
         `;
-    } else if (rooms.length === 1) {
-        const room = rooms[0];
-        return await prisma.$queryRaw`
+  } else if (rooms.length === 1) {
+    const room = rooms[0];
+    return await prisma.$queryRaw`
             SELECT 
                 cdha.mabn, 
                 cdha.makb, 
@@ -232,9 +253,9 @@ const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
               AND cdha.tenphong = ${room}
             ORDER BY cdha.ngaynhap DESC
         `;
-    }
+  }
 
-    return await prisma.$queryRaw`
+  return await prisma.$queryRaw`
         SELECT 
             cdha.mabn, 
             cdha.makb, 
@@ -257,10 +278,10 @@ const LayDanhSachBenhNhanDaAnCDHA = async (tenphongList) => {
 };
 
 module.exports = {
-    LayDanhSachHangChoCDHA,
-    LayDanhSachPhongCDHA,
-    AnBenhNhanCDHA,
-    KhoiPhucBenhNhanCDHA,
-    KhoiPhucTatCaCDHA,
-    LayDanhSachBenhNhanDaAnCDHA
+  LayDanhSachHangChoCDHA,
+  LayDanhSachPhongCDHA,
+  AnBenhNhanCDHA,
+  KhoiPhucBenhNhanCDHA,
+  KhoiPhucTatCaCDHA,
+  LayDanhSachBenhNhanDaAnCDHA,
 };

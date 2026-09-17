@@ -1,4 +1,5 @@
 const cdhaModel = require('../models/cdha.model');
+const roomHelper = require('../utils/roomHelper');
 
 const DinhDangNgaySinh = (dateVal) => {
     if (!dateVal) return 'Chưa cập nhật';
@@ -45,9 +46,11 @@ const getPriorityLabel = (uutienFromDB) => {
 };
 
 const LayDanhSachBenhNhanChoCDHA = async (tenphong) => {
+    const canonicalName = roomHelper.resolveCdhaRoomName(tenphong);
+
     const [rawData, rawHidden] = await Promise.all([
-        cdhaModel.LayDanhSachHangChoCDHA(tenphong),
-        cdhaModel.LayDanhSachBenhNhanDaAnCDHA(tenphong).catch(() => [])
+        cdhaModel.LayDanhSachHangChoCDHA(canonicalName),
+        cdhaModel.LayDanhSachBenhNhanDaAnCDHA(canonicalName).catch(() => [])
     ]);
 
     const waitingList = (rawData || []).map(p => {
@@ -62,7 +65,7 @@ const LayDanhSachBenhNhanChoCDHA = async (tenphong) => {
             genderStr: LayChuoiGioiTinh(p.gioitinh),
             priorityLabel: getPriorityLabel(p.uutien),
             ngaydk: p.ngaynhap,
-            tenphong: p.tenphong,
+            tenphong: canonicalName,
             ghichu: p.ghichu,
             dakham: 0,
         };
@@ -74,14 +77,14 @@ const LayDanhSachBenhNhanChoCDHA = async (tenphong) => {
             makb: p.makb,
             mabn: p.mabn,
             name: pName || p.makb || p.mabn,
-            room: p.tenphong || tenphong,
+            room: canonicalName,
             time: p.ngaynhap ? DinhDangGioPhut(p.ngaynhap) : '',
             key: p.makb || p.mabn || pName,
         };
     });
 
     const room = {
-        tenphong: tenphong,
+        tenphong: canonicalName,
         totalWaiting: waitingList.length,
         waitingList,
         hiddenList,
@@ -91,7 +94,16 @@ const LayDanhSachBenhNhanChoCDHA = async (tenphong) => {
 };
 
 const LayDanhSachCacPhongCDHA = async () => {
-    const rooms = await cdhaModel.LayDanhSachPhongCDHA();
+    const rawRooms = await cdhaModel.LayDanhSachPhongCDHA();
+    const rooms = (rawRooms || []).map(r => {
+        const alias = roomHelper.resolveCdhaRoomAlias(r.tenphong);
+        return {
+            ...r,
+            alias: alias || '',
+            displayName: alias ? `Phòng ${alias} - ${r.tenphong}` : r.tenphong,
+        };
+    });
+
     return {
         overview: {
             tong_cho_kham: rooms.reduce((sum, r) => sum + Number(r.tong_cho_kham || 0), 0),

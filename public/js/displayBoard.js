@@ -995,6 +995,26 @@ function applyRoomSelection(basePath = "/room") {
     return;
   }
 
+  const isCdha =
+    basePath.includes("/cdha") ||
+    window.location.pathname.includes("/cdha") ||
+    document.querySelector('[data-room-type="cdha"]') !== null;
+
+  if (isCdha) {
+    // Chuyển sang alias ngắn (1, 2, 3, 4, 5, 6)
+    const aliases = selected.map((s) => {
+      const match = s.match(/(\d+)/);
+      return match ? match[1] : s;
+    });
+
+    if (aliases.length === 1) {
+      window.location.href = `/${aliases[0]}`;
+    } else {
+      window.location.href = `/${aliases.join(",")}`;
+    }
+    return;
+  }
+
   if (selected.length === 1) {
     window.location.href = `${basePath}/${encodeURIComponent(selected[0])}`;
   } else {

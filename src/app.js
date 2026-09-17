@@ -52,8 +52,8 @@ const viewRoutes = require("./routes/viewRoutes");
 const apiRoutes = require("./routes/apiRoutes");
 
 // Mount Routes
-app.use("/", viewRoutes);
 app.use("/api", apiRoutes);
+app.use("/", viewRoutes);
 
 // Error Handling Middleware
 app.use(errorMiddleware);

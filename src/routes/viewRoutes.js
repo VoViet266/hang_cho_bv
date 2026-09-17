@@ -10,5 +10,10 @@ router.get('/cdha', viewController.getCdhaRoom);
 router.get('/cdha/dashboard', viewController.getCdhaDashboard);
 router.get('/cdha/room', viewController.getCdhaRoom);
 router.get('/cdha/room/:tenphong', viewController.getCdhaRoom);
+router.get('/cdha/:tenphong', viewController.getCdhaRoom);
+
+// Short URL route: /1, /2, /1,2,3,4, /b1, v.v.
+router.get('/:roomParam', viewController.handleShortUrl);
 
 module.exports = router;
+

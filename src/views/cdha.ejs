@@ -372,9 +372,9 @@
                         const isChecked = selectedRoomIds.includes(r.id);
                     %>
                     <label class="remote-item flex items-center gap-2 p-2 bg-white hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border border-slate-300 shadow-2xs" tabindex="0">
-                        <input type="checkbox" name="roomSelection" value="<%= r.id %>" <%= isChecked ? 'checked' : '' %>
+                        <input type="checkbox" name="roomSelection" value="<%= r.alias || r.id %>" <%= isChecked ? 'checked' : '' %>
                                class="w-4 h-4 rounded text-brand focus:ring-brand cursor-pointer pointer-events-none">
-                        <span class="text-xs md:text-sm font-bold text-slate-800 truncate"><%= r.name %></span>
+                        <span class="text-xs md:text-sm font-bold text-slate-800 truncate"><%= r.displayName || r.name %></span>
                     </label>
                     <% }); %>
                 </div>

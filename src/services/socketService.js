@@ -4,6 +4,7 @@ const logger = require("../config/logger");
 const psdangkyService = require("./psdangkyService");
 const cdhaService = require("./cdhaService");
 const dashboardService = require("./dashboardService");
+const roomHelper = require("../utils/roomHelper");
 
 let io = null;
 const roomDataCache = new Map(); // key -> hash of JSON
@@ -12,7 +13,8 @@ let isPolling = false;
 const POLLING_INTERVAL_MS = 3000;
 
 function getRoomKey(roomType, roomId) {
-  return `${roomType}:${roomId || ""}`;
+  const normId = roomType === "cdha" && roomId ? roomHelper.resolveCdhaRoomName(roomId) : (roomId || "");
+  return `${roomType}:${normId}`;
 }
 
 function hashData(data) {
