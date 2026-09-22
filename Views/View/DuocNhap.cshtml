@@ -1,0 +1,719 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhập Hàng Chờ Dược - Khoa Dược</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/board.css">
+    <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
+    <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            brand: '#1e40af',
+                            danger: '#dc2626',
+                            success: '#16a34a',
+                            accent: '#0f172a',
+                        }
+                    }
+                }
+            }
+    </script>
+</head>
+
+<body class="bg-slate-100 text-slate-900 font-sans flex flex-col h-screen overflow-hidden select-none p-2">
+
+    <!-- HEADER -->
+    <header
+        class="flex justify-between items-center bg-white py-1 px-3 border-2 border-slate-300 shadow-sm gap-2 shrink-0 rounded-lg mb-2">
+        <div class="flex items-center gap-3">
+            <a href="/duoc" title="Quay lại (Esc)"
+               class="flex items-center justify-center w-9 h-9 text-slate-400 hover:text-brand border border-slate-200 hover:border-brand rounded-lg transition shrink-0">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-12 md:h-14 object-contain">
+            <div class="tabular-nums">
+                <div id="date-str" class="text-xs text-slate-500 font-bold uppercase tracking-widest leading-tight">
+                </div>
+                <div id="time-str" class="text-xl md:text-2xl font-black text-brand leading-none"></div>
+            </div>
+        </div>
+
+        <div class="flex-1 text-center">
+            <h1 class="text-xl md:text-2xl lg:text-3xl font-black text-brand tracking-wider uppercase leading-none">
+                NHẬP HÀNG CHỜ DƯỢC
+            </h1>
+           
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="toggleFullScreen()" title="Toàn màn hình (F11)"
+                    class="flex items-center justify-center w-9 h-9 bg-white border-2 border-slate-300 text-slate-600 hover:text-brand rounded-lg transition">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-2 min-h-0">
+
+        <!-- CỘT TRÁI: Quét mã vạch và thông tin bệnh nhân -->
+        <section class="lg:col-span-7 flex flex-col gap-2 min-h-0">
+
+            <!-- BƯỚC / TRẠNG THÁI -->
+            <div class="bg-white border-2 border-slate-300 rounded-xl px-4 py-2.5 flex items-center gap-3 shrink-0">
+                <div class="flex gap-1.5 shrink-0">
+                    <div id="dot-0"
+                         class="w-3 h-3 rounded-full bg-brand transition-all duration-300 ring-2 ring-blue-300"></div>
+                    <div id="dot-1" class="w-3 h-3 rounded-full bg-slate-200 transition-all duration-300"></div>
+                    <div id="dot-2" class="w-3 h-3 rounded-full bg-slate-200 transition-all duration-300"></div>
+                </div>
+                <div class="h-4 w-px bg-slate-200 shrink-0"></div>
+                <div id="loai-badge" class="hidden shrink-0">
+                    <span id="loai-badge-inner"
+                          class="px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider border"></span>
+                </div>
+            
+                <button id="btn-cancel" onclick="resetAll()"
+                        class="hidden items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-danger border border-slate-200 hover:border-danger rounded-lg transition">
+                    <i class="fa-solid fa-rotate-left"></i> Huỷ
+                </button>
+            </div>
+
+            <!-- SCAN BOX -->
+            <div id="scan-box"
+                 class="bg-white border-2 border-slate-300 rounded-xl p-4 flex flex-col gap-3 shrink-0 transition-all duration-200">
+                <div class="flex items-center gap-2">
+                    <i id="scan-icon" class="fa-solid fa-barcode text-brand text-2xl w-8 text-center shrink-0"></i>
+                    <div>
+                        <div id="scan-label" class="font-black text-slate-800 text-sm uppercase tracking-wide">
+                            Quét hoặc nhập mã khám
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="scan-input"
+                           class="w-full pl-9 pr-4 py-3 border-2 border-slate-200 rounded-xl font-mono font-bold text-lg text-slate-800 focus:outline-none focus:border-brand bg-slate-50 tracking-widest transition"
+                           placeholder="Quét barcode hoặc gõ makh rồi nhấn Enter..." autocomplete="off" autocorrect="off"
+                           spellcheck="false">
+                </div>
+                <div class="flex items-center gap-2 min-h-[22px]">
+                    <i id="scan-status-icon" class="fa-solid fa-circle-dot text-slate-300 text-sm"></i>
+                    <span id="scan-status-text" class="text-sm font-semibold text-slate-400">Đang chờ...</span>
+                </div>
+            </div>
+
+            <!-- THÔNG TIN BỆNH NHÂN -->
+            <div id="patient-card" class="hidden bg-white border-2 border-slate-300 rounded-xl p-4 shrink-0">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2 mb-3">
+                    <i class="fa-solid fa-user-injured text-brand text-sm"></i>
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-500">Thông tin bệnh nhân</span>
+                </div>
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-slate-100 border-2 border-slate-200 flex items-center justify-center shrink-0">
+                        <i id="bn-gender-icon" class="fa-solid fa-person text-brand text-xl"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div id="p-hoten"
+                             class="text-xl font-black text-slate-900 uppercase tracking-wide leading-tight truncate"></div>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
+                            <span class="text-xs text-slate-500 flex items-center gap-1">
+                                <i class="fa-regular fa-calendar text-slate-400"></i>
+                                <span id="p-ngaysinh"></span>
+                            </span>
+                            <span class="text-xs text-slate-500 flex items-center gap-1">
+                                <i class="fa-solid fa-venus-mars text-slate-400"></i>
+                                <span id="p-gioitinh"></span>
+                            </span>
+                        </div>
+                       
+                    </div>
+                </div>
+            </div>
+
+            <!-- DANH SÁCH ĐƠN THUỐC DỊCH VỤ (loại 13) -->
+            <div id="thuoc-section"
+                 class="hidden bg-white border-2 border-slate-300 rounded-xl p-4 flex flex-col gap-2 flex-grow min-h-0">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2 shrink-0">
+                    <i class="fa-solid fa-prescription-bottle-medical text-brand text-sm"></i>
+                    <span class="text-xs font-black uppercase tracking-wider text-slate-500">Đơn thuốc dịch vụ</span>
+                    <span id="thuoc-count"
+                          class="ml-auto px-2 py-0.5 bg-slate-100 rounded-full text-xs font-bold text-slate-500">0
+                        đơn</span>
+                    </div>
+                    <div id="thuoc-list" class="flex flex-col gap-1.5 overflow-y-auto flex-grow min-h-0"></div>
+                    <div id="total-row"
+                         class="hidden shrink-0 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 mt-1">
+                        <span class="text-sm font-black text-slate-600 uppercase tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-coins text-amber-500"></i> Tổng tiền
+                        </span>
+                        <span id="total-val" class="text-xl font-black text-success tabular-nums">0 ₫</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- CỘT PHẢI: Đơn thuốc chưa giao -->
+            <section
+                class="lg:col-span-5 bg-white border-2 border-slate-300 rounded-xl flex flex-col min-h-0 shadow-sm overflow-hidden">
+                <div class="flex items-center justify-between border-b-2 border-slate-200 px-4 py-2.5 shrink-0 bg-slate-50">
+                    <h2 class="text-sm font-black text-brand uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-pills text-brand text-base"></i> Đơn Thuốc Chưa Giao
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 bg-brand text-white rounded-full text-xs font-black"
+                              id="chua-giao-count">0</span>
+                        <button onclick="loadDanhSachChuaGiao()" title="Làm mới danh sách"
+                                class="text-xs text-brand hover:text-blue-700 font-bold px-2 py-1 rounded-lg border border-slate-200 hover:border-brand bg-white transition flex items-center gap-1 cursor-pointer">
+                            <i class="fa-solid fa-rotate"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-grow overflow-y-auto overflow-x-hidden p-3 space-y-2 min-h-0 bg-slate-50/40"
+                     id="chua-giao-list">
+                    <div id="chua-giao-empty"
+                         class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-12">
+                        <i class="fa-solid fa-clipboard-check text-4xl text-slate-300"></i>
+                        <p class="text-sm font-bold text-slate-400">Không có đơn thuốc nào đang chờ</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer
+            class="bg-white border-2 border-slate-300 rounded-lg px-3 py-1.5 mt-2 flex items-center justify-between gap-4 text-xs text-slate-500 shrink-0">
+            <div class="flex items-center gap-3">
+                <span class="px-1.5 py-0.5 bg-brand text-white rounded font-bold text-[10px] uppercase shrink-0">Phím
+                    tắt</span>
+                    <span><kbd
+                        class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 font-mono text-slate-700">Enter</kbd>
+                        Quét/Xác nhận</span>
+                        <span><kbd
+                            class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 font-mono text-slate-700">Esc</kbd>
+                            Huỷ</span>
+                            <span><kbd
+                                class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 font-mono text-slate-700">F11</kbd>
+                                Toàn màn hình</span>
+                            </div>
+                            <div id="footer-status" class="text-slate-400 font-medium shrink-0">Đang chờ quét hoặc nhập mã...</div>
+                        </footer>
+
+                        <script>
+                                const $id = id => document.getElementById(id);
+                                const scanInput = $id('scan-input');
+                                let autoResetTimer = null;
+                                let thuocList = [];
+
+                                // Đồng hồ
+                                function updateTime() {
+                                    const now = new Date();
+                                    $id('date-str').textContent = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+                                    $id('time-str').textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                                }
+                                setInterval(updateTime, 1000);
+                                updateTime();
+
+                                function fmtMoney(n) {
+                                    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+                                }
+
+                                function setDots(active, total) {
+                                    for (let i = 0; i < 3; i++) {
+                                        const d = $id(`dot-${i}`);
+                                        if (i < active)
+                                            d.className = 'w-3 h-3 rounded-full bg-success transition-all duration-300';
+                                        else if (i === active && i < total)
+                                            d.className = 'w-3 h-3 rounded-full bg-brand transition-all duration-300 ring-2 ring-blue-300';
+                                        else
+                                            d.className = 'w-3 h-3 rounded-full bg-slate-200 transition-all duration-300';
+                                    }
+                                }
+
+                                function setLoaiBadge(loai) {
+                                    const el = $id('loai-badge-inner');
+                                    if (loai === 13) {
+                                        el.textContent = 'Dịch Vụ';
+                                        el.className = 'px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider border bg-purple-50 text-purple-700 border-purple-200';
+                                    } else {
+                                        el.textContent = 'BHYT';
+                                        el.className = 'px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider border bg-blue-50 text-brand border-blue-200';
+                                    }
+                                    $id('loai-badge').classList.remove('hidden');
+                                }
+
+                                function setScanState(type) {
+                                    const box = $id('scan-box');
+                                    const icon = $id('scan-icon');
+                                    const statusIcon = $id('scan-status-icon');
+                                    const statusText = $id('scan-status-text');
+                                    box.className = 'bg-white border-2 rounded-xl p-4 flex flex-col gap-3 shrink-0 transition-all duration-200';
+                                    if (type === 'loading') {
+                                        box.classList.add('border-amber-300');
+                                        icon.className = 'fa-solid fa-spinner fa-spin text-amber-500 text-2xl w-8 text-center shrink-0';
+                                        statusIcon.className = 'fa-solid fa-spinner fa-spin text-amber-400 text-sm';
+                                        statusText.className = 'text-sm font-semibold text-amber-600';
+                                    } else if (type === 'success') {
+                                        box.classList.add('border-green-400', 'bg-green-50');
+                                        icon.className = 'fa-solid fa-circle-check text-success text-2xl w-8 text-center shrink-0';
+                                        statusIcon.className = 'fa-solid fa-circle-check text-success text-sm';
+                                        statusText.className = 'text-sm font-semibold text-success';
+                                    } else if (type === 'error') {
+                                        box.classList.add('border-danger', 'bg-red-50');
+                                        icon.className = 'fa-solid fa-circle-xmark text-danger text-2xl w-8 text-center shrink-0';
+                                        statusIcon.className = 'fa-solid fa-circle-xmark text-danger text-sm';
+                                        statusText.className = 'text-sm font-semibold text-danger';
+                                        box.animate([
+                                            { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' },
+                                            { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' },
+                                            { transform: 'translateX(0)' }
+                                        ], { duration: 350 });
+                                    } else {
+                                        box.classList.add('border-slate-300');
+                                        icon.className = 'fa-solid fa-barcode text-brand text-2xl w-8 text-center shrink-0';
+                                        statusIcon.className = 'fa-solid fa-circle-dot text-slate-300 text-sm';
+                                        statusText.className = 'text-sm font-semibold text-slate-400';
+                                    }
+                                }
+
+                                function setStatus(msg) { $id('scan-status-text').textContent = msg; }
+                                function setFooter(msg) { $id('footer-status').textContent = msg; }
+
+                                function showPatient(data) {
+                                    if ($id('p-hoten')) $id('p-hoten').textContent = data.hoTen || '—';
+                                    if ($id('p-ngaysinh')) $id('p-ngaysinh').textContent = data.ngaySinh || '—';
+                                    if ($id('p-gioitinh')) $id('p-gioitinh').textContent = data.gioiTinh || '—';
+                                    if ($id('p-makb')) $id('p-makb').textContent = data.makb || '—';
+                                    if ($id('p-mabn')) $id('p-mabn').textContent = data.mabn || '—';
+                                    if ($id('bn-gender-icon')) {
+                                        $id('bn-gender-icon').className = data.gioiTinh === 'Nữ'
+                                            ? 'fa-solid fa-person-dress text-pink-500 text-xl'
+                                            : 'fa-solid fa-person text-brand text-xl';
+                                    }
+                                    $id('patient-card').classList.remove('hidden');
+                                }
+
+                                function addThuocRow(t, idx) {
+                                    const div = document.createElement('div');
+                                    div.className = 'flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden';
+                                    div.innerHTML = `
+                                                                <div class="flex items-center gap-3 min-w-0">
+                                                                    <span class="w-8 h-8 rounded-lg bg-brand text-white flex items-center justify-center font-black text-sm shrink-0">${idx + 1}</span>
+                                                                    <div class="min-w-0">
+                                                                        <div class="text-xs font-bold text-slate-700">Đơn thuốc ${idx + 1}</div>
+                                                                        <div class="text-[11px] text-slate-400 font-mono truncate">SHĐ: ${t.sohd || '—'} &bull; MBA: ${t.maba || '—'}</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="text-base font-black text-success tabular-nums shrink-0">${fmtMoney(t.tienVat)}</div>`;
+                                    $id('thuoc-list').appendChild(div);
+                                    updateTotal();
+                                }
+
+                                function updateTotal() {
+                                    const total = thuocList.reduce((s, t) => s + (t.tienVat || 0), 0);
+                                    $id('total-val').textContent = fmtMoney(total);
+                                    $id('total-row').classList.toggle('hidden', thuocList.length === 0);
+                                    $id('thuoc-count').textContent = `${thuocList.length} đơn`;
+                                }
+
+                                // Âm thanh Web Audio API
+                                let nhapAudioCtx = null;
+                                function getNhapAudioContext() {
+                                    if (!nhapAudioCtx) {
+                                        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                                        if (AudioCtxClass) nhapAudioCtx = new AudioCtxClass();
+                                    }
+                                    if (nhapAudioCtx && nhapAudioCtx.state === 'suspended') {
+                                        nhapAudioCtx.resume().catch(() => { });
+                                    }
+                                    return nhapAudioCtx;
+                                }
+
+                                ['click', 'keydown', 'input', 'touchstart'].forEach(type => {
+                                    document.addEventListener(type, () => getNhapAudioContext(), { passive: true });
+                                });
+
+                                function playScanBeep(isSuccess) {
+                                    try {
+                                        const ctx = getNhapAudioContext();
+                                        if (!ctx) return;
+                                        const osc = ctx.createOscillator();
+                                        const gain = ctx.createGain();
+                                        const now = ctx.currentTime;
+                                        if (isSuccess) {
+                                            osc.frequency.setValueAtTime(880, now);
+                                            gain.gain.setValueAtTime(0.35, now);
+                                            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+                                            osc.connect(gain);
+                                            gain.connect(ctx.destination);
+                                            osc.start(now);
+                                            osc.stop(now + 0.28);
+                                        } else {
+                                            osc.frequency.setValueAtTime(220, now);
+                                            gain.gain.setValueAtTime(0.4, now);
+                                            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                                            osc.connect(gain);
+                                            gain.connect(ctx.destination);
+                                            osc.start(now);
+                                            osc.stop(now + 0.35);
+                                        }
+                                    } catch (e) { }
+                                }
+
+                                let lastChuaGiaoJson = '';
+                                let isScanning = false;
+
+                                function resetAll() {
+                                    if (autoResetTimer) {
+                                        clearTimeout(autoResetTimer);
+                                        autoResetTimer = null;
+                                    }
+                                    thuocList = [];
+                                    scanInput.value = '';
+                                    setScanState('');
+                                    setDots(0, 3);
+                                    setStatus('Sẵn sàng quét...');
+                                    setFooter('Quét mã khám &rarr; Tự động xử lý theo quy trình');
+                                    $id('state-label').textContent = 'Sẵn sàng – Quét mã vạch để tự động xử lý';
+                                    $id('loai-badge').classList.add('hidden');
+                                    $id('btn-cancel').classList.replace('flex', 'hidden');
+                                    $id('patient-card').classList.add('hidden');
+                                    $id('thuoc-section').classList.add('hidden');
+                                    $id('thuoc-list').innerHTML = '';
+                                    updateTotal();
+                                    scanInput.focus({ preventScroll: true });
+                                    loadDanhSachChuaGiao();
+                                }
+
+                                function showError(msg) {
+                                    setScanState('error');
+                                    setStatus(msg || 'Lỗi không xác định');
+                                    setFooter('Có lỗi – vui lòng quét lại');
+                                    autoResetTimer = setTimeout(() => {
+                                        setScanState('');
+                                        setStatus('Sẵn sàng quét...');
+                                        scanInput.focus({ preventScroll: true });
+                                    }, 3000);
+                                }
+
+                                // QUÉT TỰ ĐỘNG THEO BƯỚC
+                                async function handleScan(raw) {
+                                    const code = (raw || '').trim();
+                                    if (!code || isScanning) return;
+                                    isScanning = true;
+
+                                    clearTimeout(autoTimer);
+                                    if (autoResetTimer) {
+                                        clearTimeout(autoResetTimer);
+                                        autoResetTimer = null;
+                                    }
+
+                                    scanInput.value = '';
+
+                                    setScanState('loading');
+                                    setStatus('Đang quét và xử lý hàng chờ...');
+                                    setFooter('Đang tra cứu dữ liệu chứng từ...');
+
+                                    try {
+                                        // 1. Tra cứu thông tin chứng từ & bệnh nhân
+                                        let data;
+                                        try {
+                                            const r = await fetch(`/api/duoc-nhap/scan?makh=${encodeURIComponent(code)}`);
+                                            data = await r.json();
+                                        } catch (err) {
+                                            playScanBeep(false);
+                                            showError('Lỗi kết nối server.');
+                                            return;
+                                        }
+
+                                        if (!data.success) {
+                                            playScanBeep(false);
+                                            showError(data.message || 'Không tìm thấy chứng từ.');
+                                            return;
+                                        }
+
+                                        // 2. Hiển thị thông tin bệnh nhân
+                                        setLoaiBadge(data.loai);
+                                        showPatient(data);
+                                        $id('btn-cancel').classList.replace('hidden', 'flex');
+
+                                        if (data.loai === 13) {
+                                            thuocList = (data.danhSachThuoc && data.danhSachThuoc.length > 0)
+                                                ? data.danhSachThuoc
+                                                : [{ sohd: data.sohd, maba: data.maba, tienVat: data.tienVat }];
+                                            $id('thuoc-section').classList.remove('hidden');
+                                            $id('thuoc-list').innerHTML = '';
+                                            thuocList.forEach((t, i) => addThuocRow(t, i));
+                                            updateTotal();
+                                        } else {
+                                            $id('thuoc-section').classList.add('hidden');
+                                            $id('thuoc-list').innerHTML = '';
+                                        }
+
+                                        // 3. Tự động lưu / cập nhật hàng chờ
+                                        const targetKhochan = (data.loai === 13) ? 13 : 14;
+                                        let res;
+                                        try {
+                                            const r = await fetch('/api/duoc-nhap/them-hang-cho', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    makb: data.makb,
+                                                    mabn: data.mabn,
+                                                    loai: data.loai,
+                                                    khochan: targetKhochan,
+                                                    maba: data.maba,
+                                                    ngayKcb: data.ngayKcb
+                                                })
+                                            });
+                                            res = await r.json();
+                                        } catch (err) {
+                                            playScanBeep(false);
+                                            showError('Lỗi lưu vào hàng chờ.');
+                                            return;
+                                        }
+
+                                        if (!res.success) {
+                                            playScanBeep(false);
+                                            showError(res.message || 'Lỗi khi lưu vào hàng chờ.');
+                                            return;
+                                        }
+
+                                        // 4. Thành công
+                                        playScanBeep(true);
+                                        setScanState('success');
+
+                                        const msg = res.message || 'Thao tác thành công!';
+                                        setStatus('✓ ' + msg);
+                                        setFooter(msg);
+                                        $id('state-label').textContent = `✓ ${msg} – Sẵn sàng quét tiếp...`;
+                                        setDots(3, 3);
+
+                                        // Cập nhật danh sách bên cột phải
+                                        loadDanhSachChuaGiao();
+
+                                        // Giữ nguyên thông tin bệnh nhân trên màn hình để nhân viên đối chiếu thuốc,
+                                        // không tự động co rút thẻ sau 3 giây. Sẵn sàng nhận mã quét kế tiếp.
+                                        scanInput.focus({ preventScroll: true });
+                                    } finally {
+                                        isScanning = false;
+                                    }
+                                }
+
+                                // CỘT PHẢI: Danh sách chưa giao
+                                function escapeHtml(str) {
+                                    if (!str) return '';
+                                    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                                }
+
+                                let isFetchingChuaGiao = false;
+                                async function loadDanhSachChuaGiao() {
+                                    if (isFetchingChuaGiao) return;
+                                    isFetchingChuaGiao = true;
+                                    try {
+                                        const r = await fetch('/api/duoc-nhap/danh-sach-chua-giao');
+                                        const list = await r.json();
+                                        renderDanhSachChuaGiao(list);
+                                    } catch (e) {
+                                        console.warn('Lỗi load danh sách chưa giao:', e);
+                                    } finally {
+                                        isFetchingChuaGiao = false;
+                                    }
+                                }
+
+                                function renderDanhSachChuaGiao(list) {
+                                    const container = $id('chua-giao-list');
+                                    const countEl = $id('chua-giao-count');
+                                    if (!container || !countEl) return;
+
+                                    const currentList = list || [];
+                                    countEl.textContent = currentList.length;
+
+                                    const currentJson = JSON.stringify(currentList);
+                                    if (currentJson === lastChuaGiaoJson) {
+                                        return; // Dữ liệu không đổi -> KHÔNG chạm DOM để tránh mất vị trí cuộn / giật màn hình
+                                    }
+                                    lastChuaGiaoJson = currentJson;
+
+                                    // Ghi nhớ vị trí cuộn hiện tại của danh sách
+                                    const prevScrollTop = container.scrollTop;
+
+                                    if (currentList.length === 0) {
+                                        container.innerHTML = `
+                                                                                            <div id="chua-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-12">
+                                                                                                <i class="fa-solid fa-clipboard-check text-4xl text-slate-300"></i>
+                                                                                                <p class="text-sm font-bold text-slate-400">Không có đơn thuốc nào đang chờ</p>
+                                                                                            </div>`;
+                                        return;
+                                    }
+
+                                    let html = '';
+                                    for (const item of currentList) {
+                                        const isDv = !item.isBhyt;
+                                        const badge = isDv
+                                            ? `<span class="px-2 py-0.5 bg-purple-100 text-purple-800 border border-purple-200 rounded font-black text-[10px] uppercase tracking-wide">Dịch Vụ</span>`
+                                            : `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-200 rounded font-black text-[10px] uppercase tracking-wide">BHYT</span>`;
+
+                                        let statusText = '';
+                                        let btnHtml = '';
+
+                                        if (!isDv) {
+                                            statusText = `<span class="text-xs font-bold text-slate-500 flex items-center gap-1">
+                                                                                                <i class="fa-solid fa-clock text-blue-500"></i> Chờ phát
+                                                                                            </span>`;
+                                            btnHtml = `
+                                                                                                <button onclick="actionCapNhat('${item.makb}', '${item.mabn}', 1, 'Đã phát thuốc BHYT cho ${escapeHtml(item.hoTen)}')"
+                                                                                                    class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase flex items-center gap-1.5 shadow-sm transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0">
+                                                                                                    <i class="fa-solid fa-check"></i> Đã phát
+                                                                                                </button>`;
+                                        } else {
+                                            if (item.dagiao === 0) {
+                                                statusText = `<span class="text-xs font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                                                                                                    <i class="fa-solid fa-coins text-amber-500"></i> Chờ thu: ${item.soTienStr || '—'}
+                                                                                                </span>`;
+                                                btnHtml = `
+                                                                                                    <div class="flex items-center gap-1.5 shrink-0">
+                                                                                                        <button onclick="actionCapNhat('${item.makb}', '${item.mabn}', 1, 'Đã thu tiền cho ${escapeHtml(item.hoTen)}')"
+                                                                                                            title="Xác nhận đã thu tiền"
+                                                                                                            class="px-2.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black text-xs uppercase flex items-center gap-1 shadow-sm transition active:scale-95 whitespace-nowrap cursor-pointer">
+                                                                                                            <i class="fa-solid fa-coins"></i> Thu tiền
+                                                                                                        </button>
+                                                                                                        <button onclick="actionCapNhat('${item.makb}', '${item.mabn}', 2, 'Đã phát thuốc cho ${escapeHtml(item.hoTen)}')"
+                                                                                                            title="Đã phát thuốc hoàn tất (Ẩn khỏi TV)"
+                                                                                                            class="px-2.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase flex items-center gap-1 shadow-sm transition active:scale-95 whitespace-nowrap cursor-pointer">
+                                                                                                            <i class="fa-solid fa-check"></i> Đã phát
+                                                                                                        </button>
+                                                                                                    </div>`;
+                                            } else {
+                                                statusText = `<span class="text-xs font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 flex items-center gap-1">
+                                                                                                    <i class="fa-solid fa-box-open text-blue-500"></i> Đang soạn: ${item.soTienStr || '—'}
+                                                                                                </span>`;
+                                                btnHtml = `
+                                                                                                    <button onclick="actionCapNhat('${item.makb}', '${item.mabn}', 2, 'Đã phát thuốc cho ${escapeHtml(item.hoTen)}')"
+                                                                                                        class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase flex items-center gap-1.5 shadow-sm transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0">
+                                                                                                        <i class="fa-solid fa-check"></i> Đã phát
+                                                                                                    </button>`;
+                                            }
+                                        }
+
+                                        html += `
+                                                                                            <div class="bg-white border-2 border-slate-200 hover:border-slate-300 rounded-xl p-3 shadow-xs flex items-center justify-between gap-2 transition overflow-hidden">
+                                                                                                <div class="flex-1 min-w-0">
+                                                                                                    <div class="font-black text-slate-900 text-base uppercase truncate leading-tight tracking-wide">
+                                                                                                        ${escapeHtml(item.hoTen)}
+                                                                                                    </div>
+                                                                                                    <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                                                                                        ${badge}
+                                                                                                        ${statusText}
+                                                                                                        <span class="text-[11px] font-mono text-slate-400 font-bold whitespace-nowrap">MKB: ${item.makb || item.mabn}</span>
+                                                                                                        ${item.ngayNhapStr ? `<span class="text-[11px] text-slate-400 whitespace-nowrap"><i class="fa-regular fa-clock"></i> ${item.ngayNhapStr}</span>` : ''}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                ${btnHtml}
+                                                                                            </div>`;
+                                    }
+
+                                    container.innerHTML = html;
+                                    // Khôi phục vị trí cuộn ban đầu
+                                    container.scrollTop = prevScrollTop;
+                                }
+
+                                async function actionCapNhat(makb, mabn, targetDagiao, successMsg) {
+                                    try {
+                                        const r = await fetch('/api/duoc-nhap/cap-nhat-trang-thai', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ makb, mabn, targetDagiao })
+                                        });
+                                        const res = await r.json();
+                                        if (res.success) {
+                                            playScanBeep(true);
+                                            const msg = successMsg || res.message || 'Cập nhật thành công!';
+                                            setFooter(msg);
+                                            $id('scan-status-text').textContent = msg;
+                                            // Tải lại danh sách cột phải, giữ nguyên cột trái không bị reset/co giật
+                                            loadDanhSachChuaGiao();
+                                        } else {
+                                            playScanBeep(false);
+                                            showError(res.message || 'Lỗi cập nhật');
+                                        }
+                                    } catch (e) {
+                                        showError('Lỗi kết nối server.');
+                                    }
+                                }
+
+                                // Input & Keyboard
+                                scanInput.addEventListener('keydown', e => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        clearTimeout(autoTimer);
+                                        const v = scanInput.value.trim();
+                                        if (v) handleScan(v);
+                                    }
+                                });
+
+                                let lastInputTime = 0, autoTimer = null;
+                                scanInput.addEventListener('input', () => {
+                                    const now = Date.now();
+                                    const delta = now - lastInputTime;
+                                    lastInputTime = now;
+                                    clearTimeout(autoTimer);
+                                    if (delta < 50 && scanInput.value.length >= 4) {
+                                        autoTimer = setTimeout(() => {
+                                            const v = scanInput.value.trim();
+                                            if (v.length >= 4) handleScan(v);
+                                        }, 120);
+                                    }
+                                });
+
+                                document.addEventListener('keydown', e => {
+                                    if (e.key === 'Escape') {
+                                        resetAll();
+                                        return;
+                                    }
+                                    if (e.key === 'F11') {
+                                        e.preventDefault();
+                                        toggleFullScreen();
+                                        return;
+                                    }
+                                    // Không cướp focus nếu người dùng đang thao tác trên nút bấm, liên kết hoặc input
+                                    const tag = document.activeElement ? document.activeElement.tagName : '';
+                                    if (['BUTTON', 'INPUT', 'TEXTAREA', 'A'].includes(tag)) {
+                                        return;
+                                    }
+                                    const ignoredKeys = [
+                                        'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F12',
+                                        'Tab', 'CapsLock', 'Shift', 'Control', 'Alt', 'Meta',
+                                        'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'
+                                    ];
+                                    if (!ignoredKeys.includes(e.key) && document.activeElement !== scanInput) {
+                                        scanInput.focus({ preventScroll: true });
+                                    }
+                                });
+
+                                function toggleFullScreen() {
+                                    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
+                                    else document.exitFullscreen?.().catch(() => { });
+                                }
+
+                                // Init
+                                resetAll();
+                                loadDanhSachChuaGiao();
+                                setInterval(loadDanhSachChuaGiao, 5000);
+                        </script>
+                    </body>
+
+                </html>

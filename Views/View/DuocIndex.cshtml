@@ -1,0 +1,152 @@
+@model HangChoKhamBenh.Web.Models.DuocIndexViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hàng Chờ Khoa Dược - Bệnh Viện Tâm Minh Đức</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#1e40af',
+                        danger: '#dc2626',
+                        accent: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-slate-100 text-slate-900 font-sans p-2 flex flex-col h-screen overflow-hidden select-none">
+
+    <!-- HEADER: MÀU CŨ & CẤU TRÚC CŨ -->
+    <div class="flex items-center gap-4 bg-white p-3 border-2 border-slate-300 rounded-xl mb-3 shadow-sm shrink-0">
+        <a href="/" title="Quay lại chọn dịch vụ (Esc)" class="flex items-center justify-center w-11 h-11 bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-brand rounded-xl border-2 border-slate-300 transition shrink-0">
+            <i class="fa-solid fa-arrow-left text-lg"></i>
+        </a>
+
+        <div class="flex-shrink-0 flex items-center justify-center w-[130px]">
+            <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-16 w-auto object-contain">
+        </div>
+
+        <div class="flex-1 min-w-0 text-center font-black tabular-nums tracking-wider">
+            <div id="date-str" class="text-base text-slate-500 font-bold mb-0.5 uppercase tracking-widest"></div>
+            <div id="time-str" class="text-[2.2rem] sm:text-[3rem] text-danger leading-none font-black"></div>
+        </div>
+
+        <div class="hidden sm:flex flex-col items-end justify-center min-w-[220px] text-right">
+            <div class="text-brand font-black text-xl md:text-2xl uppercase tracking-wider">
+                KHOA DƯỢC
+            </div>
+            <div class="text-slate-500 text-xs font-bold mt-0.5">
+                Bấm chọn loại cấp phát để mở màn hình TV
+            </div>
+        </div>
+    </div>
+
+    <!-- BODY: 2 NÚT BẢO HIỂM VÀ DỊCH VỤ -->
+    <div class="flex-grow flex flex-col justify-center max-w-4xl mx-auto w-full px-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+
+            <!-- 1. BẢO HIỂM -->
+            <div class="remote-item bg-white border-2 border-slate-300 rounded-xl cursor-pointer p-8 flex flex-col items-center justify-between text-center min-h-[220px]"
+                 tabindex="0" onclick="window.location.href='/duoc/bao-hiem'">
+                <div class="w-16 h-16 rounded-xl bg-slate-50 border-2 border-slate-200 text-brand flex items-center justify-center text-3xl mb-3">
+                    <i class="fa-solid fa-id-card"></i>
+                </div>
+                <div>
+                    <div class="text-brand font-bold text-2xl sm:text-3xl uppercase tracking-wide">
+                        Bảo Hiểm
+                    </div>
+                    <div class="text-slate-500 text-xs sm:text-sm font-semibold mt-1.5">
+                        Hàng chờ cấp phát thuốc Bảo hiểm y tế (BHYT)
+                    </div>
+                </div>
+                <div class="mt-4 px-4 py-1.5 bg-slate-100 text-brand font-bold text-xs rounded-lg border border-slate-300 uppercase tracking-wider">
+                    Mở màn hình Bảo Hiểm <i class="fa-solid fa-arrow-right ml-1"></i>
+                </div>
+            </div>
+
+            <!-- 2. DỊCH VỤ -->
+            <div class="remote-item bg-white border-2 border-slate-300 rounded-xl cursor-pointer p-8 flex flex-col items-center justify-between text-center min-h-[220px]"
+                 tabindex="0" onclick="window.location.href='/duoc/dich-vu'">
+                <div class="w-16 h-16 rounded-xl bg-slate-50 border-2 border-slate-200 text-brand flex items-center justify-center text-3xl mb-3">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div>
+                    <div class="text-brand font-bold text-2xl sm:text-3xl uppercase tracking-wide">
+                        Dịch Vụ
+                    </div>
+                    <div class="text-slate-500 text-xs sm:text-sm font-semibold mt-1.5">
+                        Hàng chờ cấp phát thuốc Viện phí &amp; Dịch vụ
+                    </div>
+                </div>
+                <div class="mt-4 px-4 py-1.5 bg-slate-100 text-brand font-bold text-xs rounded-lg border border-slate-300 uppercase tracking-wider">
+                    Mở màn hình Dịch Vụ <i class="fa-solid fa-arrow-right ml-1"></i>
+                </div>
+            </div>
+
+            <!-- 3. NHẬP HÀNG CHỜ -->
+            <div class="remote-item bg-white border-2 border-slate-300 rounded-xl cursor-pointer p-8 flex flex-col items-center justify-between text-center min-h-[220px]"
+                 tabindex="0" onclick="window.location.href='/duoc/nhap'">
+                <div class="w-16 h-16 rounded-xl bg-slate-50 border-2 border-slate-200 text-blue-900 flex items-center justify-center text-3xl mb-3">
+                    <i class="fa-solid fa-barcode"></i>
+                </div>
+                <div>
+                    <div class="text-blue-900 font-bold text-2xl sm:text-3xl uppercase tracking-wide">
+                        Nhập Hàng Chờ
+                    </div>
+                    <div class="text-slate-500 text-xs sm:text-sm font-semibold mt-1.5">
+                        Quét barcode phiếu khám để thêm vào hàng chờ phát thuốc
+                    </div>
+                </div>
+                <div class="mt-4 px-4 py-1.5 bg-slate-100 text-blue-900 font-bold text-xs rounded-lg border border-slate-300 uppercase tracking-wider">
+                    Mở trang Nhập <i class="fa-solid fa-arrow-right ml-1"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FOOTER CHỈ DẪN -->
+    <div class="py-1 px-3 text-center text-xs text-slate-500 bg-white border-t border-slate-200 shrink-0 flex justify-between items-center mt-1">
+        <span>Chọn loại phát thuốc để mở màn hình hàng chờ chiếu TV • Nhấn <strong>[Esc]</strong> để quay lại chọn dịch vụ</span>
+        <span>Phím <strong>[F11]</strong>: Toàn màn hình TV</span>
+    </div>
+
+    <script src="/js/remoteNav.js"></script>
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const dateStrEl = document.getElementById('date-str');
+            const timeStrEl = document.getElementById('time-str');
+
+            if (dateStrEl && timeStrEl) {
+                dateStrEl.textContent = now.toLocaleDateString('vi-VN', dateOpts);
+                timeStrEl.textContent = now.toLocaleTimeString('vi-VN', timeOpts);
+            }
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' || e.key === 'Backspace') {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -13,10 +13,13 @@ services:
     env_file:
       - .env
     environment:
-      - NODE_OPTIONS=--dns-result-order=ipv4first
+      - ASPNETCORE_URLS=http://0.0.0.0:3002
+      - ASPNETCORE_ENVIRONMENT=Production
+      - PORT=3002
+      - TZ=Asia/Ho_Chi_Minh
     volumes:
       - ./logs:/app/logs
-      - ./public/audio/cache:/app/public/audio/cache
+      - ./wwwroot/audio/cache:/app/wwwroot/audio/cache
     restart: unless-stopped
 
 networks:

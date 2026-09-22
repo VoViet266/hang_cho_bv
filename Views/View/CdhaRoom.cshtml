@@ -1,0 +1,491 @@
+@model HangChoKhamBenh.Web.Models.RoomPageViewModel
+@{
+    Layout = null;
+    var room = Model.Room;
+    var roomsData = Model.RoomsData;
+    var allAvailableRooms = Model.AllAvailableRooms;
+    var selectedRoomIds = Model.SelectedRoomIds;
+}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Hàng Chờ Siêu Âm - @(string.IsNullOrEmpty(room.Tenphong) ? "CDHA" : room.Tenphong)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/board.css">
+    <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#1e40af',
+                        danger: '#dc2626',
+                        success: '#16a34a',
+                        accent: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="tv-board bg-slate-100 text-slate-900 font-sans flex flex-col h-screen overflow-hidden select-none">
+
+    <!-- Top Bar Header -->
+    <header class="tv-header flex flex-col md:flex-row justify-between items-start md:items-center bg-white py-1 px-2.5 border-2 border-slate-300 shadow-sm gap-2 shrink-0">
+        <!-- Logo & Đồng hồ -->
+        <div class="tv-brand flex items-center bg-white gap-3">
+            <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-12 md:h-14 object-contain">
+            <div class="tabular-nums">
+                <div id="date-str" class="tv-clock-date text-xs text-slate-500 font-bold uppercase tracking-widest leading-tight"></div>
+                <div id="time-str" class="tv-clock-time text-xl md:text-2xl font-black text-brand leading-none"></div>
+            </div>
+        </div>
+
+        <!-- Tiêu đề (chỉ hiện khi xem 1 phòng) -->
+        <div class="tv-room-heading flex flex-col flex-1 text-center items-center justify-center">
+            @if (roomsData.Count <= 1)
+            {
+                <h1 class="tv-room-title tv-numbered-room-title text-danger text-xl md:text-4xl font-extrabold uppercase tracking-wide">
+                    @await Html.PartialAsync("_RoomTitle", string.IsNullOrEmpty(room.Tenphong) ? "Khoa Chẩn Đoán Hình Ảnh" : room.Tenphong)
+                </h1>
+            }
+        </div>
+
+        <!-- Controls & Counters -->
+        <div class="tv-actions flex items-center gap-2">
+            @if (roomsData.Count == 1)
+            {
+                <div class="tv-stat tv-stat--waiting bg-red-50 px-3 py-1 text-center min-w-[90px] rounded border border-red-200">
+                    <span class="block text-danger font-bold text-[10px] uppercase tracking-wide">Đang chờ</span>
+                    <span id="totalWaiting" class="block text-danger font-black text-lg md:text-xl tabular-nums leading-none mt-0.5">
+                        @room.TotalWaiting
+                    </span>
+                </div>
+            }
+
+            @{
+                int initHiddenCount = roomsData.Count > 0
+                    ? roomsData.Sum(r => r.HiddenList?.Count ?? 0)
+                    : (room.HiddenList?.Count ?? 0);
+            }
+
+            <!-- Nút xem danh sách bệnh nhân đã xóa/ẩn -->
+            <button id="hiddenPatientsBtn" onclick="toggleHiddenModal(true)"
+                class="remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-600 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer relative"
+                tabindex="0"
+                aria-label="Danh sách bệnh nhân đã xóa/ẩn"
+                title="Danh sách bệnh nhân đã xóa/ẩn (Phím H)">
+                <i class="fas fa-user-slash"></i>
+                <span id="hiddenBadgeCount" class="@(initHiddenCount > 0 ? "" : "hidden") absolute -top-1.5 -right-1.5 bg-danger text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">@initHiddenCount</span>
+            </button>
+
+            <!-- Nút Chia phòng -->
+            <button onclick="toggleRoomModal(true)"
+                class="remote-item icon-button bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                tabindex="0"
+                aria-label="Chọn phòng hiển thị"
+                title="Chia màn hình phòng CDHA (Phím M)">
+                <i class="fas fa-th-large"></i>
+            </button>
+
+            <!-- Nút bật âm thanh -->
+            <button id="soundToggleBtn" onclick="toggleSound()"
+                class="remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                tabindex="0"
+                aria-label="Bật hoặc tắt âm thanh"
+                title="Bật/Tắt âm thanh (Phím A hoặc S)">
+                <i id="soundIcon" class="fas fa-volume-mute text-slate-400"></i>
+            </button>
+
+            <!-- Nút quay lại -->
+            <a href="/cdha" class="remote-item icon-button bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1" tabindex="0" aria-label="Về danh sách phòng CDHA" title="Về danh sách phòng CDHA">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- MAIN BODY -->
+    <main class="flex-grow p-1.5 overflow-hidden flex flex-col">
+        @if (roomsData.Count <= 1)
+        {
+            var waitingList = room.WaitingList ?? new List<HangChoKhamBenh.Web.Models.PatientWaitingDto>();
+            string nextPatientNameToRead = "";
+
+            <!-- ================= CHẾ ĐỘ 1 PHÒNG CDHA ================= -->
+            <div id="room-card-@room.Tenphong"
+                 class="room-container flex-grow overflow-y-auto bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm"
+                 data-room-type="cdha"
+                 data-room-id="@room.Tenphong"
+                 data-room-name="@room.Tenphong">
+
+                <table class="patient-table patient-table--single w-full text-left border-collapse" style="table-layout: fixed;">
+                    <colgroup>
+                        <col style="width: 7%;">
+                        <col style="width: 44%;">
+                        <col style="width: 10%;">
+                        <col style="width: 17%;">
+                        <col style="width: 22%;">
+                    </colgroup>
+                    <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-2xl md:text-3xl">
+                        <tr>
+                            <th class="py-3 px-4 text-center">STT</th>
+                            <th class="py-3 px-4">Họ và Tên</th>
+                            <th class="py-3 px-4 text-center">Năm Sinh</th>
+                            <th class="py-3 px-4 text-center">Ghi Chú</th>
+                            <th class="py-3 px-4 text-center">Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientTableBody" class="divide-y divide-slate-200">
+                        @if (waitingList.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-16 text-slate-400 text-3xl font-bold italic">
+                                    Không có bệnh nhân chờ siêu âm.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            int waitCounter = 0;
+                            for (int index = 0; index < waitingList.Count; index++)
+                            {
+                                var patient = waitingList[index];
+                                bool isNear = false;
+                                if (patient.Dakham == 0)
+                                {
+                                    waitCounter++;
+                                    if (waitCounter == 1)
+                                    {
+                                        isNear = true;
+                                        nextPatientNameToRead = $"{patient.Holot} {patient.Ten}".Trim();
+                                    }
+                                }
+                                var currentPatientName = $"{patient.Holot} {patient.Ten}".Trim();
+                                var dobYear = !string.IsNullOrEmpty(patient.DobStr) && patient.DobStr != "Chưa cập nhật"
+                                    ? patient.DobStr.Split('/').Last()
+                                    : "";
+                                var patientKey = (!string.IsNullOrEmpty(patient.Makb) ? patient.Makb : (!string.IsNullOrEmpty(patient.Mabn) ? patient.Mabn : $"{currentPatientName}_{patient.DobStr}")).Trim();
+
+                                <tr data-patient="@currentPatientName"
+                                    data-patient-key="@patientKey"
+                                    data-makb="@(patient.Makb ?? "")"
+                                    data-mabn="@(patient.Mabn ?? "")"
+                                    data-room="@(room.Tenphong ?? "")"
+                                    data-room-type="cdha"
+                                    onclick="onRowClick(this)"
+                                    class="remote-item group cursor-pointer @(isNear ? "bg-yellow-100 border-l-8 border-yellow-500 shadow-md" : "border-b border-slate-200")" tabindex="0">
+                                    <td class="py-4 px-3 font-bold text-center text-blue-900 @(isNear ? "text-4xl md:text-6xl font-black" : "text-3xl md:text-5xl font-bold")">
+                                        @(index + 1)
+                                    </td>
+                                    <td class="py-4 px-3 text-blue-900 overflow-hidden @(isNear ? "text-3xl md:text-5xl font-black tracking-tight" : "text-2xl md:text-4xl font-black")">
+                                        <div class="patient-name-container min-w-0 flex items-center">
+                                            <span class="patient-name-text truncate max-w-full block">@((!string.IsNullOrEmpty(currentPatientName) ? currentPatientName : "Chưa cập nhật").ToUpper())</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-3 font-bold text-center text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black" : "text-2xl md:text-4xl font-bold")">
+                                        @dobYear
+                                    </td>
+                                    <td class="py-4 px-3 text-center text-blue-900 overflow-hidden">
+                                        @if (!string.IsNullOrEmpty(patient.PriorityLabel))
+                                        {
+                                            <span class="inline-block bg-yellow-100 text-yellow-800 px-2.5 py-1 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-sm md:text-base truncate max-w-full">
+                                                Ưu tiên: @patient.PriorityLabel
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="py-4 px-3 text-center overflow-hidden">
+                                        <div class="flex items-center justify-center gap-1.5 flex-nowrap min-w-0">
+                                            @if (isNear)
+                                            {
+                                                <span class="inline-block bg-red-600 text-white px-3 md:px-5 py-1.5 rounded-xl text-base md:text-xl lg:text-2xl font-black uppercase whitespace-nowrap shadow-md animate-pulse-red">
+                                                    Tới Lượt
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 rounded-xl text-sm md:text-lg font-bold border-2 border-slate-200 shadow-sm whitespace-nowrap">
+                                                    Chờ lượt
+                                                </span>
+                                            }
+                                            <button type="button"
+                                                    title="Ẩn bệnh nhân khỏi màn hình (khôi phục qua nút Ẩn trên thanh tiêu đề)"
+                                                    aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                                                    onclick="removePatientFromElement(this, event)"
+                                                    class="btn-hide-patient p-1.5 text-slate-400 hover:text-danger hover:bg-red-50 rounded-lg transition-all cursor-pointer shrink-0 opacity-40 group-hover:opacity-100 hover:opacity-100"
+                                                    tabindex="0">
+                                                <i class="fas fa-trash-alt text-base md:text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+
+                <div id="speechData"
+                     data-room-type="cdha"
+                     data-room-id="@room.Tenphong"
+                     data-patient="@nextPatientNameToRead"
+                     data-room="@room.Tenphong"
+                     style="display: none;"></div>
+            </div>
+        }
+        else
+        {
+            bool isSplit2 = roomsData.Count == 2;
+            string gridClass = isSplit2
+                ? "grid grid-cols-1 md:grid-cols-2 gap-2 h-full"
+                : "grid grid-cols-2 grid-rows-2 gap-2 h-full";
+
+            <!-- ================= CHẾ ĐỘ CHIA 2 HOẶC CHIA 4 CDHA ================= -->
+            <div class="@gridClass">
+                @foreach (var rData in roomsData)
+                {
+                    var roomId = rData.Tenphong;
+                    var roomTitle = rData.Tenphong;
+                    var waitingList = rData.WaitingList ?? new List<HangChoKhamBenh.Web.Models.PatientWaitingDto>();
+                    string nextPatient = "";
+
+                    <div id="room-card-@roomId"
+                         class="room-container bg-white text-slate-900 rounded-xl shadow-sm border-2 border-slate-300 flex flex-col overflow-hidden h-full"
+                         data-room-type="cdha"
+                         data-room-id="@roomId"
+                         data-room-name="@roomTitle">
+
+                        <!-- Header ô phòng -->
+                        <div class="tv-quadrant-header bg-white px-3 py-1 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
+                            <h2 class="tv-split-room-title">
+                                @await Html.PartialAsync("_RoomTitle", roomTitle)
+                            </h2>
+
+                            <div class="tv-room-counts flex items-center gap-1.5 text-xs md:text-sm shrink-0">
+                                <div class="bg-red-50 border border-red-200 px-2 py-0.5 rounded text-center">
+                                    <span class="text-danger font-bold text-[10px] uppercase">Đang chờ:</span>
+                                    <span id="total-wait-@roomId" class="text-danger font-black text-sm md:text-base tabular-nums">@rData.TotalWaiting</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bảng ô phòng -->
+                        <div class="flex-grow overflow-y-auto no-scrollbar bg-white">
+                            <table class="patient-table patient-table--split w-full text-left border-collapse" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 8%;">
+                                    <col style="width: 58%;">
+                                    <col style="width: 12%;">
+                                    <col style="width: 22%;">
+                                </colgroup>
+                                <thead class="sticky top-0 bg-slate-200 text-blue-900 font-extrabold border-b-2 border-slate-300 shadow-sm z-10 text-sm md:text-xl uppercase">
+                                    <tr>
+                                        <th class="py-1.5 px-2 text-center whitespace-nowrap">STT</th>
+                                        <th class="py-1.5 px-2">Họ và Tên</th>
+                                        <th class="py-1.5 px-2 text-center whitespace-nowrap">Năm</th>
+                                        <th class="py-1.5 px-2 text-center whitespace-nowrap">Trạng Thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-@roomId" class="divide-y divide-slate-200">
+                                    @if (waitingList.Count == 0)
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center py-8 text-slate-400 font-bold text-base md:text-2xl italic">
+                                                Không có bệnh nhân chờ.
+                                            </td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        int waitCount = 0;
+                                        for (int pIdx = 0; pIdx < waitingList.Count; pIdx++)
+                                        {
+                                            var p = waitingList[pIdx];
+                                            bool isNear = false;
+                                            if (p.Dakham == 0)
+                                            {
+                                                waitCount++;
+                                                if (waitCount == 1)
+                                                {
+                                                    isNear = true;
+                                                    nextPatient = $"{p.Holot} {p.Ten}".Trim();
+                                                }
+                                            }
+                                            var pName = $"{p.Holot} {p.Ten}".Trim();
+                                            var pYear = !string.IsNullOrEmpty(p.DobStr) && p.DobStr != "Chưa cập nhật"
+                                                ? p.DobStr.Split('/').Last()
+                                                : "";
+                                            var pKey = (!string.IsNullOrEmpty(p.Makb) ? p.Makb : (!string.IsNullOrEmpty(p.Mabn) ? p.Mabn : $"{pName}_{p.DobStr}")).Trim();
+
+                                            <tr data-patient="@pName"
+                                                data-patient-key="@pKey"
+                                                data-makb="@(p.Makb ?? "")"
+                                                data-mabn="@(p.Mabn ?? "")"
+                                                data-room="@roomTitle"
+                                                data-room-type="cdha"
+                                                onclick="onRowClick(this)"
+                                                class="remote-item cursor-pointer @(isNear ? "bg-yellow-100 border-l-8 border-yellow-500 shadow-md font-black" : "border-b border-slate-200")" tabindex="0">
+                                                <td class="py-2.5 px-2 text-center font-bold text-blue-900 @(isNear ? "text-2xl md:text-4xl lg:text-5xl font-black" : "text-xl md:text-3xl font-bold")">
+                                                    @(pIdx + 1)
+                                                </td>
+                                                <td class="py-2.5 px-2 text-blue-900 overflow-hidden @(isNear ? "text-2xl md:text-4xl lg:text-5xl font-black tracking-tight" : "text-xl md:text-3xl lg:text-4xl font-extrabold")">
+                                                    <div class="patient-name-container flex flex-col items-start justify-center min-w-0">
+                                                        <span class="patient-name-text truncate max-w-full block">
+                                                            @((!string.IsNullOrEmpty(pName) ? pName : "Chưa cập nhật").ToUpper())
+                                                        </span>
+                                                        @if (!string.IsNullOrEmpty(p.PriorityLabel))
+                                                        {
+                                                            <span class="inline-block bg-yellow-100 text-yellow-800 text-xs md:text-sm px-1.5 py-0.5 rounded font-extrabold border border-yellow-300 ml-1 whitespace-nowrap truncate max-w-full">
+                                                                Ưu tiên: @p.PriorityLabel
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td class="py-2.5 px-2 text-center font-bold text-blue-900 overflow-hidden @(isNear ? "text-xl md:text-3xl lg:text-4xl font-black" : "text-lg md:text-2xl font-bold")">
+                                                    @pYear
+                                                </td>
+                                                <td class="py-2.5 px-2 text-center whitespace-nowrap overflow-hidden">
+                                                    <div class="flex items-center justify-center gap-1.5 flex-nowrap min-w-0">
+                                                        @if (isNear)
+                                                        {
+                                                            <span class="inline-flex items-center justify-center bg-red-600 text-white px-1.5 py-0.5 rounded text-xs font-black uppercase whitespace-nowrap">
+                                                                Tới Lượt
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="inline-flex items-center justify-center bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md text-xs font-bold border border-slate-300 whitespace-nowrap">
+                                                                Chờ
+                                                            </span>
+                                                        }
+                                                        <button type="button"
+                                                                title="Xóa/Ẩn khỏi màn hình"
+                                                                aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                                                                onclick="removePatientFromElement(this, event)"
+                                                                class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0"
+                                                                tabindex="0">
+                                                            <i class="fas fa-trash-alt text-xs"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="speech-track-@roomId"
+                             data-patient="@nextPatient"
+                             data-room="@roomTitle"
+                             style="display:none;"></div>
+                    </div>
+                }
+            </div>
+        }
+    </main>
+
+    <!-- Modal Cấu Hình Chia Phòng CDHA -->
+    <div id="roomModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white border-2 border-slate-300 rounded-2xl w-full max-w-2xl p-5 text-slate-900 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center pb-3 border-b-2 border-slate-200">
+                <h3 class="text-lg md:text-xl font-black text-brand flex items-center gap-2 uppercase">
+                    <i class="fas fa-th-large text-danger"></i> Cấu hình phòng CDHA hiển thị trên TV
+                </h3>
+                <button onclick="toggleRoomModal(false)" class="text-slate-400 hover:text-danger text-2xl font-bold cursor-pointer transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="my-3 flex-grow overflow-hidden flex flex-col">
+                <p class="text-xs md:text-sm text-slate-600 mb-2 font-medium">
+                    Tích chọn <strong>1 phòng</strong> (toàn màn hình), <strong>2 phòng</strong> (chia đôi) hoặc <strong>4 phòng</strong> (chia 4):
+                </p>
+
+                <div class="flex justify-between items-center mb-3 shrink-0">
+                    <span class="text-xs text-slate-500 font-semibold">Danh sách các phòng CDHA:</span>
+                    <button type="button" onclick="clearRoomSelection()" class="remote-item bg-red-50 hover:bg-red-100 text-danger text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors" tabindex="0">
+                        <i class="fas fa-trash-alt mr-1"></i> Bỏ chọn hết
+                    </button>
+                </div>
+
+                <!-- Checkbox list -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto p-2 bg-slate-50 rounded-xl border-2 border-slate-200 flex-grow">
+                    @foreach (var r in allAvailableRooms)
+                    {
+                        var isChecked = selectedRoomIds.Contains(r.Id) || (!string.IsNullOrEmpty(r.Alias) && selectedRoomIds.Contains(r.Alias));
+                        <label class="remote-item flex items-center gap-2 p-2 bg-white hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border border-slate-300 shadow-2xs" tabindex="0">
+                            <input type="checkbox" name="roomSelection" value="@(!string.IsNullOrEmpty(r.Alias) ? r.Alias : r.Id)" @(isChecked ? "checked" : "")
+                                   class="w-4 h-4 rounded text-brand focus:ring-brand cursor-pointer pointer-events-none">
+                            <span class="text-xs md:text-sm font-bold text-slate-800 truncate">@(r.DisplayName ?? r.Name)</span>
+                        </label>
+                    }
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-3 border-t-2 border-slate-200 shrink-0">
+                <span id="selectedCountText" class="text-xs md:text-sm text-brand font-black">
+                    Đã chọn: @selectedRoomIds.Count phòng
+                </span>
+                <div class="flex gap-2">
+                    <button onclick="toggleRoomModal(false)" class="remote-item px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs md:text-sm border border-slate-300 transition-colors cursor-pointer" tabindex="0">
+                        Hủy
+                    </button>
+                    <button onclick="applyRoomSelection('/cdha/room')" class="remote-item px-5 py-2 bg-brand hover:bg-blue-800 text-white rounded-xl font-black text-xs md:text-sm shadow-md transition-colors cursor-pointer" tabindex="0">
+                        Áp Dụng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Danh Sách Bệnh Nhân Đã Xóa / Ẩn -->
+    <div id="hiddenPatientsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white border-2 border-slate-300 rounded-2xl w-full max-w-xl p-5 text-slate-900 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center pb-3 border-b-2 border-slate-200">
+                <h3 class="text-base md:text-lg font-black text-danger flex items-center gap-2 uppercase">
+                    <i class="fas fa-user-slash"></i> Danh Sách Bệnh Nhân Đã Xóa / Ẩn
+                </h3>
+                <button onclick="toggleHiddenModal(false)" class="text-slate-400 hover:text-danger text-2xl font-bold cursor-pointer transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="my-3 flex-grow overflow-y-auto" id="hiddenPatientsListContainer">
+                <!-- Danh sách render qua JS -->
+            </div>
+
+            <div class="flex justify-between items-center pt-3 border-t-2 border-slate-200 shrink-0">
+                <button onclick="restoreAllHiddenPatients()" class="remote-item px-4 py-2 bg-green-50 hover:bg-green-600 hover:text-white text-green-700 rounded-xl font-black text-xs md:text-sm border border-green-300 transition-colors cursor-pointer" tabindex="0">
+                    <i class="fas fa-undo mr-1"></i> Khôi phục tất cả
+                </button>
+                <button onclick="toggleHiddenModal(false)" class="remote-item px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs md:text-sm border border-slate-300 transition-colors cursor-pointer" tabindex="0">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/signalr.min.js"></script>
+    <script src="/js/socket-signalr-adapter.js"></script>
+    <script src="/js/remoteNav.js"></script>
+    <script src="/js/queuePolicy.js"></script>
+    <script src="/js/audioQueue.js"></script>
+    <script src="/js/displayBoard.js"></script>
+</body>
+
+</html>

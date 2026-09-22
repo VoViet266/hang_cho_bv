@@ -1,10 +1,8 @@
-node_modules
 .env
 .env.production
 .git
 .gitignore
-test.js
-test_prisma.js
-public/audio/cache
 logs
-
+**/bin/
+**/obj/
+**/wwwroot/audio/cache
