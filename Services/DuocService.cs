@@ -96,6 +96,8 @@ public class DuocService : IDuocService
 
             var rawHangCho = await baseQuery
                 .OrderBy(h => h.Ngaynhap)
+                .ThenBy(h => h.Makb)
+                .ThenBy(h => h.Mabn)
                 .Select(h => new
                 {
                     h.Mabn,
@@ -104,7 +106,8 @@ public class DuocService : IDuocService
                     h.Dagiao,
                     h.Maba,
                     h.Ngaynhap,
-                    h.Ngaygiao
+                    h.Ngaygiao,
+                    h.Taikhoan
                 })
                 .ToListAsync();
 
@@ -144,6 +147,7 @@ public class DuocService : IDuocService
                     h.Maba,
                     h.Ngaynhap,
                     h.Ngaygiao,
+                    Taikhoan = h.Taikhoan,
                     Holot = holot,
                     Ten = ten,
                     Ngaysinh = ngaysinh,
@@ -156,7 +160,10 @@ public class DuocService : IDuocService
                 .GroupBy(x => !string.IsNullOrWhiteSpace(x.Makb) ? x.Makb.Trim() : (!string.IsNullOrWhiteSpace(x.Mabn) ? x.Mabn.Trim() : Guid.NewGuid().ToString()))
                 .Select(g =>
                 {
-                    var first = g.OrderBy(x => x.Ngaynhap ?? DateTime.MaxValue).First();
+                    var first = g.OrderBy(x => x.Ngaynhap ?? DateTime.MaxValue)
+                                 .ThenBy(x => x.Makb)
+                                 .ThenBy(x => x.Mabn)
+                                 .First();
                     var maxKhochan = g.Max(x => x.Khochan);
                     var maxDagiao = g.Max(x => x.Dagiao);
                     return new
@@ -168,6 +175,7 @@ public class DuocService : IDuocService
                         first.Maba,
                         first.Ngaynhap,
                         first.Ngaygiao,
+                        Taikhoan = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "",
                         first.Holot,
                         first.Ten,
                         first.Ngaysinh,
@@ -176,6 +184,8 @@ public class DuocService : IDuocService
                     };
                 })
                 .OrderBy(x => x.Ngaynhap ?? DateTime.MaxValue)
+                .ThenBy(x => x.Makb)
+                .ThenBy(x => x.Mabn)
                 .ToList();
 
             // Nếu là Dịch vụ: tra cứu số tiền từ chungtu (theo makh/mabn) và tổng lại tất cả toa dịch vụ (khochan = 13)
@@ -336,7 +346,8 @@ public class DuocService : IDuocService
                     SoTien = soTien,
                     SoTienStr = soTienStr,
                     DaThu = isDangSoan,
-                    Dagiao = item.Dagiao
+                    Dagiao = item.Dagiao,
+                    OCua = item.Taikhoan ?? ""
                 });
             }
 

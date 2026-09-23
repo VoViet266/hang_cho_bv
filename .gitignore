@@ -12,9 +12,11 @@ obj/
 .env.production
 .env.local
 
+appsettings.json
+appsettings.*.json
+appsetting*.json
+*.bak
 
-appsetting.Development.json
-appsetting.json
 # Logs and runtime caches
 logs/
 backup/

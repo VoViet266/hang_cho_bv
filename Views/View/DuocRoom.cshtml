@@ -50,8 +50,8 @@
                 }
 
                 50% {
-                    transform: scale(1.04);
-                    opacity: 0.9;
+                    transform: scale(1.02);
+                    opacity: 0.95;
                 }
             }
 
@@ -72,9 +72,9 @@
                 overflow: visible !important;
                 text-overflow: clip !important;
                 white-space: nowrap !important;
-                font-size: clamp(12px, 1.05vw, 17px) !important;
+                font-size: clamp(14px, 1.25vw, 22px) !important;
                 font-weight: 900 !important;
-                padding: 8px 4px !important;
+                padding: 10px 4px !important;
                 letter-spacing: 0.01em !important;
                 text-align: center !important;
                 color: #1e3a8a !important;
@@ -82,7 +82,7 @@
 
             .duoc-patient-table th:nth-child(2) {
                 text-align: left !important;
-                padding-left: 10px !important;
+                padding-left: 12px !important;
             }
 
             .duoc-patient-table td {
@@ -97,23 +97,22 @@
                 min-width: 0 !important;
             }
 
-            /* Tên bệnh nhân: Chữ TO ĐẬM RÕ, nhìn xa được */
             .duoc-patient-table .patient-name-text {
                 display: inline-block !important;
                 white-space: normal !important;
                 word-break: break-word !important;
                 overflow: visible !important;
                 text-overflow: clip !important;
-                line-height: 1.2 !important;
+                line-height: 1.18 !important;
                 max-width: 100% !important;
-                font-size: clamp(16px, 1.45vw, 24px) !important;
+                font-size: clamp(23px, 2.1vw, 48px) !important;
                 font-weight: 900 !important;
+                letter-spacing: -0.01em !important;
                 color: #1e3a8a !important;
             }
 
-            /* STT to rõ ràng */
             .duoc-patient-table td.cell-stt {
-                font-size: clamp(20px, 1.9vw, 34px) !important;
+                font-size: clamp(24px, 2.2vw, 40px) !important;
                 font-weight: 900 !important;
                 text-align: center !important;
                 white-space: nowrap !important;
@@ -124,9 +123,8 @@
                 padding-right: 2px !important;
             }
 
-            /* Năm sinh to rõ */
             .duoc-patient-table td.cell-namsinh {
-                font-size: clamp(14px, 1.25vw, 20px) !important;
+                font-size: clamp(16px, 1.5vw, 32px) !important;
                 font-weight: 800 !important;
                 text-align: center !important;
                 white-space: nowrap !important;
@@ -137,18 +135,110 @@
                 padding-right: 2px !important;
             }
 
-            /* Badge tiền */
-            .duoc-patient-table .badge-money {
-                font-size: clamp(12px, 1.1vw, 17px) !important;
+            /* --- CHẾ ĐỘ 1 BẢNG (KHI CHƯA TRÀN): CHỮ SIÊU TO, ĐẬM NÉT, DỄ ĐỌC TỪ XA --- */
+            .duoc-table-single th {
+                font-size: clamp(16px, 1.45vw, 25px) !important;
                 font-weight: 900 !important;
-                padding: 3px 6px !important;
+                padding: 12px 6px !important;
+                letter-spacing: 0.02em !important;
+                text-align: center !important;
+                color: #1e3a8a !important;
             }
 
-            /* Badge trạng thái */
-            .duoc-patient-table .badge-status {
-                font-size: clamp(11px, 1vw, 15px) !important;
+            .duoc-table-single th:nth-child(2) {
+                text-align: left !important;
+                padding-left: 14px !important;
+            }
+
+            .duoc-table-single .patient-name-text {
+                font-size: clamp(28px, 2.65vw, 45px) !important;
+                color: #1e3a8a !important;
+            }
+
+            .duoc-table-single td.cell-stt {
+                font-size: clamp(32px, 3.2vw, 54px) !important;
+            }
+
+            .duoc-table-single td.cell-namsinh {
+                font-size: clamp(20px, 1.9vw, 32px) !important;
+            }
+
+            .duoc-table-single .badge-money {
+                font-size: clamp(18px, 1.6vw, 28px) !important;
                 font-weight: 900 !important;
-                padding: 3px 6px !important;
+                padding: 5px 12px !important;
+            }
+
+            .duoc-table-single .badge-ocua {
+                font-size: clamp(18px, 1.6vw, 28px) !important;
+                font-weight: 900 !important;
+                padding: 5px 12px !important;
+            }
+
+            .duoc-table-single .badge-status {
+                font-size: clamp(16px, 1.4vw, 24px) !important;
+                font-weight: 900 !important;
+                padding: 5px 12px !important;
+            }
+
+            /* --- CHẾ ĐỘ 2 BẢNG (KHI FULL TRÀN MÀN HÌNH): CHỮ TO RÕ, CÂN ĐỐI 2 BÊN --- */
+            .duoc-table-split th {
+                font-size: clamp(12px, 1.0vw, 16px) !important;
+                font-weight: 900 !important;
+                padding: 6px 2px !important;
+                letter-spacing: 0 !important;
+                text-align: center !important;
+                color: #1e3a8a !important;
+                white-space: nowrap !important;
+            }
+
+            .duoc-table-split th:nth-child(2) {
+                text-align: left !important;
+                padding-left: 10px !important;
+            }
+
+            .duoc-table-split .patient-name-text {
+                font-size: clamp(23px, 2.0vw, 34px) !important;
+                color: #1e3a8a !important;
+            }
+
+            .duoc-table-split td.cell-stt {
+                font-size: clamp(25px, 2.3vw, 40px) !important;
+            }
+
+            .duoc-table-split td.cell-namsinh {
+                font-size: clamp(17px, 1.5vw, 25px) !important;
+            }
+
+            .duoc-table-split .badge-money {
+                font-size: clamp(14px, 1.25vw, 21px) !important;
+                font-weight: 900 !important;
+                padding: 3px 8px !important;
+            }
+
+            .duoc-table-split .badge-ocua {
+                font-size: clamp(14px, 1.25vw, 21px) !important;
+                font-weight: 900 !important;
+                padding: 3px 8px !important;
+            }
+
+            .duoc-table-split .badge-status {
+                font-size: clamp(11px, 0.95vw, 15px) !important;
+                font-weight: 900 !important;
+                padding: 2px 6px !important;
+            }
+
+            /* Tự động lấp đầy 100% chiều cao bảng, chia đều các hàng, không để lại khoảng trống thừa ở đáy */
+            .duoc-patient-table.table-fill-height {
+                height: 100% !important;
+            }
+
+            .duoc-patient-table.table-fill-height tbody {
+                height: 100% !important;
+            }
+
+            .duoc-patient-table.table-fill-height tbody tr {
+                height: 1% !important;
             }
     </style>
 </head>
@@ -233,23 +323,23 @@
         <div id="paginationContainer" class="flex-grow overflow-hidden flex flex-col">
             <!-- SSR fallback: hiển thị bảng tĩnh (JS sẽ replace sau khi đo chiều cao) -->
             <div id="ssrTableWrapper"
-                 class="room-container flex-grow overflow-y-auto bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm">
-                <table class="patient-table patient-table--single w-full text-left border-collapse"
-                       style="table-layout: fixed;">
+                 class="room-container flex-grow overflow-hidden flex flex-col bg-white border-2 border-slate-300 rounded-xl shadow-sm">
+                <table
+                    class="w-full h-full border-collapse table-fixed select-none duoc-patient-table duoc-table-single">
                     <colgroup>
                         <col style="width: 7%;">
-                        <col style="width: 43%;">
-                        <col style="width: 10%;">
+                        <col style="width: 45%;">
+                        <col style="width: 12%;">
                         <col style="width: 18%;">
-                        <col style="width: 22%;">
+                        <col style="width: 18%;">
                     </colgroup>
                     <thead
                         class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-xl md:text-2xl">
                         <tr>
                             <th class="py-3 px-3 text-center">STT</th>
-                            <th class="py-3 px-4">Họ và Tên</th>
+                            <th class="py-3 px-4 text-left">Họ và Tên</th>
                             <th class="py-3 px-3 text-center">Năm Sinh</th>
-                            <th class="py-3 px-3 text-center">Loại / Tiền</th>
+                            <th class="py-3 px-3 text-center">Số Tiền</th>
                             <th class="py-3 px-3 text-center">Trạng Thái</th>
                         </tr>
                     </thead>
@@ -278,7 +368,7 @@
 
                                 <tr data-patient="@currentPatientName" data-makb="@(p.Makb ?? "")" data-mabn="@(p.Mabn ?? "")"
                                     data-room-type="duoc"
-                                    class="remote-item group cursor-pointer @(isNear ? "bg-yellow-100 border-l-[10px] border-yellow-500 shadow-md" : (pIsBhyt ? "border-l-[6px] border-blue-400 bg-blue-50/60" : "border-l-[6px] border-emerald-400 bg-emerald-50/50")) border-b border-slate-200"
+                                    class="remote-item group @(isNear ? "bg-yellow-100 border-l-[10px] border-yellow-500 shadow-md" : (pIsBhyt ? "border-l-[6px] border-blue-400 bg-blue-50/60" : "border-l-[6px] border-emerald-400 bg-emerald-50/50")) border-b border-slate-200"
                                     tabindex="0">
                                     <td
                                         class="py-4 px-3 font-bold text-center text-blue-900 @(isNear ? "text-4xl md:text-6xl font-black" : "text-3xl md:text-5xl font-bold")">
@@ -286,11 +376,9 @@
                                     </td>
                                     <td
                                         class="py-4 px-4 text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black tracking-tight" : "text-2xl md:text-4xl font-black")">
-                                        <div class="patient-name-container cursor-pointer select-none group flex items-center min-w-0"
-                                             onclick="speakPatientByName('@currentPatientName', '@p.TrangThai')"
-                                             title="Nhấp vào tên để phát âm thanh gọi @currentPatientName">
+                                        <div class="patient-name-container select-none flex items-center min-w-0">
                                             <span
-                                                class="patient-name-text group-hover:text-blue-700 transition whitespace-normal break-words leading-tight max-w-full block">
+                                                class="patient-name-text whitespace-normal break-words leading-tight max-w-full block">
                                                 @((!string.IsNullOrEmpty(currentPatientName) ? currentPatientName : "Chưa cập nhật").ToUpper())
                                             </span>
                                         </div>
@@ -435,19 +523,20 @@
 
                 // Trạng thái âm thanh: Mặc định luôn BẬT
                 let isSoundEnabled = localStorage.getItem("duocSoundEnabled") !== "false";
-                // Trạng thái tự động gọi loa: Mặc định luôn BẬT
-                let isAutoSpeakEnabled = localStorage.getItem("duocAutoSpeakEnabled") !== "false";
+                // Trạng thái tự động gọi loa: Mặc định TẮT (để quầy bấm chọn cửa phát loa)
+                let isAutoSpeakEnabled = localStorage.getItem("duocAutoSpeakEnabled") === "true";
                 let audioUnlocked = false;
 
                 // Key lưu vết lần gọi gần nhất
                 let lastCalledPatientKey = '@(queueList.Count > 0 ? $"{(queueList[0].Makb ?? queueList[0].Mabn ?? "")}_{queueList[0].TrangThai ?? ""}" : "")';
                 let currentTopPatient = @Html.Raw(queueList.Count > 0 ? System.Text.Json.JsonSerializer.Serialize(new
                     {
-                                                        tenBenhNhan = queueList[0].TenBenhNhan,
-                                                        trangThai = queueList[0].TrangThai,
-                                                        makb = queueList[0].Makb,
-                                                        mabn = queueList[0].Mabn,
-                                                        isBhyt = queueList[0].IsBhyt
+                                                                                tenBenhNhan = queueList[0].TenBenhNhan,
+                                                                                trangThai = queueList[0].TrangThai,
+                                                                                makb = queueList[0].Makb,
+                                                                                mabn = queueList[0].Mabn,
+                                                                                isBhyt = queueList[0].IsBhyt,
+                                                                                oCua = queueList[0].OCua
                     }) : "null");
 
                 // Quản lý bệnh nhân ẩn (dùng key "duoc_hidden_all" khi mode=all)
@@ -540,12 +629,12 @@
                 }
 
                 // Đọc trực tiếp khi nhấp vào ĐÚNG TÊN bệnh nhân
-                function speakPatientByName(name, status) {
+                function speakPatientByName(name, status, ocua) {
                     if (!name) return;
                     unlockAudio();
                     if (!isSoundEnabled) { toggleSound(true); }
                     audioQueue.clear();
-                    speakTargetPatient({ tenBenhNhan: name, trangThai: status || '', isBhyt: false });
+                    speakTargetPatient({ tenBenhNhan: name, trangThai: status || '', isBhyt: false, oCua: ocua || '' });
                 }
 
                 // Đọc giọng nói gọi tên bệnh nhân bằng TTS Tiếng Việt chuẩn
@@ -554,17 +643,7 @@
                     const name = (p.tenBenhNhan || '').trim();
                     if (!name) return;
 
-                    let targetLoc;
-                    if (p.isBhyt) {
-                        targetLoc = "quầy phát thuốc bảo hiểm";
-                    } else {
-                        if (p.trangThai === "Chờ thu") {
-                            targetLoc = "quầy thu tiền";
-                        } else {
-                            targetLoc = "quầy phát thuốc";
-                        }
-                    }
-
+                    const targetLoc = p.oCua ? `ô số ${p.oCua}` : "quầy";
                     const speakText = `Mời bệnh nhân, ${name}, đến ${targetLoc}`;
                     audioQueue.enqueue(speakText);
                 }
@@ -625,21 +704,6 @@
                 let currentActiveList = [];
 
                 
-                function calculateMaxRowsPerCol() {
-                    const container = document.getElementById('paginationContainer');
-                    if (!container) return 10;
-
-                    // Chiều cao thực tế khả dụng của vùng chứa
-                    const containerH = container.clientHeight || (window.innerHeight - 130);
-                    const theadH = 46;
-                    const availH = containerH - theadH - 10;
-
-                    // Chiều cao mục tiêu mỗi hàng (~68px) để chữ to rõ nhìn xa từ 5 - 10m
-                    const targetRowH = 68;
-                    const rows = Math.floor(availH / targetRowH);
-                    return Math.max(6, rows); // Tối thiểu 6 hàng
-                }
-
                 function buildSplitView(list) {
                     const container = document.getElementById('paginationContainer');
                     if (!container) return;
@@ -647,97 +711,125 @@
 
                     if (!list || list.length === 0) {
                         container.innerHTML = `
-                            <div class="room-container flex-grow bg-white border-2 border-slate-300 rounded-xl flex items-center justify-center shadow-sm h-full">
-                                <p class="text-center text-slate-400 text-2xl md:text-4xl font-bold italic">Không có bệnh nhân chờ lĩnh thuốc.</p>
-                            </div>`;
+                                            <div class="room-container flex-grow bg-white border-2 border-slate-300 rounded-xl flex items-center justify-center shadow-sm h-full">
+                                                <p class="text-center text-slate-400 text-2xl md:text-4xl font-bold italic">Không có bệnh nhân chờ lĩnh thuốc.</p>
+                                            </div>`;
                         return;
                     }
 
                     currentActiveList = list;
 
-                    // Tính toán số dòng hiển thị FULL vừa vặn chiều cao màn hình cho Cột 1
-                    const maxRowsPerCol = calculateMaxRowsPerCol();
+                    // BƯỚC 1: Render ở chế độ BÌNH THƯỜNG (1 bảng duy nhất toàn màn hình)
+                    container.innerHTML = `
+                                        <div id="singleBoardWrapper" class="room-container flex-grow w-full bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm overflow-hidden h-full">
+                                            ${buildTableHtml(list, false, false)}
+                                        </div>`;
 
-                    // Nếu danh sách <= 6 người: hiển thị 1 bảng duy nhất cực to toàn màn hình
-                    // Nếu danh sách > 6 người: chia 2 cột. Cột 1 điền FULL, nếu thiếu thì dôi dư bao nhiêu nhảy sang Cột 2 bấy nhiêu!
-                    const isSplit = list.length > 6;
+                    const singleWrapper = document.getElementById('singleBoardWrapper');
+                    if (!singleWrapper) return;
 
-                    if (!isSplit) {
-                        // <= 6 bệnh nhân: 1 bảng duy nhất cực to toàn màn hình
-                        container.innerHTML = `
-                            <div class="room-container flex-grow w-full bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm overflow-hidden h-full">
-                                ${buildTableHtml(list, false)}
-                            </div>`;
-                    } else {
-                        // > 6 bệnh nhân: Hiển thị 2 bên
-                        // Cột 1 hiển thị FULL đến hết sức chứa chiều cao màn hình (maxRowsPerCol)
-                        const col1 = list.slice(0, maxRowsPerCol);
-                        // Phần dôi dư (nếu danh sách vượt quá sức chứa Cột 1) sẽ nhảy sang Cột 2: dư nhiêu nhảy nhiêu!
-                        const col2 = list.slice(maxRowsPerCol);
+                    // BƯỚC 2: Kiểm tra xem 1 bảng bình thường có bị tràn (FULL) chiều cao không
+                    const scrollBox = singleWrapper.querySelector('.overflow-y-auto') || singleWrapper;
+                    const isFullAndOverflow = scrollBox.scrollHeight > (scrollBox.clientHeight + 4);
 
-                        container.innerHTML = `
-                            <div class="flex-grow flex flex-row gap-3 h-full overflow-hidden w-full min-w-0">
-                                <!-- CỘT 1 (Điền FULL chiều cao) -->
-                                <div class="room-container flex-1 min-w-0 bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm overflow-hidden h-full">
-                                    ${buildTableHtml(col1, true)}
-                                </div>
-                                <!-- CỘT 2 (Nhận phần dôi dư: dư nhiêu nhảy nhiêu) -->
-                                <div class="room-container flex-1 min-w-0 bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm overflow-hidden h-full">
-                                    ${buildTableHtml(col2, true)}
-                                </div>
-                            </div>`;
+                    if (!isFullAndOverflow) {
+                        // CHƯA FULL -> VẪN HIỂN THỊ BÌNH THƯỜNG (1 bảng toàn màn hình chữ siêu to)
+                        return;
                     }
+
+                    // BƯỚC 3: ĐÃ FULL MÀN HÌNH -> MỚI NHẢY SANG 2 BÊN!
+                    // Render tạm vào Cột 1 để đo chính xác số hàng vừa khít từ trên xuống sát mép đáy
+                    container.innerHTML = `
+                                        <div class="flex-grow flex flex-row gap-3 h-full overflow-hidden w-full min-w-0">
+                                            <!-- CỘT 1 -->
+                                            <div id="col1Container" class="room-container flex-1 min-w-0 bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm overflow-hidden h-full">
+                                                ${buildTableHtml(list, true, false)}
+                                            </div>
+                                            <!-- CỘT 2 -->
+                                            <div id="col2Container" class="room-container flex-1 min-w-0 bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm overflow-hidden h-full">
+                                                ${buildTableHtml([], true, false)}
+                                            </div>
+                                        </div>`;
+
+                    const col1Box = document.getElementById('col1Container');
+                    const col2Box = document.getElementById('col2Container');
+                    if (!col1Box || !col2Box) return;
+
+                    // Đo mép đáy của Cột 1
+                    const maxBottom = col1Box.getBoundingClientRect().bottom - 4;
+                    const rows = col1Box.querySelectorAll('tbody tr[data-patient]');
+
+                    let fitCount = 0;
+                    for (let i = 0; i < rows.length; i++) {
+                        const rect = rows[i].getBoundingClientRect();
+                        if (rect.bottom <= maxBottom) {
+                            fitCount++;
+                        } else {
+                            break; // Dòng này vượt quá đáy -> dừng lại, các dòng sau tự nhảy sang Cột 2
+                        }
+                    }
+
+                    if (fitCount === 0 && list.length > 0) fitCount = 1;
+
+                    // Phân bổ: Cột 1 điền FULL, phần dôi dư nhảy sang Cột 2 (dư nhiêu nhảy nhiêu)
+                    const col1Data = list.slice(0, fitCount);
+                    const col2Data = list.slice(fitCount);
+
+                    col1Box.innerHTML = buildTableHtml(col1Data, true, true);
+                    col2Box.innerHTML = buildTableHtml(col2Data, true, col2Data.length >= fitCount);
                 }
 
-                function buildTableHtml(rows, isSplit) {
-                    // Padding thoáng đãng để dòng cao ráo, chữ to
-                    const pyClass = isSplit ? 'py-3 md:py-3.5' : 'py-4 md:py-5';
+                function buildTableHtml(rows, isSplit, fillHeight = false) {
+                    // Padding thoáng đãng, hàng cao ráo, chữ to
+                    const pyClass = isSplit ? 'py-2 md:py-2.5' : 'py-2.5 md:py-3.5';
+                    const modeClass = isSplit ? 'duoc-table-split' : 'duoc-table-single';
 
-                    // Tỷ lệ cột khi chia đôi màn hình:
-                    // STT 7%, Họ và Tên 44%, Năm Sinh 12%, Loại/Tiền 18%, Trạng Thái 19%
+                    // Tỷ lệ cột khi chia đôi màn hình vs 1 màn hình:
                     const colWidths = isSplit
-                        ? `<col style="width: 7%;">
-                           <col style="width: 44%;">
-                           <col style="width: 12%;">
-                           <col style="width: 18%;">
-                           <col style="width: 19%;">`
+                        ? `<col style="width: 8%;">
+                                   <col style="width: 42%;">
+                                   <col style="width: 14%;">
+                                   <col style="width: 18%;">
+                                   <col style="width: 18%;">`
                         : `<col style="width: 7%;">
-                           <col style="width: 45%;">
-                           <col style="width: 10%;">
-                           <col style="width: 18%;">
-                           <col style="width: 20%;">`;
+                                   <col style="width: 45%;">
+                                   <col style="width: 12%;">
+                                   <col style="width: 18%;">
+                                   <col style="width: 18%;">`;
 
                     let tbodyContent = '';
                     if (!rows || rows.length === 0) {
                         tbodyContent = `<tr>
-                            <td colspan="5" class="text-center py-16 text-slate-300 italic font-bold text-lg">
-                                Chưa có thêm bệnh nhân
-                            </td>
-                        </tr>`;
+                                            <td colspan="5" class="text-center py-16 text-slate-300 italic font-bold text-lg">
+                                                Chưa có thêm bệnh nhân
+                                            </td>
+                                        </tr>`;
                     } else {
                         tbodyContent = rows.map(p => buildRowHtml(p, isSplit, pyClass)).join('');
                     }
 
+                    const fillClass = fillHeight ? 'table-fill-height' : '';
+
                     return `
-                        <div class="flex-grow overflow-y-auto no-scrollbar w-full">
-                            <table class="patient-table duoc-patient-table w-full text-left border-collapse" style="table-layout: fixed;">
-                                <colgroup>
-                                    ${colWidths}
-                                </colgroup>
-                                <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-black text-xs md:text-sm">
-                                    <tr>
-                                        <th class="py-2.5 px-1 text-center font-black">STT</th>
-                                        <th class="py-2.5 px-3 text-left font-black">Họ và Tên</th>
-                                        <th class="py-2.5 px-1 text-center font-black">Năm Sinh</th>
-                                        <th class="py-2.5 px-1 text-center font-black">Loại / Tiền</th>
-                                        <th class="py-2.5 px-1 text-center font-black">Trạng Thái</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-200">
-                                    ${tbodyContent}
-                                </tbody>
-                            </table>
-                        </div>`;
+                                        <div class="flex-grow overflow-y-auto no-scrollbar w-full flex flex-col h-full">
+                                            <table class="patient-table duoc-patient-table ${modeClass} ${fillClass} w-full text-left border-collapse" style="table-layout: fixed;">
+                                                <colgroup>
+                                                    ${colWidths}
+                                                </colgroup>
+                                                <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-black">
+                                                    <tr>
+                                                        <th class="text-center font-black">STT</th>
+                                                        <th class="text-left font-black">Họ và Tên</th>
+                                                        <th class="text-center font-black">Năm Sinh</th>
+                                                        <th class="text-center font-black">Loại / Tiền</th>
+                                                        <th class="text-center font-black">Trạng Thái</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-200">
+                                                    ${tbodyContent}
+                                                </tbody>
+                                            </table>
+                                        </div>`;
                 }
 
                 function buildRowHtml(p, isSplit, pyClass) {
@@ -759,83 +851,74 @@
                         rowClass = 'border-l-[4px] md:border-l-[6px] border-emerald-400 bg-emerald-50/50 border-b border-slate-200';
                     }
 
-                    // CỠ CHỮ TO RÕ NHÌN XA ĐƯỢC
-                    const sttFontClass = isSplit ? 'text-2xl md:text-3xl lg:text-4xl font-black' : 'text-3xl md:text-5xl font-black';
-                    const nameFontClass = isSplit ? 'text-base md:text-lg lg:text-xl font-black' : 'text-xl md:text-2xl lg:text-3xl font-black';
-                    const namSinhFontClass = isSplit ? 'text-sm md:text-base lg:text-lg font-bold' : 'text-lg md:text-2xl font-bold';
-                    const loaiFontClass = isSplit ? 'text-xs md:text-sm lg:text-base font-black font-mono' : 'text-sm md:text-xl font-black font-mono';
-                    const badgeFontClass = isSplit ? 'text-xs md:text-sm font-black' : 'text-sm md:text-base font-black';
-
                     // Cột Loại / Tiền
                     let col4Html = '';
                     if (!pIsBhyt) {
                         col4Html = `<td class="${pyClass} px-1 text-center">
-                            <span class="inline-block rounded border font-black font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs px-2.5 py-1 ${loaiFontClass}">
-                                ${escapeHtml(p.soTienStr || '—')}
-                            </span>
-                        </td>`;
+                                            <span class="badge-money inline-block rounded border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
+                                                ${escapeHtml(p.soTienStr || '—')}
+                                            </span>
+                                        </td>`;
                     } else {
                         col4Html = `<td class="${pyClass} px-1 text-center">
-                            <span class="inline-block rounded border font-bold uppercase whitespace-nowrap bg-blue-100 text-blue-800 border-blue-300 shadow-2xs px-2.5 py-1 ${loaiFontClass}">
-                                BHYT
-                            </span>
-                        </td>`;
+                                            <span class="badge-money inline-block rounded border p-1 uppercase whitespace-nowrap bg-blue-100 text-blue-800 border-blue-300 shadow-2xs">
+                                                BHYT
+                                            </span>
+                                        </td>`;
                     }
 
                     // Cột Trạng Thái
                     let col5Badge = '';
                     if (isNear) {
                         if (!pIsBhyt && p.trangThai === "Chờ thu") {
-                            col5Badge = `<span class="inline-block bg-amber-600 text-white font-black uppercase whitespace-nowrap shadow-sm animate-pulse-red rounded px-2.5 py-1 ${badgeFontClass}">TỚI LƯỢT THU</span>`;
+                            col5Badge = `<span class="badge-status inline-block bg-amber-600 text-white font-black uppercase whitespace-nowrap shadow-sm animate-pulse-red rounded">TỚI LƯỢT</span>`;
                         } else {
-                            col5Badge = `<span class="inline-block bg-red-600 text-white font-black uppercase whitespace-nowrap shadow-sm animate-pulse-red rounded px-2.5 py-1 ${badgeFontClass}">TỚI LƯỢT</span>`;
+                            col5Badge = `<span class="badge-status inline-block bg-red-600 text-white font-black uppercase whitespace-nowrap shadow-sm animate-pulse-red rounded">TỚI LƯỢT</span>`;
                         }
                     } else {
                         if (!pIsBhyt) {
                             if (p.trangThai === "Chờ thu") {
-                                col5Badge = `<span class="inline-block bg-amber-50 text-amber-800 border border-amber-200 font-bold whitespace-nowrap rounded px-2 py-0.5 shadow-2xs ${badgeFontClass}">Chờ thu</span>`;
+                                col5Badge = `<span class="badge-status p-1 inline-block bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap rounded shadow-2xs">Chờ thu</span>`;
                             } else {
-                                col5Badge = `<span class="inline-block bg-blue-50 text-blue-800 border border-blue-200 font-bold whitespace-nowrap rounded px-2 py-0.5 shadow-2xs ${badgeFontClass}">Đang soạn</span>`;
+                                col5Badge = `<span class="badge-status p-1 inline-block bg-blue-50 text-blue-800 border border-blue-200 whitespace-nowrap rounded shadow-2xs">Đang soạn</span>`;
                             }
                         } else {
-                            col5Badge = `<span class="inline-block bg-slate-100 text-slate-600 border border-slate-200 font-bold whitespace-nowrap rounded px-2 py-0.5 shadow-2xs ${badgeFontClass}">${escapedStatus || 'Chờ lượt'}</span>`;
+                            col5Badge = `<span class="badge-status inline-block bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap rounded shadow-2xs">${escapedStatus || 'Chờ lượt'}</span>`;
                         }
                     }
 
                     return `<tr data-patient="${escapedName}" data-makb="${makb}" data-mabn="${mabn}"
-                                data-room-type="duoc"
-                                class="remote-item group cursor-pointer ${rowClass}"
-                                tabindex="0">
-                            <td class="cell-stt ${pyClass} px-1 text-center text-blue-900 ${sttFontClass}">
-                                ${p.stt}
-                            </td>
-                            <td class="${pyClass} px-3 text-blue-900">
-                                <div class="patient-name-container cursor-pointer select-none group flex items-center min-w-0"
-                                     onclick="speakPatientByName('${escapedName.replace(/'/g, "\\'")}', '${escapedStatus.replace(/'/g, "\\'")}')"
-                                     title="Nhấp vào tên để phát âm thanh gọi ${escapedName}">
-                                    <span class="patient-name-text group-hover:text-blue-700 transition uppercase whitespace-normal break-words leading-tight max-w-full ${nameFontClass} ${isNear ? 'text-red-700' : 'text-blue-900'}">
-                                        ${escapedName.toUpperCase()}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="cell-namsinh ${pyClass} px-1 text-center text-blue-900 ${namSinhFontClass}">
-                                ${namSinh}
-                            </td>
-                            ${col4Html}
-                            <td class="${pyClass} px-1 text-center">
-                                <div class="flex items-center justify-center gap-1.5 flex-nowrap min-w-0">
-                                    ${col5Badge}
-                                    <button type="button"
-                                            title="Ẩn bệnh nhân khỏi màn hình"
-                                            aria-label="Ẩn bệnh nhân"
-                                            onclick="hidePatientRow(this, event)"
-                                            class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition cursor-pointer shrink-0 opacity-40 group-hover:opacity-100 hover:opacity-100"
-                                            tabindex="0">
-                                        <i class="fas fa-trash-alt text-xs"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>`;
+                                                data-room-type="duoc"
+                                                class="remote-item group ${rowClass}"
+                                                tabindex="0">
+                                            <td class="cell-stt ${pyClass} px-1 text-center">
+                                                ${p.stt}
+                                            </td>
+                                            <td class="${pyClass} px-3 text-blue-900">
+                                                <div class="patient-name-container select-none flex items-center min-w-0">
+                                                    <span class="patient-name-text uppercase whitespace-normal break-words leading-tight max-w-full ${isNear ? 'text-red-700' : 'text-blue-900'}">
+                                                        ${escapedName.toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="cell-namsinh ${pyClass} px-1 text-center">
+                                                ${namSinh}
+                                            </td>
+                                            ${col4Html}
+                                            <td class="${pyClass} px-1 text-center">
+                                                <div class="flex items-center justify-center gap-1.5 flex-nowrap min-w-0">
+                                                    ${col5Badge}
+                                                    <button type="button"
+                                                            title="Ẩn bệnh nhân khỏi màn hình"
+                                                            aria-label="Ẩn bệnh nhân"
+                                                            onclick="hidePatientRow(this, event)"
+                                                            class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition cursor-pointer shrink-0 opacity-40 group-hover:opacity-100 hover:opacity-100"
+                                                            tabindex="0">
+                                                        <i class="fas fa-trash-alt text-xs"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>`;
                 }
 
                 // Tự động tính toán lại và chia cột khi thay đổi kích thước màn hình / F11
@@ -848,8 +931,6 @@
                         }
                     }, 100);
                 });
-
-                // (không còn dùng goToPage / timer cho pagination)
 
                 // ═══════════════ SIGNALR REALTIME & POLLING FALLBACK ═══════════════
                 let hubConnection = null;
@@ -874,6 +955,20 @@
                                 fetchQueueData();
                             }
                         }
+                    });
+
+                    // Lắng nghe lệnh phát loa trực tiếp khi quầy bấm chọn ô cửa
+                    hubConnection.on("duoc_trigger_speak", (payload) => {
+                        if (!payload || !payload.hoTen) return;
+                        unlockAudio();
+                        isSoundEnabled = true;
+                        localStorage.setItem("duocSoundEnabled", "true");
+                        updateSoundIcon();
+                        audioQueue.clear();
+
+                        const targetLoc = payload.oCua ? `ô số ${payload.oCua}` : "quầy";
+                        const speakText = `Mời bệnh nhân, ${payload.hoTen}, đến ${targetLoc}`;
+                        audioQueue.enqueue(speakText);
                     });
 
                     async function startHub() {
@@ -1010,27 +1105,27 @@
 
                     if (hiddenPatients.length === 0) {
                         container.innerHTML = `
-                                                <div class="text-center py-8 text-slate-400 font-bold italic">
-                                                    <i class="fas fa-info-circle text-2xl mb-2 block text-slate-300"></i>
-                                                    Không có bệnh nhân nào bị ẩn gần đây.
-                                                </div>`;
+                                                                <div class="text-center py-8 text-slate-400 font-bold italic">
+                                                                    <i class="fas fa-info-circle text-2xl mb-2 block text-slate-300"></i>
+                                                                    Không có bệnh nhân nào bị ẩn gần đây.
+                                                                </div>`;
                         return;
                     }
 
                     let html = '<div class="divide-y divide-slate-100">';
                     hiddenPatients.forEach((p, idx) => {
                         html += `
-                                                <div class="py-3 px-2 flex items-center justify-between gap-3 hover:bg-slate-50 rounded-lg">
-                                                    <div class="flex flex-col">
-                                                        <span class="font-extrabold text-blue-900 text-base md:text-lg uppercase">${escapeHtml(p.name)}</span>
-                                                        <span class="text-xs text-slate-500 font-semibold">Mã: ${escapeHtml(p.makb || p.mabn || '—')} &bull; Ẩn lúc: ${escapeHtml(p.time || '')}</span>
-                                                    </div>
-                                                    <button onclick="restoreHiddenPatient(${idx})"
-                                                            class="remote-item px-3 py-1.5 bg-blue-50 hover:bg-brand hover:text-white text-brand border border-blue-200 rounded-lg text-xs md:text-sm font-black transition cursor-pointer"
-                                                            tabindex="0">
-                                                        <i class="fas fa-undo mr-1"></i> Khôi phục
-                                                    </button>
-                                                </div>`;
+                                                                <div class="py-3 px-2 flex items-center justify-between gap-3 hover:bg-slate-50 rounded-lg">
+                                                                    <div class="flex flex-col">
+                                                                        <span class="font-extrabold text-blue-900 text-base md:text-lg uppercase">${escapeHtml(p.name)}</span>
+                                                                        <span class="text-xs text-slate-500 font-semibold">Mã: ${escapeHtml(p.makb || p.mabn || '—')} &bull; Ẩn lúc: ${escapeHtml(p.time || '')}</span>
+                                                                    </div>
+                                                                    <button onclick="restoreHiddenPatient(${idx})"
+                                                                            class="remote-item px-3 py-1.5 bg-blue-50 hover:bg-brand hover:text-white text-brand border border-blue-200 rounded-lg text-xs md:text-sm font-black transition cursor-pointer"
+                                                                            tabindex="0">
+                                                                        <i class="fas fa-undo mr-1"></i> Khôi phục
+                                                                    </button>
+                                                                </div>`;
                     });
                     html += '</div>';
                     container.innerHTML = html;
@@ -1131,30 +1226,9 @@
                     showToast(`Đã khôi phục ${successCount} bệnh nhân!`, 'info');
                 }
 
-                // Toast thông báo trên màn hình TV
+                // Toast thông báo trên màn hình TV (Đã tắt theo yêu cầu)
                 function showToast(message, type = 'info') {
-                    let container = document.getElementById('tvToastContainer');
-                    if (!container) {
-                        container = document.createElement('div');
-                        container.id = 'tvToastContainer';
-                        container.className = 'fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none';
-                        document.body.appendChild(container);
-                    }
-
-                    const toast = document.createElement('div');
-                    const bgClass = (type === 'danger') ? 'bg-red-600 border-red-400' : 'bg-blue-800 border-blue-500';
-                    toast.className = `pointer-events-auto flex items-center justify-between gap-3 px-5 py-3 rounded-2xl border-2 text-white font-bold shadow-2xl text-sm md:text-base ${bgClass} transition-all duration-300`;
-                    toast.innerHTML = `
-                                            <div class="flex items-center gap-2">
-                                                <i class="${type === 'danger' ? 'fas fa-exclamation-triangle' : 'fas fa-info-circle'} text-lg"></i>
-                                                <span>${message}</span>
-                                            </div>`;
-
-                    container.appendChild(toast);
-                    setTimeout(() => {
-                        toast.style.opacity = '0';
-                        setTimeout(() => toast.remove(), 300);
-                    }, 3500);
+                    // Tắt hiển thị thông báo góc phải màn hình TV
                 }
 
                 function escapeHtml(str) {
@@ -1185,20 +1259,21 @@
 
                     // Rebuild từ data JSON ban đầu
                     const initialList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                                                                                                                                                                                                                        queueList.Select(p => new
-                                                                                                                                {
-                                                                                                                                    stt = p.Stt,
-                                                                                                                                                                                                                                        mabn = p.Mabn,
-                                                                                                                                                                                                                                        makb = p.Makb,
-                                                                                                                                                                                                                                        tenBenhNhan = p.TenBenhNhan,
-                                                                                                                                                                                                                                        namSinh = p.NamSinh,
-                                                                                                                                                                                                                                        trangThai = p.TrangThai,
-                                                                                                                                                                                                                                        isToiLuot = p.IsToiLuot,
-                                                                                                                                                                                                                                        isBhyt = p.IsBhyt,
-                                                                                                                                                                                                                                        soTienStr = p.SoTienStr,
-                                                                                                                                                                                                                                        khochan = p.Khochan,
-                                                                                                                                                                                                                                        dagiao = p.Dagiao
-                                                                                                                                })
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        queueList.Select(p => new
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    stt = p.Stt,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                mabn = p.Mabn,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                makb = p.Makb,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                tenBenhNhan = p.TenBenhNhan,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                namSinh = p.NamSinh,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                trangThai = p.TrangThai,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                isToiLuot = p.IsToiLuot,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                isBhyt = p.IsBhyt,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                soTienStr = p.SoTienStr,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                khochan = p.Khochan,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        dagiao = p.Dagiao,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        oCua = p.OCua
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                })
                                         ));
 
                     // Ẩn ssrTableWrapper sau khi dùng

@@ -333,6 +333,9 @@ public class DuocQueueItemDto
 
     [JsonPropertyName("dagiao")]
     public decimal Dagiao { get; set; }
+
+    [JsonPropertyName("oCua")]
+    public string OCua { get; set; } = string.Empty;
 }
 
 public class DuocQueuePageDto
@@ -435,6 +438,9 @@ public class DuocNhapThemRequest
 
     [JsonPropertyName("ngayKcb")]
     public DateTime? NgayKcb { get; set; }
+
+    [JsonPropertyName("oCua")]
+    public string? OCua { get; set; }
 }
 
 public class DuocNhapThemResponse
@@ -456,6 +462,9 @@ public class DuocNhapThemResponse
 
     [JsonPropertyName("isUpdate")]
     public bool IsUpdate { get; set; }
+
+    [JsonPropertyName("oCua")]
+    public string? OCua { get; set; }
 }
 
 public class DuocCapNhatTrangThaiRequest
@@ -468,6 +477,18 @@ public class DuocCapNhatTrangThaiRequest
 
     [JsonPropertyName("targetDagiao")]
     public decimal TargetDagiao { get; set; } // 1: Đang soạn / Đã phát BHYT, 2: Đã phát Dịch vụ
+
+    [JsonPropertyName("oCua")]
+    public string? OCua { get; set; }
+
+    [JsonPropertyName("hoTen")]
+    public string? HoTen { get; set; }
+
+    [JsonPropertyName("isBhyt")]
+    public bool? IsBhyt { get; set; }
+
+    [JsonPropertyName("trangThai")]
+    public string? TrangThai { get; set; }
 }
 
 public class DuocChuaGiaoItemDto
@@ -507,4 +528,43 @@ public class DuocChuaGiaoItemDto
 
     [JsonPropertyName("ngayNhapStr")]
     public string NgayNhapStr { get; set; } = string.Empty;
+
+    [JsonPropertyName("oCua")]
+    public string OCua { get; set; } = string.Empty;
+}
+
+public class DuocDaGiaoItemDto
+{
+    [JsonPropertyName("makb")]
+    public string Makb { get; set; } = string.Empty;
+
+    [JsonPropertyName("mabn")]
+    public string Mabn { get; set; } = string.Empty;
+
+    [JsonPropertyName("hoTen")]
+    public string HoTen { get; set; } = string.Empty;
+
+    [JsonPropertyName("namSinh")]
+    public string NamSinh { get; set; } = string.Empty;
+
+    [JsonPropertyName("gioiTinh")]
+    public string GioiTinh { get; set; } = string.Empty;
+
+    [JsonPropertyName("khochan")]
+    public int Khochan { get; set; }
+
+    [JsonPropertyName("isBhyt")]
+    public bool IsBhyt { get; set; }
+
+    [JsonPropertyName("dagiao")]
+    public decimal Dagiao { get; set; }
+
+    [JsonPropertyName("soTienStr")]
+    public string SoTienStr { get; set; } = string.Empty;
+
+    [JsonPropertyName("ngayGiaoStr")]
+    public string NgayGiaoStr { get; set; } = string.Empty;
+
+    [JsonPropertyName("oCua")]
+    public string OCua { get; set; } = string.Empty;
 }
