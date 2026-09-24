@@ -1,25 +1,30 @@
-FROM node:20-slim
-RUN apt-get update -y && apt-get install -y openssl
+# Multi-stage build for HangChoKhamBenh (.NET 8)
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
-# Set working directory
+# Copy csproj and restore dependencies first to cache restore layer
+COPY HangChoKhamBenh.csproj ./
+RUN dotnet restore "HangChoKhamBenh.csproj"
+
+# Copy source code and publish
+COPY . ./
+RUN dotnet publish "HangChoKhamBenh.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Install dependencies first for better caching
-COPY package.json package-lock.json ./
-RUN npm install --production
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    PORT=3002 \
+    TZ=Asia/Ho_Chi_Minh
 
-# Copy Prisma schema and generate Prisma client
-COPY prisma ./prisma
-RUN npx prisma generate
+COPY --from=build /app/publish .
 
-# Copy the rest of the application
-COPY . .
-
-
-# Force IPv4 DNS resolution for Node.js fetch (undici) - fixes Azure TTS timeout in Docker
-ENV NODE_OPTIONS=--dns-result-order=ipv4first
+# Tạo thư mục logs và audio cache, tạo symlink public -> wwwroot để tương thích ngược
+RUN mkdir -p /app/logs /app/wwwroot/audio/cache && \
+    ln -s /app/wwwroot /app/public
 
 EXPOSE 3002
 
-# Start command
-CMD ["npm", "start"]
+ENTRYPOINT ["dotnet", "HangChoKhamBenh.dll"]

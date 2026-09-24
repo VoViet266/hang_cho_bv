@@ -1,8 +1,23 @@
-node_modules/
-.env
-pnpm-lock.yaml
-public/audio/cache/
+# .NET build artifacts
+bin/
+obj/
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
 
+# Environment & credentials
+.env
+.env.production
+.env.local
+
+appsettings.json
+appsettings.*.json
+appsetting*.json
+*.bak
+
+# Logs and runtime caches
 logs/
 backup/
-
+**/wwwroot/audio/cache/

@@ -108,6 +108,8 @@ jobs:
                 --network hospital_net \
                 -p "$PORT:$PORT" \
                 -e PORT="$PORT" \
+                -e ASPNETCORE_URLS="http://0.0.0.0:$PORT" \
+                -e ASPNETCORE_ENVIRONMENT="Production" \
                 -e TZ="Asia/Ho_Chi_Minh" \
                 -e DATABASE_URL="$DATABASE_URL" \
                 -e GOOGLE_TTS_API_KEY="$GOOGLE_TTS_API_KEY" \
@@ -115,7 +117,7 @@ jobs:
                 -e SPEAKING_RATE="$SPEAKING_RATE" \
                 -v /etc/localtime:/etc/localtime:ro \
                 -v "$LOGS_VOLUME":/app/logs \
-                -v "$AUDIO_CACHE_VOLUME":/app/public/audio/cache \
+                -v "$AUDIO_CACHE_VOLUME":/app/wwwroot/audio/cache \
                 --restart unless-stopped \
                 "$IMAGE"
             }
@@ -126,13 +128,13 @@ jobs:
             echo "Chờ service khởi động..."
             retries=6
             count=0
-            until curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1 || [ "$count" -ge "$retries" ]; do
+            until curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1 || curl -s -f http://localhost:"$PORT"/health > /dev/null 2>&1 || [ "$count" -ge "$retries" ]; do
               count=$((count + 1))
               echo "Healthcheck attempt $count/$retries failed; retry in 5s..."
               sleep 5
             done
 
-            if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1; then
+            if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1 || curl -s -f http://localhost:"$PORT"/health > /dev/null 2>&1; then
               echo "Health check thành công!"
             else
               echo "Health check thất bại! Dump logs:"
@@ -145,7 +147,7 @@ jobs:
                 echo "Khôi phục container từ image cũ ($PREVIOUS_IMAGE_ID)..."
                 start_container "$PREVIOUS_IMAGE_ID"
                 sleep 5
-                if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1; then
+                if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1 || curl -s -f http://localhost:"$PORT"/health > /dev/null 2>&1; then
                   echo "Rollback thành công!"
                 else
                   echo "Rollback thất bại! Cần kiểm tra thủ công."

@@ -1,0 +1,119 @@
+@model HangChoKhamBenh.Web.Models.MainPortalViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hàng Chờ - Bệnh Viện Tâm Minh Đức</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
+    <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            brand: '#1e40af',
+                            danger: '#dc2626',
+                            success: '#16a34a',
+                            accent: '#0f172a',
+                        }
+                    }
+                }
+            }
+    </script>
+</head>
+
+<body class="bg-slate-100 text-slate-900 font-sans p-2 sm:p-4 flex flex-col h-screen overflow-hidden select-none">
+
+    <!-- HEADER: MÀU CŨ & CẤU TRÚC CŨ -->
+    <div class="flex items-center gap-4 bg-white p-3 border-2 border-slate-300 rounded-xl mb-4 shadow-sm shrink-0">
+        <div class="flex-shrink-0 flex items-center justify-center w-[140px]">
+            <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-16 w-auto object-contain">
+        </div>
+
+        <div class="flex-1 min-w-0 text-center font-black tabular-nums tracking-wider">
+            <div id="date-str" class="text-base sm:text-lg text-slate-500 font-bold mb-0.5 uppercase tracking-widest">
+            </div>
+            <div id="time-str"
+                 class="text-[2.5rem] sm:text-[3.2rem] md:text-[3.8rem] text-danger leading-none font-black"></div>
+        </div>
+
+        <div class="hidden sm:flex flex-col items-end justify-center min-w-[220px] text-right">
+            <div class="text-brand font-black text-xl md:text-2xl uppercase tracking-wider">
+                CHỌN DỊCH VỤ
+            </div>
+            <div class="text-slate-500 text-xs font-bold mt-0.5">
+                Bệnh Viện Đa Khoa Tâm Minh Đức
+            </div>
+        </div>
+    </div>
+
+    <!-- BODY: CHỈ HIỂN THỊ CÁC DỊCH VỤ CHÍNH (BẤM VÀO MỚI HIỆN BÊN TRONG) -->
+    <div class="flex-grow flex flex-col justify-center max-w-6xl mx-auto w-full px-2 sm:px-4">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+            <!-- 1. PHÒNG KHÁM BỆNH -->
+            <div class="remote-item bg-white border-2 border-slate-300 rounded-xl cursor-pointer p-6 flex flex-col items-center justify-center text-center min-h-[180px] gap-3"
+                 tabindex="0" onclick="window.location.href='/kham-benh'">
+                <div class="text-brand text-4xl">
+                    <i class="fa-solid fa-stethoscope"></i>
+                </div>
+                <div class="text-brand font-bold text-2xl uppercase">
+                    Phòng Khám Bệnh
+                </div>
+            </div>
+
+            <!-- 2. CHẨN ĐOÁN HÌNH ẢNH -->
+            <div class="remote-item bg-white border-2 border-slate-300 rounded-xl cursor-pointer p-6 flex flex-col items-center justify-center text-center min-h-[180px] gap-3"
+                 tabindex="0" onclick="window.location.href='/cdha'">
+                <div class="text-brand text-4xl">
+                    <i class="fa-solid fa-x-ray"></i>
+                </div>
+                <div class="text-brand font-bold text-2xl uppercase">
+                    Phòng siêu âm
+                </div>
+            </div>
+
+            <!-- 3. KHOA DƯỢC -->
+            <div class="remote-item bg-white border-2 border-slate-300 rounded-xl cursor-pointer p-6 flex flex-col items-center justify-center text-center min-h-[180px] gap-3"
+                 tabindex="0" onclick="window.location.href='/duoc'">
+                <div class="text-brand text-4xl">
+                    <i class="fa-solid fa-pills"></i>
+                </div>
+                <div class="text-brand font-bold text-2xl uppercase">
+                    Khoa Dược
+                </div>
+            </div>
+
+        </div>
+        </div>
+
+        <!-- FOOTER CHỈ DẪN -->
+
+       
+        <script src="/js/remoteNav.js"></script>
+        <script>
+                function updateTime() {
+                    const now = new Date();
+                    const dateOpts = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
+                    const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                    const dateStrEl = document.getElementById('date-str');
+                    const timeStrEl = document.getElementById('time-str');
+
+                    if (dateStrEl && timeStrEl) {
+                        dateStrEl.textContent = now.toLocaleDateString('vi-VN', dateOpts);
+                        timeStrEl.textContent = now.toLocaleTimeString('vi-VN', timeOpts);
+                    }
+                }
+                setInterval(updateTime, 1000);
+                updateTime();
+        </script>
+    </body>
+
+</html>

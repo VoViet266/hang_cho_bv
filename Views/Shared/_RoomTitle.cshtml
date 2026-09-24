@@ -1,0 +1,14 @@
+@model string
+@{
+    var titleText = (Model ?? string.Empty).Trim();
+    var match = System.Text.RegularExpressions.Regex.Match(titleText, @"^(.*?)\s+(\d+)$");
+}
+@if (match.Success)
+{
+    <span class="tv-room-label">@match.Groups[1].Value</span>
+    <span class="tv-room-number">@match.Groups[2].Value</span>
+}
+else
+{
+    <span class="tv-room-label">@titleText</span>
+}

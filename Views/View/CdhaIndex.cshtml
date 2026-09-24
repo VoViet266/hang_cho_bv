@@ -1,0 +1,131 @@
+@model HangChoKhamBenh.Web.Models.CdhaDashboardStatsDto
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách phòng siêu âm</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
+    <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            brand: '#1e40af',
+                            danger: '#dc2626',
+                            accent: '#0f172a',
+                        }
+                    }
+                }
+            }
+    </script>
+</head>
+
+<body class="bg-slate-100 text-slate-900 font-sans p-2 flex flex-col h-screen overflow-hidden">
+
+    <!-- HEADER -->
+    <div class="flex items-center gap-4 bg-white p-3 border-2 border-slate-300 rounded-xl mb-3 shadow-sm shrink-0">
+        <a href="/" title="Quay lại chọn dịch vụ (Esc)"
+           class="flex items-center justify-center w-11 h-11 bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-brand rounded-xl border-2 border-slate-300 transition shrink-0">
+            <i class="fa-solid fa-arrow-left text-lg"></i>
+        </a>
+
+        <div class="flex-shrink-0 flex items-center justify-center w-[130px]">
+            <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-16 w-auto object-contain">
+        </div>
+
+        <div class="flex-1 min-w-0 text-center font-black tabular-nums tracking-wider">
+            <div id="date-str" class="text-base text-slate-500 font-bold mb-0.5 uppercase tracking-widest"></div>
+            <div id="time-str" class="text-[2.2rem] sm:text-[3rem] text-danger leading-none font-black"></div>
+        </div>
+
+        <div class="hidden sm:flex flex-col items-end justify-center min-w-[220px] text-right">
+            <div class="text-brand font-black text-xl md:text-2xl uppercase tracking-wider">
+                CHẨN ĐOÁN HÌNH ẢNH
+            </div>
+            <div class="text-slate-500 text-xs font-bold mt-0.5">
+                Bấm phòng để mở màn hình hàng chờ
+            </div>
+        </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="flex-grow overflow-y-auto p-1">
+        <div id="cdhaGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 h-max">
+            <!-- Ghép 4 phòng siêu âm -->
+            <div class="remote-item bg-white border-2 border-slate-300 rounded-xl cursor-pointer flex flex-col justify-center items-center p-4 min-h-[120px] gap-2"
+                 tabindex="0" onclick="window.location.href='/cdha/1,2,3,4'">
+                <div class="text-brand font-bold text-xl md:text-2xl text-center truncate w-full px-1">
+                    4 Phòng Siêu Âm
+                </div>
+            </div>
+            @if (Model.Rooms.Count == 0)
+            {
+                <div class="col-span-full text-center text-slate-500 text-2xl font-bold p-10">
+                    Không có phòng CDHA nào đang hoạt động.
+                </div>
+            }
+            else
+            {
+                @foreach (var r in Model.Rooms)
+                {
+                    var targetUrl = "/cdha/" + (!string.IsNullOrEmpty(r.Alias) ? r.Alias : Uri.EscapeDataString(r.Tenphong));
+                    <div class="remote-item bg-white border-2 border-slate-300 rounded-xl cursor-pointer flex flex-col justify-center items-center p-4 min-h-[120px] gap-2"
+                         tabindex="0" onclick="window.location.href='@targetUrl'">
+                        <div class="text-brand font-bold text-xl md:text-2xl text-center truncate w-full px-1">
+                            @(string.IsNullOrEmpty(r.Tenphong) ? "Chưa cập nhật" : r.Tenphong)
+                        </div>
+                        <div class="bg-red-50 text-danger font-bold px-3 py-1 rounded-full border border-red-200">
+                            Chờ: @r.TongChoKham
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <script src="/js/signalr.min.js"></script>
+    <script src="/js/socket-signalr-adapter.js"></script>
+    <script src="/js/remoteNav.js"></script>
+    <script>
+            function updateTime() {
+                const now = new Date();
+                const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                const dateStrEl = document.getElementById('date-str');
+                const timeStrEl = document.getElementById('time-str');
+
+                if (dateStrEl && timeStrEl) {
+                    dateStrEl.textContent = now.toLocaleDateString('en-GB', dateOpts);
+                    timeStrEl.textContent = now.toLocaleTimeString('en-GB', timeOpts);
+                }
+            }
+            setInterval(updateTime, 1000);
+            updateTime();
+
+            // Real-time cho CDHA Dashboard
+            if (typeof io !== "undefined") {
+                const socket = io();
+                socket.on("connect", () => {
+                    socket.emit("join_room", { roomType: "cdha_dashboard", roomId: "" });
+                });
+
+                socket.on("room_data_updated", (payload) => {
+                    if (!payload || !payload.data) return;
+                    const d = payload.data;
+                    if (d.overview) {
+                        const ckEl = document.getElementById("cdha_tong_cho_kham");
+                        if (ckEl) ckEl.textContent = d.overview.tong_cho_kham;
+                    }
+                });
+            }
+    </script>
+</body>
+
+</html>
