@@ -107,13 +107,13 @@ public class QueueHub : Hub
             Context.ConnectionId, channel, clientCount);
     }
 
-    public async Task BroadcastSpeak(string roomType, string roomId, string patientName, string roomName)
+    public async Task BroadcastSpeak(string roomType, string roomId, string patientName, string roomName, string? dobYear = null)
     {
         if (string.IsNullOrWhiteSpace(patientName)) return;
 
         var channel = _tracker.GetRoomKey(roomType ?? "room", roomId);
-        _logger.LogInformation("[SignalR] Speak: Group={Channel} | Patient='{PatientName}' -> '{RoomName}'",
-            channel, patientName, roomName);
+        _logger.LogInformation("[SignalR] Speak: Group={Channel} | Patient='{PatientName}' (DOB: '{DobYear}') -> '{RoomName}'",
+            channel, patientName, dobYear, roomName);
 
         // Phát tới tất cả client khác trong cùng Group (tránh client phát lệnh bị đọc trùng lặp)
         await Clients.OthersInGroup(channel).SendAsync("trigger_speak", new
@@ -122,6 +122,7 @@ public class QueueHub : Hub
             roomId = roomId ?? string.Empty,
             patientName,
             roomName = roomName ?? string.Empty,
+            dobYear = dobYear ?? string.Empty,
             timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         });
     }

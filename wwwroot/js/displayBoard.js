@@ -3,9 +3,7 @@ let soundEnabled = localStorage.getItem("soundEnabled") === "true";
 
 let lastKnownRoomsData = {}; // Cache dữ liệu phòng gần nhất theo roomId
 
-// ==========================================
-// CHUẨN HÓA TÊN PHÒNG KHI ĐỌC GIỌNG NÓI
-// ==========================================
+
 function formatRoomSpokenName(roomName) {
   if (!roomName || !roomName.trim()) return "";
   const clean = roomName.trim();
@@ -14,6 +12,31 @@ function formatRoomSpokenName(roomName) {
   }
   return `phòng ${clean}`;
 }
+
+function extractBirthYear(val, rowEl = null) {
+  if (val !== undefined && val !== null) {
+    const str = typeof val === "object" ? (val.namSinh || val.dobStr || val.dob || val.ngaysinh || "") : String(val).trim();
+    if (str && str !== "Chưa cập nhật" && str !== "null" && str !== "undefined") {
+      const match = str.match(/(19\d{2}|20\d{2})/);
+      if (match) return match[1];
+    }
+  }
+  if (rowEl) {
+    const attr = rowEl.getAttribute("data-dob-year") || rowEl.dataset?.dobYear || rowEl.getAttribute("data-nam-sinh") || rowEl.dataset?.namSinh || "";
+    if (attr && attr.trim() !== "Chưa cập nhật") {
+      const match = attr.match(/(19\d{2}|20\d{2})/);
+      if (match) return match[1];
+    }
+    const cells = rowEl.querySelectorAll("td");
+    for (const cell of cells) {
+      const txt = cell.textContent.trim();
+      const match = txt.match(/\b(19\d{2}|20\d{2})\b/);
+      if (match) return match[1];
+    }
+  }
+  return "";
+}
+window.extractBirthYear = extractBirthYear;
 
 const audioQueue = new window.AudioQueueManager({
   isEnabled: () => soundEnabled,
@@ -70,10 +93,12 @@ function toggleSound() {
 window.toggleSound = toggleSound;
 
 // Gọi đọc 1 bệnh nhân cụ thể
-function requestSpeak(patientName, roomName) {
+function requestSpeak(patientName, roomName, dobYear) {
   if (!patientName || !patientName.trim()) return;
   const spokenRoom = formatRoomSpokenName(roomName);
-  const speakText = `Mời bệnh nhân, ${patientName.trim()}, vào ${spokenRoom}`;
+  const dobClean = extractBirthYear(dobYear);
+  const dobText = dobClean ? `, sinh năm ${dobClean}` : "";
+  const speakText = `Mời bệnh nhân, ${patientName.trim()}${dobText}, vào ${spokenRoom}`;
   audioQueue.enqueue(speakText);
 }
 window.requestSpeak = requestSpeak;
@@ -508,8 +533,10 @@ window.toggleHiddenModal = toggleHiddenModal;
 // Nhấp hoặc nhấn Enter trên dòng để gọi tên ngay
 function onRowClick(el) {
   if (!el) return;
-  const patientName = (el.dataset.patient || "").trim();
-  const roomName = (el.dataset.room || "").trim();
+  const row = el.tagName === "TR" ? el : (el.closest("tr[data-patient]") || el.closest("tr") || el);
+  const patientName = (row.dataset.patient || row.getAttribute("data-patient") || "").trim();
+  const roomName = (row.dataset.room || row.getAttribute("data-room") || "").trim();
+  const dobYear = extractBirthYear(row.dataset.dobYear || row.getAttribute("data-dob-year"), row);
   if (!patientName) return;
 
   if (!soundEnabled) {
@@ -519,14 +546,14 @@ function onRowClick(el) {
   }
 
   // Gọi ngay khi người dùng chọn bệnh nhân.
-  const roomContainer = el.closest(".room-container, .room-card, [data-room-id]") || document.querySelector(".room-container");
+  const roomContainer = row.closest(".room-container, .room-card, [data-room-id]") || document.querySelector(".room-container");
   const roomId = roomContainer ? roomContainer.dataset.roomId : null;
-  const roomType = (roomContainer ? roomContainer.dataset.roomType : "") || (el.dataset.roomType || "room");
-  requestSpeak(patientName, roomName);
+  const roomType = (roomContainer ? roomContainer.dataset.roomType : "") || (row.dataset.roomType || "room");
+  requestSpeak(patientName, roomName, dobYear);
 
   // Phát tín hiệu Socket.IO để các máy khác cùng phòng đồng thời phát loa
   if (typeof emitBroadcastSpeak === "function") {
-    emitBroadcastSpeak(roomType, roomId, patientName, roomName);
+    emitBroadcastSpeak(roomType, roomId, patientName, roomName, dobYear);
   }
 }
 window.onRowClick = onRowClick;
@@ -546,12 +573,21 @@ function speakCurrentPatients(force = false) {
       document.getElementById(`speech-track-${roomId}`) ||
       document.getElementById("speechData");
 
-    if (!tracker) return;
+    let currentPatient = tracker ? (tracker.dataset.patient || tracker.getAttribute("data-patient") || "").trim() : "";
+    let dobYear = tracker ? extractBirthYear(tracker.dataset.dobYear || tracker.getAttribute("data-dob-year")) : "";
 
-    const currentPatient = (tracker.dataset.patient || "").trim();
+    // Fallback nếu tracker chưa có dữ liệu: Lấy dòng đầu tiên trong bảng
+    if (!currentPatient) {
+      const firstRow = container.querySelector("tbody tr[data-patient]");
+      if (firstRow) {
+        currentPatient = (firstRow.dataset.patient || firstRow.getAttribute("data-patient") || "").trim();
+        dobYear = extractBirthYear(firstRow.dataset.dobYear || firstRow.getAttribute("data-dob-year"), firstRow);
+      }
+    }
+
     if (!currentPatient) return;
 
-    requestSpeak(currentPatient, roomName);
+    requestSpeak(currentPatient, roomName, dobYear);
   });
 }
 
@@ -655,6 +691,7 @@ function updateRoomDOM(roomId, data) {
 
   let nextPatientNameToRead = "";
   let nextPatientKeyToRead = "";
+  let nextPatientDobYearToRead = "";
 
   // 1. Cập nhật các badge số đếm
   const singleDk = document.getElementById("totalDKPlus");
@@ -702,6 +739,7 @@ function updateRoomDOM(roomId, data) {
             nextPatientIndex = idx;
             nextPatientNameToRead = `${patient.holot || ""} ${patient.ten || ""}`.trim();
             nextPatientKeyToRead = getPatientKey(patient);
+            nextPatientDobYearToRead = extractBirthYear(patient.dobStr || patient.ngaysinh || patient.namSinh);
           }
         }
       });
@@ -716,9 +754,7 @@ function updateRoomDOM(roomId, data) {
         const sttDisplay = index + 1;
         const currentPatientName = `${patient.holot || ""} ${patient.ten || ""}`.trim();
         const pKey = getPatientKey(patient);
-        const dobYear = patient.dobStr && patient.dobStr !== "Chưa cập nhật"
-          ? patient.dobStr.split("/").pop()
-          : "";
+        const dobYear = extractBirthYear(patient.dobStr || patient.ngaysinh || patient.namSinh);
 
         let noteBadge = "";
         if (patient.priorityLabel) {
@@ -762,7 +798,7 @@ function updateRoomDOM(roomId, data) {
           `;
 
           rowsHtml += `
-            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item cursor-pointer transition-all ${rowClass}" tabindex="0">
+            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-dob-year="${safeDobYear}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item cursor-pointer transition-all ${rowClass}" tabindex="0">
               <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${sttClass} overflow-hidden">
                 ${sttDisplay}
               </td>
@@ -811,7 +847,7 @@ function updateRoomDOM(roomId, data) {
           `;
 
           rowsHtml += `
-            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item transition-all cursor-pointer ${rowClass}" tabindex="0">
+            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-dob-year="${safeDobYear}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item transition-all cursor-pointer ${rowClass}" tabindex="0">
               <td class="py-5 px-4 font-bold text-center text-blue-900 ${sttClass} overflow-hidden">
                 ${sttDisplay}
               </td>
@@ -848,6 +884,7 @@ function updateRoomDOM(roomId, data) {
   if (tracker) {
     tracker.dataset.patient = nextPatientNameToRead;
     tracker.dataset.patientKey = nextPatientKeyToRead;
+    tracker.dataset.dobYear = nextPatientDobYearToRead;
   }
 
   if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
@@ -861,13 +898,14 @@ window.updateRoomDOM = updateRoomDOM;
 // ==========================================
 let boardSocket = null;
 
-function emitBroadcastSpeak(roomType, roomId, patientName, roomName) {
+function emitBroadcastSpeak(roomType, roomId, patientName, roomName, dobYear) {
   if (boardSocket && typeof boardSocket.emit === "function") {
     boardSocket.emit("broadcast_speak", {
       roomType: roomType || "room",
       roomId: roomId || "",
       patientName,
       roomName,
+      dobYear: dobYear || "",
     });
   }
 }
@@ -939,8 +977,8 @@ function initSocket() {
   // Lắng nghe tín hiệu phát thanh loa từ máy khác cùng phòng
   boardSocket.on("trigger_speak", (payload) => {
     if (!payload || !payload.patientName) return;
-    const { patientName, roomName } = payload;
-    requestSpeak(patientName, roomName);
+    const { patientName, roomName, dobYear } = payload;
+    requestSpeak(patientName, roomName, dobYear);
   });
 }
 

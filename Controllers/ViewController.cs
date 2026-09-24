@@ -55,15 +55,8 @@ public class ViewController : Controller
         return View("DuocIndex", new DuocIndexViewModel());
     }
 
-    // Tất cả URL cũ redirect về /duoc/tong-hop
-    [HttpGet("/duoc/bao-hiem")]
-    [HttpGet("/duoc/bhyt")]
-    [HttpGet("/duoc/dich-vu")]
-    [HttpGet("/duoc/vien-phi")]
-    [HttpGet("/duoc/room")]
-    [HttpGet("/duoc/room/{loai}")]
-    [HttpGet("/duoc/tat-ca")]
-    public IActionResult RedirectToTongHop() => Redirect("/duoc/tong-hop");
+
+    public IActionResult RedirectToTongHop() => Redirect("/duoc/danh-sach");
 
     [HttpGet("/duoc/nhap")]
     [HttpGet("/duoc/input")]
@@ -72,9 +65,10 @@ public class ViewController : Controller
         return View("DuocNhap");
     }
 
-    // URL DUY NHẤT cho màn hình gộp BHYT + Dịch Vụ
-    [HttpGet("/duoc/tong-hop")]
-    [HttpHead("/duoc/tong-hop")]
+    // Màn hình hiển thị danh sách hàng chờ Dược (chiếu TV)
+    
+    [HttpGet("/duoc/danh-sach")]
+    [HttpHead("/duoc/danh-sach")]
     public async Task<IActionResult> GetDuocTongHop()
     {
         if (Request.Method == "HEAD") return Ok();

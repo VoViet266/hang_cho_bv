@@ -88,7 +88,7 @@
                 } else if (event === "leave_room") {
                     connection.invoke("LeaveRoom", data.roomType || "", data.roomId || "").catch((e) => console.error(e));
                 } else if (event === "broadcast_speak") {
-                    connection.invoke("BroadcastSpeak", data.roomType || "room", data.roomId || "", data.patientName || "", data.roomName || "").catch((e) => console.error(e));
+                    connection.invoke("BroadcastSpeak", data.roomType || "room", data.roomId || "", data.patientName || "", data.roomName || "", data.dobYear || "").catch((e) => console.error(e));
                 }
             },
             disconnect: function () {

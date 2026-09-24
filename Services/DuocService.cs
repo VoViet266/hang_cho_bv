@@ -312,19 +312,17 @@ public class DuocService : IDuocService
                 // Trạng thái:
                 // - Toa Dịch Vụ: Dựa vào cột dagiao trong bảng hangchoduoc_tmd
                 //   dagiao == 0 -> "Chờ thu"
-                //   dagiao >= 1 -> "Đang soạn thuốc"
-                // - Toa BHYT: "Đang soạn thuốc" (Lần 1), "Chờ gọi tên" (Lần 2), STT 1: "TỚI LƯỢT NHẬN"
+                //   dagiao >= 1 -> "Đang soạn"
+                // - Toa BHYT: Mặc định là "Đang soạn"
                 string trangThaiStr;
                 bool isDangSoan = item.Dagiao >= 1;
                 if (!itemIsBhyt)
                 {
-                    trangThaiStr = isDangSoan ? "Đang soạn thuốc" : "Chờ thu";
+                    trangThaiStr = isDangSoan ? "Đang soạn" : "Chờ thu";
                 }
                 else
                 {
-                    trangThaiStr = isToiLuot
-                        ? "TỚI LƯỢT NHẬN"
-                        : (item.Khochan == 1 ? "Đang soạn thuốc" : "Chờ gọi tên");
+                    trangThaiStr = "Đang soạn";
                 }
 
                 waitingList.Add(new DuocQueueItemDto

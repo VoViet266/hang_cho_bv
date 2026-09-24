@@ -127,6 +127,7 @@
                     var roomTitle = !string.IsNullOrEmpty(room.Tenphong) ? room.Tenphong : room.Maphong;
                     var waitingList = room.WaitingList ?? new List<HangChoKhamBenh.Web.Models.PatientWaitingDto>();
                     string nextPatient = "";
+                    string nextPatientDobYear = "";
 
                     <div id="room-card-@roomId"
                         class="room-quadrant bg-white text-slate-900 rounded-xl shadow-sm border-2 border-slate-300 flex flex-col overflow-hidden h-full"
@@ -197,16 +198,20 @@
                                                 {
                                                     isNear = true;
                                                     nextPatient = $"{p.Holot} {p.Ten}".Trim();
+                                                    nextPatientDobYear = !string.IsNullOrEmpty(p.DobStr) && p.DobStr != "Chưa cập nhật"
+                                                        ? System.Text.RegularExpressions.Regex.Match(p.DobStr, @"(19\d{2}|20\d{2})").Value
+                                                        : (p.Ngaysinh.HasValue ? p.Ngaysinh.Value.ToString("yyyy") : "");
                                                 }
                                             }
                                             var pName = $"{p.Holot} {p.Ten}".Trim();
                                             var pYear = !string.IsNullOrEmpty(p.DobStr) && p.DobStr != "Chưa cập nhật"
-                                                ? p.DobStr.Split('/').Last()
-                                                : "";
+                                                ? System.Text.RegularExpressions.Regex.Match(p.DobStr, @"(19\d{2}|20\d{2})").Value
+                                                : (p.Ngaysinh.HasValue ? p.Ngaysinh.Value.ToString("yyyy") : "");
                                             var pKey = (!string.IsNullOrEmpty(p.Makb) ? p.Makb : (!string.IsNullOrEmpty(p.Mabn) ? p.Mabn : $"{pName}_{p.DobStr}")).Trim();
 
                                             <tr data-patient="@pName"
                                                 data-patient-key="@pKey"
+                                                data-dob-year="@pYear"
                                                 data-room="@roomTitle"
                                                 onclick="onRowClick(this)"
                                                 class="remote-item cursor-pointer transition-all @(isNear ? "bg-yellow-100 hover:bg-yellow-200 border-l-8 border-yellow-500 shadow-md font-black" : "hover:bg-blue-50 border-b border-slate-200")"
@@ -261,7 +266,7 @@
                             </table>
                         </div>
 
-                        <div id="speech-track-@roomId" data-patient="@nextPatient" data-room="@roomTitle" style="display:none;"></div>
+                        <div id="speech-track-@roomId" data-patient="@nextPatient" data-dob-year="@nextPatientDobYear" data-room="@roomTitle" style="display:none;"></div>
                     </div>
                 }
             </div>
@@ -319,12 +324,12 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/js/signalr.min.js"></script>
-    <script src="/js/socket-signalr-adapter.js"></script>
-    <script src="/js/remoteNav.js"></script>
-    <script src="/js/queuePolicy.js"></script>
-    <script src="/js/audioQueue.js"></script>
-    <script src="/js/displayBoard.js"></script>
+    <script src="/js/signalr.min.js?v=@DateTime.UtcNow.Ticks"></script>
+    <script src="/js/socket-signalr-adapter.js?v=@DateTime.UtcNow.Ticks"></script>
+    <script src="/js/remoteNav.js?v=@DateTime.UtcNow.Ticks"></script>
+    <script src="/js/queuePolicy.js?v=@DateTime.UtcNow.Ticks"></script>
+    <script src="/js/audioQueue.js?v=@DateTime.UtcNow.Ticks"></script>
+    <script src="/js/displayBoard.js?v=@DateTime.UtcNow.Ticks"></script>
 </body>
 
 </html>

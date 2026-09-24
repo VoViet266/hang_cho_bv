@@ -34,24 +34,34 @@ public class DuocNhapApiController : ControllerBase
     }
 
     /// <summary>
-    /// Tra cứu bằng makh (mã khám) trong bảng chungtu.
-    /// - Tìm chứng từ theo makh (hoặc sohd).
-    /// - Xác định loại (13 = BHYT, 14 = Dịch vụ) từ khochan trong chungtu.
-    /// - Nếu là 14 (Dịch vụ): lấy danh sách đơn thuốc và tính tổng tienvat.
-    /// - Tra cứu thông tin bệnh nhân từ dmbenhnhan theo mabn và ngaykcb từ khambenh.
+    /// Tra cứu bằng makh (mã khám), makb, mabn hoặc sohd trong bảng chungtu, khambenh, psdangky, dmbenhnhan.
+    /// - Hỗ trợ tra cứu đa tầng: chungtu -> khambenh -> psdangky -> dmbenhnhan.
+    /// - Tự động nhận diện Dịch vụ (khochan = 13 hoặc 3) và BHYT (khochan = 14, 1, 2 hoặc mặc định).
+    /// - Không bao giờ báo lỗi từ chối khochan.
     /// </summary>
     [HttpGet("scan")]
     public async Task<IActionResult> Scan([FromQuery] string? makh, [FromQuery] string? makb)
     {
-        var code = (!string.IsNullOrWhiteSpace(makh) ? makh : makb)?.Trim();
-        if (string.IsNullOrWhiteSpace(code))
-            return Ok(new DuocNhapBarcodeResultDto { Success = false, Message = "Mã khám (makh) không được để trống." });
+        var rawCode = (!string.IsNullOrWhiteSpace(makh) ? makh : makb)?.Trim();
+        if (string.IsNullOrWhiteSpace(rawCode))
+            return Ok(new DuocNhapBarcodeResultDto { Success = false, Message = "Vui lòng nhập mã khám (makh) hoặc mã bệnh nhân." });
+
+        // Làm sạch mã (loại bỏ ký tự điều khiển từ máy quét mã vạch nếu có)
+        var code = rawCode.Replace("\r", "").Replace("\n", "").Replace("\t", "").Trim();
 
         try
         {
-            // 1. Tra cứu trực tiếp trong bảng chungtu bằng makh trước (có index scan tốc độ cao)
+            string actualMakh = code;
+            string mabn = "";
+            string maba = "";
+            string sohd = "";
+            int loai = 14; // Mặc định là 14 (BHYT)
+            decimal tongTien = 0;
+            var danhSachThuoc = new List<DuocNhapThuocItemDto>();
+
+            // 1. Tra cứu trực tiếp theo Makh trong chungtu (sử dụng B-tree index scan trên Makh, siêu nhanh < 1ms)
             var ctList = await _context.ChungTu.AsNoTracking()
-                .Where(c => c.Makh == code && (c.Xoa == null || c.Xoa == 0))
+                .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Makh == code)
                 .Select(c => new
                 {
                     c.Makh,
@@ -63,11 +73,42 @@ public class DuocNhapApiController : ControllerBase
                 })
                 .ToListAsync();
 
-            // Nếu không tìm thấy theo makh, mới thử tra theo sohd
+            // 2. Nếu chưa có, tra theo Makb trong khambenh (sử dụng PK index, < 0.5ms)
+            if (ctList.Count == 0)
+            {
+                var kb = await _context.KhamBenh.AsNoTracking()
+                    .Where(k => (k.Xoa == null || k.Xoa == 0) && k.Makb == code)
+                    .OrderByDescending(k => k.Ngaykcb)
+                    .Select(k => new { k.Makb, k.Mabn, k.Ngaykcb })
+                    .FirstOrDefaultAsync();
+
+                if (kb != null)
+                {
+                    actualMakh = kb.Makb;
+                    mabn = kb.Mabn;
+
+                    if (!string.IsNullOrEmpty(actualMakh))
+                    {
+                        ctList = await _context.ChungTu.AsNoTracking()
+                            .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Makh == actualMakh)
+                            .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Tienvat })
+                            .ToListAsync();
+                    }
+                    if (ctList.Count == 0 && !string.IsNullOrEmpty(mabn))
+                    {
+                        ctList = await _context.ChungTu.AsNoTracking()
+                            .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == mabn)
+                            .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Tienvat })
+                            .ToListAsync();
+                    }
+                }
+            }
+
+            // 3. Nếu chưa có, tra theo Mabn trong chungtu (sử dụng index scan trên Mabn, < 1ms)
             if (ctList.Count == 0)
             {
                 ctList = await _context.ChungTu.AsNoTracking()
-                    .Where(c => c.Sohd == code && (c.Xoa == null || c.Xoa == 0))
+                    .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == code)
                     .Select(c => new
                     {
                         c.Makh,
@@ -80,108 +121,123 @@ public class DuocNhapApiController : ControllerBase
                     .ToListAsync();
             }
 
-            // Fallback: nếu vẫn chưa thấy, tra psdangky theo makb để lấy mabn rồi tra chungtu
+            // 4. Nếu chưa có, tra theo Sohd trong chungtu (sử dụng index scan trên Sohd, < 1ms)
             if (ctList.Count == 0)
             {
+                ctList = await _context.ChungTu.AsNoTracking()
+                    .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Sohd == code)
+                    .Select(c => new
+                    {
+                        c.Makh,
+                        c.Mabn,
+                        c.Sohd,
+                        c.Maba,
+                        c.Khochan,
+                        c.Tienvat
+                    })
+                    .ToListAsync();
+            }
+
+            // 5. Nếu chưa có, tra psdangky theo Makb (sử dụng PK index)
+            if (ctList.Count == 0 && string.IsNullOrEmpty(mabn))
+            {
                 var dk = await _context.PsDangKy.AsNoTracking()
-                    .Where(d => d.Makb == code && (d.Xoa == null || d.Xoa == 0))
+                    .Where(d => (d.Xoa == null || d.Xoa == 0) && d.Makb == code)
                     .OrderByDescending(d => d.Ngaydk)
                     .Select(d => new { d.Makb, d.Mabn })
                     .FirstOrDefaultAsync();
 
-                if (dk != null && !string.IsNullOrWhiteSpace(dk.Mabn))
+                if (dk != null)
                 {
-                    ctList = await _context.ChungTu.AsNoTracking()
-                        .Where(c => c.Mabn == dk.Mabn && (c.Xoa == null || c.Xoa == 0))
-                        .Select(c => new
-                        {
-                            c.Makh,
-                            c.Mabn,
-                            c.Sohd,
-                            c.Maba,
-                            c.Khochan,
-                            c.Tienvat
-                        })
-                        .ToListAsync();
+                    actualMakh = dk.Makb;
+                    mabn = dk.Mabn;
+
+                    if (!string.IsNullOrEmpty(mabn))
+                    {
+                        ctList = await _context.ChungTu.AsNoTracking()
+                            .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == mabn)
+                            .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Tienvat })
+                            .ToListAsync();
+                    }
                 }
             }
 
-            if (ctList.Count == 0)
+            // 6. Nếu vẫn chưa có mabn, kiểm tra trong dmbenhnhan bằng mabn (PK index, < 0.2ms)
+            if (string.IsNullOrEmpty(mabn))
             {
-                return Ok(new DuocNhapBarcodeResultDto
+                var bnCheck = await _context.DmBenhNhan.AsNoTracking()
+                    .Where(b => b.Mabn == code)
+                    .Select(b => b.Mabn)
+                    .FirstOrDefaultAsync();
+
+                if (!string.IsNullOrEmpty(bnCheck))
                 {
-                    Success = false,
-                    Message = $"Không tìm thấy chứng từ với mã '{code}'."
-                });
+                    mabn = bnCheck;
+                }
             }
 
-            var firstCt = ctList[0];
-            var mabn = firstCt.Mabn ?? "";
-            var actualMakh = !string.IsNullOrWhiteSpace(firstCt.Makh) ? firstCt.Makh : code;
-            var maba = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Maba))?.Maba ?? firstCt.Maba;
-            var sohd = firstCt.Sohd;
-
-            // Xác định loại từ khochan trong chungtu (13 = Dịch vụ, 14 = BHYT)
-            int loai = 0;
-            if (ctList.Any(c => c.Khochan == "13")) loai = 13; // Dịch vụ
-            else if (ctList.Any(c => c.Khochan == "14")) loai = 14; // BHYT
-            else if (int.TryParse(firstCt.Khochan, out int parsed)) loai = parsed;
-
-            if (loai != 13 && loai != 14)
+            // Nếu có dữ liệu chứng từ
+            if (ctList.Count > 0)
             {
-                return Ok(new DuocNhapBarcodeResultDto
+                var firstCt = ctList[0];
+                if (string.IsNullOrEmpty(mabn)) mabn = firstCt.Mabn ?? "";
+                if (string.IsNullOrEmpty(actualMakh) || actualMakh == code)
                 {
-                    Success = false,
-                    Message = $"Khochan '{firstCt.Khochan}' trong chứng từ không hỗ trợ (cần 13 hoặc 14)."
-                });
-            }
+                    actualMakh = !string.IsNullOrWhiteSpace(firstCt.Makh) ? firstCt.Makh : code;
+                }
+                maba = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Maba))?.Maba ?? firstCt.Maba ?? "";
+                sohd = firstCt.Sohd ?? "";
 
-            // Tính tổng tiền & danh sách đơn thuốc (cho loại 13 Dịch vụ)
-            decimal tongTien = 0;
-            var danhSachThuoc = new List<DuocNhapThuocItemDto>();
+                // Xác định loại: 13 (Dịch vụ nếu có khochan 13 hoặc 3), ngược lại là 14 (BHYT)
+                if (ctList.Any(c => c.Khochan == "13" || c.Khochan == "3"))
+                {
+                    loai = 13;
+                }
+                else
+                {
+                    loai = 14;
+                }
 
-            if (loai == 13)
-            {
-                var today = DateTime.Today;
-                var allDvList = await _context.ChungTu.AsNoTracking()
-                    .Where(c => (c.Khochan == "13" || c.Khochan == "3")
-                             && (c.Xoa == null || c.Xoa == 0)
-                             && (c.Ngaylap == null || c.Ngaylap >= today)
-                             && ((!string.IsNullOrEmpty(actualMakh) && c.Makh == actualMakh) || (!string.IsNullOrEmpty(mabn) && c.Mabn == mabn)))
-                    .Select(c => new
+                // Tính tổng tiền & danh sách đơn thuốc (cho loại 13 Dịch vụ)
+                if (loai == 13)
+                {
+                    var dvItems = ctList.Where(c => c.Khochan == "13" || c.Khochan == "3").ToList();
+                    if (dvItems.Count == 0) dvItems = ctList;
+
+                    var distinctDv = dvItems
+                        .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd : Guid.NewGuid().ToString())
+                        .Select(g => g.First())
+                        .ToList();
+
+                    tongTien = distinctDv.Sum(c => c.Tienvat ?? 0);
+                    danhSachThuoc = distinctDv.Select(c => new DuocNhapThuocItemDto
                     {
-                        c.Makh,
-                        c.Mabn,
-                        c.Sohd,
-                        c.Maba,
-                        c.Khochan,
-                        c.Tienvat
-                    })
-                    .ToListAsync();
-
-                var dvItems = allDvList.Count > 0 ? allDvList : ctList.Where(c => c.Khochan == "13" || c.Khochan == "3").ToList();
-                if (dvItems.Count == 0) dvItems = ctList;
-
-                var distinctDv = dvItems
-                    .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd : Guid.NewGuid().ToString())
-                    .Select(g => g.First())
-                    .ToList();
-
-                tongTien = distinctDv.Sum(c => c.Tienvat ?? 0);
-                danhSachThuoc = distinctDv.Select(c => new DuocNhapThuocItemDto
+                        Sohd = c.Sohd,
+                        Maba = c.Maba,
+                        TienVat = c.Tienvat ?? 0
+                    }).ToList();
+                }
+                else
                 {
-                    Sohd = c.Sohd,
-                    Maba = c.Maba,
-                    TienVat = c.Tienvat ?? 0
-                }).ToList();
+                    var bhItems = ctList.Where(c => c.Khochan == "14" || c.Khochan == "1" || c.Khochan == "2").ToList();
+                    tongTien = bhItems.Count > 0 ? (bhItems[0].Tienvat ?? 0) : (firstCt.Tienvat ?? 0);
+                }
             }
             else
             {
-                var bhItems = ctList.Where(c => c.Khochan == "14" || c.Khochan == "1" || c.Khochan == "2").ToList();
-                tongTien = bhItems.Count > 0 ? (bhItems[0].Tienvat ?? 0) : (firstCt.Tienvat ?? 0);
+                // Không có chứng từ, kiểm tra có thông tin bệnh nhân không
+                if (string.IsNullOrEmpty(mabn))
+                {
+                    return Ok(new DuocNhapBarcodeResultDto
+                    {
+                        Success = false,
+                        Message = $"Không tìm thấy thông tin bệnh nhân hoặc chứng từ với mã '{code}'."
+                    });
+                }
+                loai = 14; // Mặc định hàng chờ BHYT
             }
 
-            // Tra cứu thông tin bệnh nhân từ DmBenhNhan và KhamBenh
+            // 7. Tra cứu thông tin bệnh nhân từ DmBenhNhan và KhamBenh
             string hoTen = "";
             string ngaySinh = "";
             string gioiTinh = "";
@@ -210,15 +266,20 @@ public class DuocNhapApiController : ControllerBase
                         .FirstOrDefaultAsync();
                     ngayKcb = kb;
                 }
-                if (ngayKcb == null && !string.IsNullOrEmpty(mabn))
+                if (ngayKcb == null)
                 {
                     var kb = await _context.KhamBenh.AsNoTracking()
                         .Where(k => k.Mabn == mabn && (k.Xoa == null || k.Xoa == 0))
                         .OrderByDescending(k => k.Ngaykcb)
-                        .Select(k => (DateTime?)k.Ngaykcb)
+                        .Select(k => k.Ngaykcb)
                         .FirstOrDefaultAsync();
                     ngayKcb = kb;
                 }
+            }
+
+            if (string.IsNullOrEmpty(hoTen))
+            {
+                hoTen = !string.IsNullOrEmpty(actualMakh) ? actualMakh : mabn;
             }
 
             if (ngayKcb == null)
@@ -252,36 +313,49 @@ public class DuocNhapApiController : ControllerBase
 
     /// <summary>
     /// Thêm hoặc cập nhật trạng thái trong hangchoduoc_tmd:
-    /// - Khochan lấy trực tiếp từ chungtu (13 = Dịch vụ, 14 = BHYT).
+    /// - Khochan: 13 (Dịch vụ), 14 (BHYT).
     /// - BHYT: Lần 1 = Thêm (dagiao = 0), Lần 2 = Ẩn (dagiao = 1).
     /// - Dịch vụ: Lần 1 = Thêm (dagiao = 0, Chờ thu), Lần 2 = Thanh toán (dagiao = 1, Đang soạn), Lần 3 = Ẩn tên (dagiao = 2, Đã phát).
     /// </summary>
     [HttpPost("them-hang-cho")]
     public async Task<IActionResult> ThemHangCho([FromBody] DuocNhapThemRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Makb) || string.IsNullOrWhiteSpace(req.Mabn))
-            return Ok(new DuocNhapThemResponse { Success = false, Message = "Thiếu makb hoặc mabn." });
+        var makb = req.Makb?.Trim() ?? "";
+        var mabn = req.Mabn?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(makb) && string.IsNullOrWhiteSpace(mabn))
+            return Ok(new DuocNhapThemResponse { Success = false, Message = "Thiếu mã khám hoặc mã bệnh nhân." });
+
+        if (string.IsNullOrEmpty(makb)) makb = mabn;
+        if (string.IsNullOrEmpty(mabn)) mabn = makb;
 
         try
         {
-            DateTime? ngayKcbUtc = req.NgayKcb.HasValue 
-                ? DateTime.SpecifyKind(req.NgayKcb.Value, DateTimeKind.Utc) 
-                : null;
+            DateTime? ngayKcbVal = req.NgayKcb ?? DateTime.Now;
 
             var today = DateTime.UtcNow.Date;
 
-            // Xác định khochan đích: lấy trực tiếp từ chungtu
-            int targetKhochan = req.Khochan > 0 ? req.Khochan : (req.Loai > 0 ? req.Loai : 14);
+            // Xác định khochan đích: 13 cho Dịch vụ, 14 cho BHYT
+            int targetKhochan = (req.Khochan == 13 || req.Khochan == 3 || req.Loai == 13) ? 13 : 14;
 
-            // Kiểm tra bệnh nhân đã có trong hàng chờ hôm nay chưa
-            var existing = await _context.HangChoDuocTmd
-                .Where(h => (h.Makb == req.Makb || h.Mabn == req.Mabn)
-                         && h.Xoa == 0
-                         && (h.Ngaynhap == null || h.Ngaynhap >= today))
-                .OrderByDescending(h => h.Ngaynhap)
-                .FirstOrDefaultAsync();
+            // Kiểm tra bệnh nhân đã có trong hàng chờ hôm nay chưa (ưu tiên makb trước, sau đó mabn)
+            HangChoDuocTmd? existing = null;
+            if (!string.IsNullOrEmpty(makb))
+            {
+                existing = await _context.HangChoDuocTmd
+                    .Where(h => h.Makb == makb && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today))
+                    .OrderByDescending(h => h.Ngaynhap)
+                    .FirstOrDefaultAsync();
+            }
+            if (existing == null && !string.IsNullOrEmpty(mabn))
+            {
+                existing = await _context.HangChoDuocTmd
+                    .Where(h => h.Mabn == mabn && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today))
+                    .OrderByDescending(h => h.Ngaynhap)
+                    .FirstOrDefaultAsync();
+            }
 
-            bool isDichVu = (targetKhochan == 13 || targetKhochan == 3 || (existing != null && (existing.Khochan == 13 || existing.Khochan == 3)));
+            bool isDichVu = (targetKhochan == 13 || (existing != null && (existing.Khochan == 13 || existing.Khochan == 3)));
 
             if (isDichVu)
             {
@@ -290,11 +364,11 @@ public class DuocNhapApiController : ControllerBase
                 {
                     await _context.Database.ExecuteSqlInterpolatedAsync($@"
                         INSERT INTO current.hangchoduoc_tmd (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao)
-                        VALUES ({req.Mabn}, {req.Makb}, now(), now(), {req.OCua}, {targetKhochan}, 0, {ngayKcbUtc}, {req.Maba}, 0)
+                        VALUES ({mabn}, {makb}, now(), now(), {req.OCua}, {targetKhochan}, 0, {ngayKcbVal}, {req.Maba}, 0)
                     ");
 
-                    _logger.LogInformation("Lần 1 Thêm Dịch vụ: makb={Makb}, khochan={Khochan}, oCua={OCua}", req.Makb, targetKhochan, req.OCua);
-                    NotifyDuocQueuesUpdated();
+                    _logger.LogInformation("Lần 1 Thêm Dịch vụ: makb={Makb}, mabn={Mabn}, khochan={Khochan}, oCua={OCua}", makb, mabn, targetKhochan, req.OCua);
+                    NotifyDuocQueuesUpdated(makb, mabn);
                     return Ok(new DuocNhapThemResponse
                     {
                         Success = true,
@@ -311,11 +385,11 @@ public class DuocNhapApiController : ControllerBase
                     await _context.Database.ExecuteSqlInterpolatedAsync($@"
                         UPDATE current.hangchoduoc_tmd
                         SET dagiao = 1, ngaygiao = now(), taikhoan = COALESCE({req.OCua}, taikhoan)
-                        WHERE (makb = {req.Makb} OR mabn = {req.Mabn}) AND dagiao = 0 AND xoa = 0
+                        WHERE ((makb = {makb} AND makb <> '') OR (mabn = {mabn} AND mabn <> '')) AND dagiao = 0 AND xoa = 0
                     ");
 
-                    _logger.LogInformation("Lần 2 Thanh toán Dịch vụ: makb={Makb}", req.Makb);
-                    NotifyDuocQueuesUpdated();
+                    _logger.LogInformation("Lần 2 Thanh toán Dịch vụ: makb={Makb}, mabn={Mabn}", makb, mabn);
+                    NotifyDuocQueuesUpdated(makb, mabn);
                     return Ok(new DuocNhapThemResponse
                     {
                         Success = true,
@@ -333,11 +407,11 @@ public class DuocNhapApiController : ControllerBase
                     await _context.Database.ExecuteSqlInterpolatedAsync($@"
                         UPDATE current.hangchoduoc_tmd
                         SET dagiao = 2, ngaygiao = now(), taikhoan = COALESCE({req.OCua}, taikhoan)
-                        WHERE (makb = {req.Makb} OR mabn = {req.Mabn}) AND dagiao = 1 AND xoa = 0
+                        WHERE ((makb = {makb} AND makb <> '') OR (mabn = {mabn} AND mabn <> '')) AND dagiao = 1 AND xoa = 0
                     ");
 
-                    _logger.LogInformation("Lần 3 Ẩn tên Dịch vụ (Đã phát): makb={Makb}", req.Makb);
-                    NotifyDuocQueuesUpdated();
+                    _logger.LogInformation("Lần 3 Ẩn tên Dịch vụ (Đã phát): makb={Makb}, mabn={Mabn}", makb, mabn);
+                    NotifyDuocQueuesUpdated(makb, mabn);
                     return Ok(new DuocNhapThemResponse
                     {
                         Success = true,
@@ -346,6 +420,7 @@ public class DuocNhapApiController : ControllerBase
                         Khochan = existing.Khochan,
                         OCua = req.OCua ?? existing.Taikhoan,
                         IsUpdate = true,
+                        Message = "Đã phát thuốc hoàn tất (Ẩn khỏi TV)."
                     });
                 }
                 else
@@ -356,7 +431,8 @@ public class DuocNhapApiController : ControllerBase
                         Action = "da_xong",
                         Dagiao = existing.Dagiao,
                         Khochan = existing.Khochan,
-                        OCua = existing.Taikhoan
+                        OCua = existing.Taikhoan,
+                        Message = "Bệnh nhân đã hoàn tất phát thuốc trước đó."
                     });
                 }
             }
@@ -367,11 +443,11 @@ public class DuocNhapApiController : ControllerBase
                 {
                     await _context.Database.ExecuteSqlInterpolatedAsync($@"
                         INSERT INTO current.hangchoduoc_tmd (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao)
-                        VALUES ({req.Mabn}, {req.Makb}, now(), now(), {req.OCua}, {targetKhochan}, 0, {ngayKcbUtc}, {req.Maba}, 0)
+                        VALUES ({mabn}, {makb}, now(), now(), {req.OCua}, {targetKhochan}, 0, {ngayKcbVal}, {req.Maba}, 0)
                     ");
 
-                    _logger.LogInformation("Lần 1 Thêm BHYT: makb={Makb}, khochan={Khochan}, oCua={OCua}", req.Makb, targetKhochan, req.OCua);
-                    NotifyDuocQueuesUpdated();
+                    _logger.LogInformation("Lần 1 Thêm BHYT: makb={Makb}, mabn={Mabn}, khochan={Khochan}, oCua={OCua}", makb, mabn, targetKhochan, req.OCua);
+                    NotifyDuocQueuesUpdated(makb, mabn);
                     return Ok(new DuocNhapThemResponse
                     {
                         Success = true,
@@ -388,11 +464,11 @@ public class DuocNhapApiController : ControllerBase
                     await _context.Database.ExecuteSqlInterpolatedAsync($@"
                         UPDATE current.hangchoduoc_tmd
                         SET dagiao = 1, ngaygiao = now(), taikhoan = COALESCE({req.OCua}, taikhoan)
-                        WHERE (makb = {req.Makb} OR mabn = {req.Mabn}) AND dagiao = 0 AND xoa = 0
+                        WHERE ((makb = {makb} AND makb <> '') OR (mabn = {mabn} AND mabn <> '')) AND dagiao = 0 AND xoa = 0
                     ");
 
-                    _logger.LogInformation("Lần 2 Ẩn tên BHYT (Đã phát): makb={Makb}", req.Makb);
-                    NotifyDuocQueuesUpdated();
+                    _logger.LogInformation("Lần 2 Ẩn tên BHYT (Đã phát): makb={Makb}, mabn={Mabn}", makb, mabn);
+                    NotifyDuocQueuesUpdated(makb, mabn);
                     return Ok(new DuocNhapThemResponse
                     {
                         Success = true,
@@ -401,6 +477,7 @@ public class DuocNhapApiController : ControllerBase
                         Khochan = existing.Khochan,
                         OCua = req.OCua ?? existing.Taikhoan,
                         IsUpdate = true,
+                        Message = "Đã phát thuốc hoàn tất (Ẩn khỏi TV)."
                     });
                 }
                 else
@@ -411,14 +488,15 @@ public class DuocNhapApiController : ControllerBase
                         Action = "da_xong",
                         Dagiao = existing.Dagiao,
                         Khochan = existing.Khochan,
-                        OCua = existing.Taikhoan
+                        OCua = existing.Taikhoan,
+                        Message = "Bệnh nhân đã được phát thuốc trước đó."
                     });
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Lỗi thêm/cập nhật hàng chờ dược makb={Makb}", req.Makb);
+            _logger.LogError(ex, "Lỗi thêm/cập nhật hàng chờ dược makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
             return Ok(new DuocNhapThemResponse { Success = false, Message = "Lỗi hệ thống: " + ex.Message });
         }
     }
@@ -483,25 +561,31 @@ public class DuocNhapApiController : ControllerBase
             ");
 
             var hoTen = req.HoTen?.Trim() ?? "";
-            if (string.IsNullOrEmpty(hoTen) && !string.IsNullOrEmpty(mabn))
+            var namSinh = req.NamSinh?.Trim() ?? "";
+            if ((string.IsNullOrEmpty(hoTen) || string.IsNullOrEmpty(namSinh)) && !string.IsNullOrEmpty(mabn))
             {
                 var bn = await _context.DmBenhNhan.AsNoTracking()
                     .Where(b => b.Mabn == mabn)
-                    .Select(b => new { b.Holot, b.Ten })
+                    .Select(b => new { b.Holot, b.Ten, b.Ngaysinh })
                     .FirstOrDefaultAsync();
-                if (bn != null) hoTen = $"{bn.Holot} {bn.Ten}".Trim();
+                if (bn != null)
+                {
+                    if (string.IsNullOrEmpty(hoTen)) hoTen = $"{bn.Holot} {bn.Ten}".Trim();
+                    if (string.IsNullOrEmpty(namSinh) && bn.Ngaysinh.HasValue) namSinh = bn.Ngaysinh.Value.ToString("yyyy");
+                }
             }
 
-            _logger.LogInformation("Chỉ định ô cửa & gọi loa makb={Makb}, oCua={OCua}, hoTen={HoTen}, rows={Rows}", makb, oCua, hoTen, rows);
+            _logger.LogInformation("Chỉ định ô cửa & gọi loa makb={Makb}, oCua={OCua}, hoTen={HoTen}, namSinh={NamSinh}, rows={Rows}", makb, oCua, hoTen, namSinh, rows);
             NotifyDuocQueuesUpdated(makb, mabn);
 
             // Phát loa gọi bệnh nhân qua SignalR tới màn hình TV
             if (!string.IsNullOrEmpty(hoTen) && !string.IsNullOrEmpty(oCua))
             {
-                _logger.LogInformation("[SignalR Broadcast] Gửi duoc_trigger_speak: hoTen={HoTen}, oCua={OCua}", hoTen, oCua);
+                _logger.LogInformation("[SignalR Broadcast] Gửi duoc_trigger_speak: hoTen={HoTen}, namSinh={NamSinh}, oCua={OCua}", hoTen, namSinh, oCua);
                 await _hubContext.Clients.All.SendAsync("duoc_trigger_speak", new
                 {
                     hoTen = hoTen,
+                    namSinh = namSinh,
                     oCua = oCua,
                     isBhyt = req.IsBhyt ?? true,
                     trangThai = req.TrangThai ?? ""
@@ -711,11 +795,11 @@ public class DuocNhapApiController : ControllerBase
                 string trangThaiStr;
                 if (isBhyt)
                 {
-                    trangThaiStr = "Chờ phát";
+                    trangThaiStr = "Đang soạn";
                 }
                 else
                 {
-                    trangThaiStr = (item.Dagiao >= 1) ? "Đang soạn thuốc" : "Chờ thu";
+                    trangThaiStr = (item.Dagiao >= 1) ? "Đang soạn" : "Chờ thu";
                 }
 
                 return new DuocChuaGiaoItemDto

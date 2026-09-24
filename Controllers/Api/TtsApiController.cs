@@ -26,6 +26,8 @@ public class TtsApiController : ControllerBase
             return BadRequest("Thiếu tham số 'text'");
         }
 
+        _logger.LogInformation("[TTS Request] Stream nội dung: \"{Text}\"", content);
+
         try
         {
             var result = await _ttsService.GetOrGenerateAudioAsync(content);
@@ -60,6 +62,8 @@ public class TtsApiController : ControllerBase
         {
             return BadRequest(new { error = "Thiếu trường 'text' trong body" });
         }
+
+        _logger.LogInformation("[TTS Request] Tạo audio: \"{Text}\"", text);
 
         try
         {

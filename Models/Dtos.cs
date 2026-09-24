@@ -489,6 +489,9 @@ public class DuocCapNhatTrangThaiRequest
 
     [JsonPropertyName("trangThai")]
     public string? TrangThai { get; set; }
+
+    [JsonPropertyName("namSinh")]
+    public string? NamSinh { get; set; }
 }
 
 public class DuocChuaGiaoItemDto
