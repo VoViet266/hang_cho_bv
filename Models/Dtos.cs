@@ -537,6 +537,12 @@ public class DuocChuaGiaoItemDto
 
     [JsonPropertyName("oCua")]
     public string OCua { get; set; } = string.Empty;
+
+    [JsonPropertyName("sohd")]
+    public string? Sohd { get; set; }
+
+    [JsonPropertyName("maba")]
+    public string? Maba { get; set; }
 }
 
 public class DuocDaGiaoItemDto
@@ -573,6 +579,12 @@ public class DuocDaGiaoItemDto
 
     [JsonPropertyName("oCua")]
     public string OCua { get; set; } = string.Empty;
+
+    [JsonPropertyName("sohd")]
+    public string? Sohd { get; set; }
+
+    [JsonPropertyName("maba")]
+    public string? Maba { get; set; }
 }
 
 public class DuocHoanTacRequest

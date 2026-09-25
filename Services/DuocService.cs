@@ -26,22 +26,27 @@ public class DuocService : IDuocService
     {
         var today = DateTime.Today;
         var tomorrow = today.AddDays(1);
-        var isBhyt = duocType.Equals("bhyt", StringComparison.OrdinalIgnoreCase);
+        var isAll = duocType.Equals("all", StringComparison.OrdinalIgnoreCase);
+        var isBhyt = !isAll && duocType.Equals("bhyt", StringComparison.OrdinalIgnoreCase);
 
         var query = _context.HangChoDuocTmd.AsNoTracking()
             .Where(h => h.Xoa == 0
                      && h.Ngaynhap >= today && h.Ngaynhap < tomorrow);
 
-        if (isBhyt)
+        if (isAll)
         {
-            query = query.Where(h => h.Khochan == 14);
+            query = query.Where(h => h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2 || h.Khochan == 13 || h.Khochan == 3);
+        }
+        else if (isBhyt)
+        {
+            query = query.Where(h => h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2);
         }
         else
         {
-            query = query.Where(h => h.Khochan == 13);
+            query = query.Where(h => h.Khochan == 13 || h.Khochan == 3);
         }
 
-        // Đếm số lượng bệnh nhân khác nhau trong ngày (tránh đếm trùng)
+        // Đếm số lượng bệnh nhân khác nhau trong ngày
         return await query
             .Select(h => !string.IsNullOrEmpty(h.Makb) ? h.Makb : h.Mabn)
             .Distinct()
@@ -58,8 +63,7 @@ public class DuocService : IDuocService
                 ? "KHOA DƯỢC - HÀNG CHỜ PHÁT THUỐC BẢO HIỂM"
                 : "KHOA DƯỢC - HÀNG CHỜ PHÁT THUỐC DỊCH VỤ");
 
-        var cutoffTime = DateTime.Today; // Hôm nay
-        var tomorrow = cutoffTime.AddDays(1);
+        var cutoffTime = DateTime.Today;
 
         try
         {
@@ -101,24 +105,24 @@ public class DuocService : IDuocService
                 })
                 .ToListAsync();
 
-            // Lấy thông tin danh mục bệnh nhân CHỈ cho danh sách mã bệnh nhân trong hàng chờ (nhanh gấp 100 lần so với JOIN toàn bảng)
             var mabnList = rawHangCho
                 .Select(h => h.Mabn)
                 .Where(m => !string.IsNullOrWhiteSpace(m))
                 .Distinct()
                 .ToList();
 
-            var bnDict = new Dictionary<string, (string Holot, string Ten, DateTime? Ngaysinh, decimal? Gioitinh)>();
+            var bnDict = new Dictionary<string, (string Holot, string Ten, DateTime? Ngaysinh, decimal? Gioitinh)>(StringComparer.OrdinalIgnoreCase);
             if (mabnList.Count > 0)
             {
                 var bnRecords = await _context.DmBenhNhan.AsNoTracking()
-                    .Where(bn => mabnList.Contains(bn.Mabn))
+                    .Where(bn => bn.Mabn != null && mabnList.Contains(bn.Mabn))
                     .Select(bn => new { bn.Mabn, bn.Holot, bn.Ten, bn.Ngaysinh, bn.Gioitinh })
                     .ToListAsync();
 
                 foreach (var b in bnRecords)
                 {
-                    bnDict[b.Mabn] = (b.Holot ?? "", b.Ten ?? "", b.Ngaysinh, b.Gioitinh);
+                    if (!string.IsNullOrEmpty(b.Mabn))
+                        bnDict[b.Mabn] = (b.Holot ?? "", b.Ten ?? "", b.Ngaysinh, b.Gioitinh);
                 }
             }
 
@@ -146,16 +150,16 @@ public class DuocService : IDuocService
                 };
             }).ToList();
 
-            // Gom nhóm theo bệnh nhân (makb hoặc mabn) để mỗi bệnh nhân chỉ xuất hiện 1 dòng duy nhất trên bảng TV
+            // Gom nhóm theo (Makb + Loại toa 13/14) để phân biệt rõ ràng từng toa (Toa BHYT và Toa Dịch Vụ)
             var groupedList = rawList
-                .GroupBy(x => !string.IsNullOrWhiteSpace(x.Makb) ? x.Makb.Trim() : (!string.IsNullOrWhiteSpace(x.Mabn) ? x.Mabn.Trim() : Guid.NewGuid().ToString()))
+                .GroupBy(x => $"{(!string.IsNullOrWhiteSpace(x.Makb) ? x.Makb.Trim() : (!string.IsNullOrWhiteSpace(x.Mabn) ? x.Mabn.Trim() : (x.Maba ?? string.Empty)))}_{((x.Khochan == 13 || x.Khochan == 3) ? 13 : 14)}")
                 .Select(g =>
                 {
                     var first = g.OrderBy(x => x.Ngaynhap ?? DateTime.MaxValue)
                                  .ThenBy(x => x.Makb)
                                  .ThenBy(x => x.Mabn)
                                  .First();
-                    var maxKhochan = g.Max(x => x.Khochan);
+                    var khochanVal = first.Khochan;
                     var maxDagiao = g.Max(x => x.Dagiao);
                     var latestNgayGiao = g.Max(x => x.Ngaygiao);
                     var assignedOcua = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "";
@@ -163,7 +167,7 @@ public class DuocService : IDuocService
                     {
                         first.Mabn,
                         first.Makb,
-                        Khochan = maxKhochan,
+                        Khochan = khochanVal,
                         Dagiao = maxDagiao,
                         Dathu = g.Any(x => x.Dathu == true),
                         first.Maba,
@@ -185,26 +189,45 @@ public class DuocService : IDuocService
                 .ToList();
 
             // Nếu là Dịch vụ: tra cứu số tiền và trạng thái đã in (dain != 0) từ chungtu
-            var dvInfoMap = new Dictionary<string, (decimal TotalTien, bool DaThu)>();
+            var dvInfoMap = new Dictionary<string, (decimal TotalTien, bool DaThu)>(StringComparer.OrdinalIgnoreCase);
             if (!isBhyt && groupedList.Count > 0)
             {
-                var now = DateTime.UtcNow;
-
-                var allMakhs = groupedList.Select(g => g.Makb).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct().ToList();
-                var allMabns = groupedList.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct().ToList();
+                var dvGrouped = groupedList.Where(g => g.Khochan == 13 || g.Khochan == 3).ToList();
+                var allMakhs = dvGrouped.Select(g => g.Makb).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                var allMabns = dvGrouped.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
                 if (allMakhs.Count > 0 || allMabns.Count > 0)
                 {
                     var yesterday = DateTime.Today.AddDays(-1);
-                    var matchedChungTu = await _context.ChungTu.AsNoTracking()
-                        .Where(c => (c.Xoa == null || c.Xoa == 0)
-                                 && (c.Khochan == "13" || c.Khochan == "3")
-                                 && (c.Ngaylap == null || c.Ngaylap >= yesterday)
-                                 && ((c.Makh != null && allMakhs.Contains(c.Makh)) || (c.Mabn != null && allMabns.Contains(c.Mabn))))
-                        .Select(c => new { c.Sohd, c.Makh, c.Mabn, c.Thanhtien, c.Dain })
-                        .ToListAsync();
+                    var matchedChungTu = new List<ChungTuShortDto>();
 
-                    foreach (var g in groupedList)
+                    if (allMakhs.Count > 0)
+                    {
+                        var byMakh = await _context.ChungTu.AsNoTracking()
+                            .Where(c => (c.Xoa == null || c.Xoa == 0)
+                                     && (c.Khochan == "13" || c.Khochan == "3")
+                                     && (c.Ngaylap == null || c.Ngaylap >= yesterday)
+                                     && c.Makh != null && allMakhs.Contains(c.Makh))
+                            .Select(c => new ChungTuShortDto { Sohd = c.Sohd, Makh = c.Makh, Mabn = c.Mabn, Thanhtien = c.Thanhtien, Dain = c.Dain })
+                            .ToListAsync();
+                        matchedChungTu.AddRange(byMakh);
+                    }
+
+                    var foundMabns = matchedChungTu.Where(c => !string.IsNullOrEmpty(c.Mabn)).Select(c => c.Mabn!.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    var remainingMabns = allMabns.Where(m => !foundMabns.Contains(m)).ToList();
+                    if (remainingMabns.Count > 0)
+                    {
+                        var byMabn = await _context.ChungTu.AsNoTracking()
+                            .Where(c => (c.Xoa == null || c.Xoa == 0)
+                                     && (c.Khochan == "13" || c.Khochan == "3")
+                                     && (c.Ngaylap == null || c.Ngaylap >= yesterday)
+                                     && c.Mabn != null && remainingMabns.Contains(c.Mabn))
+                            .Select(c => new ChungTuShortDto { Sohd = c.Sohd, Makh = c.Makh, Mabn = c.Mabn, Thanhtien = c.Thanhtien, Dain = c.Dain })
+                            .ToListAsync();
+                        matchedChungTu.AddRange(byMabn);
+                    }
+
+                    foreach (var g in dvGrouped)
                     {
                         var gMakb = g.Makb?.Trim() ?? "";
                         var gMabn = g.Mabn?.Trim() ?? "";
@@ -212,17 +235,17 @@ public class DuocService : IDuocService
                         if (string.IsNullOrEmpty(key)) continue;
 
                         var patientCts = matchedChungTu
-                            .Where(c => (!string.IsNullOrEmpty(gMakb) && (c.Makh?.Trim() == gMakb))
-                                     || (string.IsNullOrEmpty(gMakb) && !string.IsNullOrEmpty(gMabn) && (c.Mabn?.Trim() == gMabn)))
-                            .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : Guid.NewGuid().ToString())
+                            .Where(c => (!string.IsNullOrEmpty(gMakb) && string.Equals(c.Makh?.Trim(), gMakb, StringComparison.OrdinalIgnoreCase))
+                                     || (string.IsNullOrEmpty(gMakb) && !string.IsNullOrEmpty(gMabn) && string.Equals(c.Mabn?.Trim(), gMabn, StringComparison.OrdinalIgnoreCase)))
+                            .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? string.Empty))
                             .Select(cg => cg.First())
                             .ToList();
 
                         if (patientCts.Count == 0 && !string.IsNullOrEmpty(gMabn))
                         {
                             patientCts = matchedChungTu
-                                .Where(c => c.Mabn?.Trim() == gMabn)
-                                .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : Guid.NewGuid().ToString())
+                                .Where(c => string.Equals(c.Mabn?.Trim(), gMabn, StringComparison.OrdinalIgnoreCase))
+                                .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Mabn ?? string.Empty))
                                 .Select(cg => cg.First())
                                 .ToList();
                         }
@@ -356,4 +379,13 @@ public class DuocService : IDuocService
             };
         }
     }
+}
+
+internal class ChungTuShortDto
+{
+    public string? Sohd { get; set; }
+    public string? Makh { get; set; }
+    public string? Mabn { get; set; }
+    public decimal? Thanhtien { get; set; }
+    public decimal? Dain { get; set; }
 }

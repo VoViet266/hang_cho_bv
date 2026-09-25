@@ -364,7 +364,7 @@
                                             {
                                                 <span
                                                     class="inline-block bg-amber-50 text-amber-800 px-3 md:px-5 py-1.5 rounded-xl text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-amber-300 shadow-sm @(isNear ? "animate-pulse-red" : "")">
-                                                    Chờ thu
+                                                    Chờ thu tiền
                                                 </span>
                                             }
                                             else
@@ -807,8 +807,10 @@
 
                     hubConnection.on("room_data_updated", (payload) => {
                         if (payload && payload.roomType === "duoc") {
-                            // Mode all: nhận update từ cả bhyt và dichvu
-                            if (DUOC_TYPE === 'all' || payload.roomId === DUOC_TYPE) {
+                            // Render trực tiếp từ payload data nếu có, tránh query lại DB
+                            if (DUOC_TYPE !== 'all' && payload.roomId === DUOC_TYPE && payload.data) {
+                                renderQueue(payload.data);
+                            } else if (DUOC_TYPE === 'all' || payload.roomId === DUOC_TYPE) {
                                 fetchQueueData();
                             }
                         }
@@ -979,8 +981,8 @@
                     }, { once: true });
                 }
 
-                // Fallback polling mỗi 3 giây
-                setInterval(fetchQueueData, 3000);
+                // Fallback polling mỗi 15 giây (SignalR đảm bảo cập nhật tức thì < 20ms)
+                setInterval(fetchQueueData, 15000);
         </script>
     </body>
 

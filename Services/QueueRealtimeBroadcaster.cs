@@ -86,8 +86,7 @@ public class QueueRealtimeBroadcaster : IQueueRealtimeBroadcaster
 
     private static string ComputeMd5(string input)
     {
-        using var md5 = MD5.Create();
-        var bytes = md5.ComputeHash(Encoding.UTF8.GetBytes(input));
+        var bytes = MD5.HashData(Encoding.UTF8.GetBytes(input));
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }
