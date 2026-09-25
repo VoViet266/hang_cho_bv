@@ -13,16 +13,6 @@ public interface IDuocService
 
 public class DuocService : IDuocService
 {
-    private static readonly ConcurrentDictionary<string, (decimal TotalTien, DateTime ExpireAt)> _dvMoneyCache = new();
-
-    public static void InvalidateCache(string? key)
-    {
-        if (!string.IsNullOrWhiteSpace(key))
-        {
-            _dvMoneyCache.TryRemove(key.Trim(), out _);
-        }
-    }
-
     private readonly AppDbContext _context;
     private readonly ILogger<DuocService> _logger;
 
@@ -44,11 +34,11 @@ public class DuocService : IDuocService
 
         if (isBhyt)
         {
-            query = query.Where(h => h.Khochan == 14 );
+            query = query.Where(h => h.Khochan == 14);
         }
         else
         {
-            query = query.Where(h => h.Khochan == 13 );
+            query = query.Where(h => h.Khochan == 13);
         }
 
         // Đếm số lượng bệnh nhân khác nhau trong ngày (tránh đếm trùng)
@@ -60,9 +50,9 @@ public class DuocService : IDuocService
 
     public async Task<DuocQueuePageDto> LayDanhSachHangChoDuocAsync(string duocType)
     {
-        var isAll  = duocType.Equals("all",    StringComparison.OrdinalIgnoreCase);
+        var isAll = duocType.Equals("all", StringComparison.OrdinalIgnoreCase);
         var isBhyt = !isAll && duocType.Equals("bhyt", StringComparison.OrdinalIgnoreCase);
-        var title  = isAll
+        var title = isAll
             ? "KHOA DƯỢC - HÀNG CHỜ PHÁT THUỐC"
             : (isBhyt
                 ? "KHOA DƯỢC - HÀNG CHỜ PHÁT THUỐC BẢO HIỂM"
@@ -75,23 +65,22 @@ public class DuocService : IDuocService
         {
             var baseQuery = _context.HangChoDuocTmd.AsNoTracking()
                 .Where(h => h.Xoa == 0
-                         && (h.Ngaynhap == null || h.Ngaynhap >= cutoffTime));
+                         && (h.Ngaynhap == null || h.Ngaynhap >= cutoffTime)
+                         && h.Dagiao == 0);
 
             if (isAll)
             {
-                // Gộp cả BHYT (dagiao=0) và Dịch Vụ (dagiao=0,1)
                 baseQuery = baseQuery.Where(h =>
-                    ((h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2) && h.Dagiao == 0)
-                    || ((h.Khochan == 13 || h.Khochan == 3) && (h.Dagiao == 0 || h.Dagiao == 1)));
+                    h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2
+                    || h.Khochan == 13 || h.Khochan == 3);
             }
             else if (isBhyt)
             {
-                baseQuery = baseQuery.Where(h => (h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2) && h.Dagiao == 0);
+                baseQuery = baseQuery.Where(h => h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2);
             }
             else
             {
-                // Dịch vụ: lấy cả dagiao = 0 (Chờ thu) và dagiao = 1 (Đang soạn thuốc)
-                baseQuery = baseQuery.Where(h => (h.Khochan == 13 || h.Khochan == 3) && (h.Dagiao == 0 || h.Dagiao == 1));
+                baseQuery = baseQuery.Where(h => h.Khochan == 13 || h.Khochan == 3);
             }
 
             var rawHangCho = await baseQuery
@@ -134,8 +123,8 @@ public class DuocService : IDuocService
 
             var rawList = rawHangCho.Select(h =>
             {
-                var (holot, ten, ngaysinh, gioitinh) = bnDict.TryGetValue(h.Mabn ?? "", out var bn) 
-                    ? bn 
+                var (holot, ten, ngaysinh, gioitinh) = bnDict.TryGetValue(h.Mabn ?? "", out var bn)
+                    ? bn
                     : (string.Empty, string.Empty, (DateTime?)null, (decimal?)null);
 
                 return new
@@ -188,74 +177,54 @@ public class DuocService : IDuocService
                 .ThenBy(x => x.Mabn)
                 .ToList();
 
-            // Nếu là Dịch vụ: tra cứu số tiền từ chungtu (theo makh/mabn) và tổng lại tất cả toa dịch vụ (khochan = 13)
-            var dvInfoMap = new Dictionary<string, decimal>();
+            // Nếu là Dịch vụ: tra cứu số tiền và trạng thái đã in (dain != 0) từ chungtu
+            var dvInfoMap = new Dictionary<string, (decimal TotalTien, bool DaThu)>();
             if (!isBhyt && groupedList.Count > 0)
             {
                 var now = DateTime.UtcNow;
 
-                // Kiểm tra cache tiền trước
-                var missingMakhs = new List<string>();
-                var missingMabnsWithoutMakh = new List<string>();
+                var allMakhs = groupedList.Select(g => g.Makb).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct().ToList();
+                var allMabns = groupedList.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct().ToList();
 
-                foreach (var g in groupedList)
+                if (allMakhs.Count > 0 || allMabns.Count > 0)
                 {
-                    var key = !string.IsNullOrEmpty(g.Makb) ? g.Makb : g.Mabn;
-                    if (!string.IsNullOrEmpty(key) && _dvMoneyCache.TryGetValue(key, out var cached) && cached.ExpireAt > now)
-                    {
-                        dvInfoMap[key] = cached.TotalTien;
-                    }
-                    else
-                    {
-                        if (!string.IsNullOrEmpty(g.Makb)) missingMakhs.Add(g.Makb);
-                        else if (!string.IsNullOrEmpty(g.Mabn)) missingMabnsWithoutMakh.Add(g.Mabn);
-                    }
-                }
-
-                if (missingMakhs.Count > 0 || missingMabnsWithoutMakh.Count > 0)
-                {
-                    var matchedChungTu = new List<(string? Sohd, string? Makh, string? Mabn, decimal? Tienvat)>();
-
-                    // Dùng trực tiếp Index Scan trên makh (chỉ vài mili-giây, không quét toàn bảng)
-                    if (missingMakhs.Count > 0)
-                    {
-                        var makhRecords = await _context.ChungTu.AsNoTracking()
-                            .Where(c => (c.Xoa == null || c.Xoa == 0)
-                                     && (c.Khochan == "13" || c.Khochan == "3")
-                                     && missingMakhs.Contains(c.Makh))
-                            .Select(c => new { c.Sohd, c.Makh, c.Mabn, c.Tienvat })
-                            .ToListAsync();
-
-                        matchedChungTu.AddRange(makhRecords.Select(c => (c.Sohd, c.Makh, c.Mabn, c.Tienvat)));
-                    }
-
-                    if (missingMabnsWithoutMakh.Count > 0)
-                    {
-                        var mabnRecords = await _context.ChungTu.AsNoTracking()
-                            .Where(c => (c.Xoa == null || c.Xoa == 0)
-                                     && (c.Khochan == "13" || c.Khochan == "3")
-                                     && missingMabnsWithoutMakh.Contains(c.Mabn))
-                            .Select(c => new { c.Sohd, c.Makh, c.Mabn, c.Tienvat })
-                            .ToListAsync();
-
-                        matchedChungTu.AddRange(mabnRecords.Select(c => (c.Sohd, c.Makh, c.Mabn, c.Tienvat)));
-                    }
+                    var yesterday = DateTime.Today.AddDays(-1);
+                    var matchedChungTu = await _context.ChungTu.AsNoTracking()
+                        .Where(c => (c.Xoa == null || c.Xoa == 0)
+                                 && (c.Khochan == "13" || c.Khochan == "3")
+                                 && (c.Ngaylap == null || c.Ngaylap >= yesterday)
+                                 && ((c.Makh != null && allMakhs.Contains(c.Makh)) || (c.Mabn != null && allMabns.Contains(c.Mabn))))
+                        .Select(c => new { c.Sohd, c.Makh, c.Mabn, c.Thanhtien, c.Dain })
+                        .ToListAsync();
 
                     foreach (var g in groupedList)
                     {
-                        var key = !string.IsNullOrEmpty(g.Makb) ? g.Makb : g.Mabn;
-                        if (string.IsNullOrEmpty(key) || dvInfoMap.ContainsKey(key)) continue;
+                        var gMakb = g.Makb?.Trim() ?? "";
+                        var gMabn = g.Mabn?.Trim() ?? "";
+                        var key = !string.IsNullOrEmpty(gMakb) ? gMakb : gMabn;
+                        if (string.IsNullOrEmpty(key)) continue;
 
                         var patientCts = matchedChungTu
-                            .Where(c => (!string.IsNullOrEmpty(g.Makb) && c.Makh == g.Makb)
-                                     || (!string.IsNullOrEmpty(g.Mabn) && c.Mabn == g.Mabn))
-                            .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd : Guid.NewGuid().ToString())
+                            .Where(c => (!string.IsNullOrEmpty(gMakb) && (c.Makh?.Trim() == gMakb))
+                                     || (string.IsNullOrEmpty(gMakb) && !string.IsNullOrEmpty(gMabn) && (c.Mabn?.Trim() == gMabn)))
+                            .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : Guid.NewGuid().ToString())
                             .Select(cg => cg.First())
                             .ToList();
 
-                        decimal totalTien = patientCts.Sum(c => c.Tienvat ?? 0);
-                        dvInfoMap[key] = totalTien;
-                        _dvMoneyCache[key] = (totalTien, now.AddSeconds(60));
+                        if (patientCts.Count == 0 && !string.IsNullOrEmpty(gMabn))
+                        {
+                            patientCts = matchedChungTu
+                                .Where(c => c.Mabn?.Trim() == gMabn)
+                                .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : Guid.NewGuid().ToString())
+                                .Select(cg => cg.First())
+                                .ToList();
+                        }
+
+                        decimal totalTien = patientCts.Sum(c => c.Thanhtien ?? 0);
+                        bool isDaThu = patientCts.Count > 0 && patientCts.Any(c => (c.Dain ?? 0) != 0);
+
+                        if (!string.IsNullOrEmpty(gMakb)) dvInfoMap[gMakb] = (totalTien, isDaThu);
+                        if (!string.IsNullOrEmpty(gMabn)) dvInfoMap[gMabn] = (totalTien, isDaThu);
                     }
                 }
             }
@@ -272,19 +241,25 @@ public class DuocService : IDuocService
                     hoTen = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
                 }
 
-                var key = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
+                var cleanMakb = item.Makb?.Trim() ?? "";
+                var cleanMabn = item.Mabn?.Trim() ?? "";
                 decimal? soTien = null;
                 string soTienStr = string.Empty;
+                bool isDaThu = false;
 
-                // Mỗi item tự xác định loại dựa trên khochan (quan trọng khi mode = all)
                 var itemIsBhyt = (item.Khochan == 14 || item.Khochan == 1 || item.Khochan == 2);
 
                 if (!itemIsBhyt)
                 {
-                    if (dvInfoMap.TryGetValue(key, out var totalTien))
+                    (decimal TotalTien, bool DaThu) dvInfo = (0, false);
+                    bool found = (!string.IsNullOrEmpty(cleanMakb) && dvInfoMap.TryGetValue(cleanMakb, out dvInfo))
+                              || (!string.IsNullOrEmpty(cleanMabn) && dvInfoMap.TryGetValue(cleanMabn, out dvInfo));
+
+                    if (found)
                     {
-                        soTien = totalTien;
-                        soTienStr = totalTien > 0 ? $"{totalTien:N0} ₫" : "—";
+                        soTien = dvInfo.TotalTien;
+                        soTienStr = dvInfo.TotalTien > 0 ? $"{dvInfo.TotalTien:N0} ₫" : "—";
+                        isDaThu = dvInfo.DaThu;
                     }
                     else
                     {
@@ -310,12 +285,12 @@ public class DuocService : IDuocService
                 };
 
                 // Trạng thái:
-                // - Toa Dịch Vụ: Dựa vào cột dagiao trong bảng hangchoduoc_tmd
-                //   dagiao == 0 -> "Chờ thu"
-                //   dagiao >= 1 -> "Đang soạn"
+                // - Toa Dịch Vụ: Dựa vào cột dain trong bảng chungtu (dain != 0 là đã in/thu tiền) hoặc dagiao >= 1
+                //   Đã thu -> "Đang soạn"
+                //   Chưa thu -> "Chờ thu"
                 // - Toa BHYT: Mặc định là "Đang soạn"
                 string trangThaiStr;
-                bool isDangSoan = item.Dagiao >= 1;
+                bool isDangSoan = itemIsBhyt || isDaThu || (item.Dagiao >= 1);
                 if (!itemIsBhyt)
                 {
                     trangThaiStr = isDangSoan ? "Đang soạn" : "Chờ thu";
