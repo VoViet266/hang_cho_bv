@@ -80,7 +80,7 @@
                 color: #1e3a8a !important;
             }
 
-            .duoc-patient-table th:nth-child(2) {
+            .duoc-patient-table th:first-child {
                 text-align: left !important;
                 padding-left: 12px !important;
             }
@@ -111,18 +111,6 @@
                 color: #1e3a8a !important;
             }
 
-            .duoc-patient-table td.cell-stt {
-                font-size: clamp(24px, 2.2vw, 40px) !important;
-                font-weight: 900 !important;
-                text-align: center !important;
-                white-space: nowrap !important;
-                overflow: visible !important;
-                text-overflow: clip !important;
-                color: #172554 !important;
-                padding-left: 2px !important;
-                padding-right: 2px !important;
-            }
-
             .duoc-patient-table td.cell-namsinh {
                 font-size: clamp(16px, 1.5vw, 32px) !important;
                 font-weight: 800 !important;
@@ -145,7 +133,7 @@
                 color: #1e3a8a !important;
             }
 
-            .duoc-table-single th:nth-child(2) {
+            .duoc-table-single th:first-child {
                 text-align: left !important;
                 padding-left: 14px !important;
             }
@@ -153,10 +141,6 @@
             .duoc-table-single .patient-name-text {
                 font-size: clamp(28px, 2.65vw, 45px) !important;
                 color: #1e3a8a !important;
-            }
-
-            .duoc-table-single td.cell-stt {
-                font-size: clamp(32px, 3.2vw, 54px) !important;
             }
 
             .duoc-table-single td.cell-namsinh {
@@ -192,7 +176,7 @@
                 white-space: nowrap !important;
             }
 
-            .duoc-table-split th:nth-child(2) {
+            .duoc-table-split th:first-child {
                 text-align: left !important;
                 padding-left: 10px !important;
             }
@@ -200,10 +184,6 @@
             .duoc-table-split .patient-name-text {
                 font-size: clamp(23px, 2.0vw, 34px) !important;
                 color: #1e3a8a !important;
-            }
-
-            .duoc-table-split td.cell-stt {
-                font-size: clamp(25px, 2.3vw, 40px) !important;
             }
 
             .duoc-table-split td.cell-namsinh {
@@ -306,16 +286,14 @@
                 <table
                     class="w-full h-full border-collapse table-fixed select-none duoc-patient-table duoc-table-single">
                     <colgroup>
-                        <col style="width: 7%;">
-                        <col style="width: 45%;">
-                        <col style="width: 12%;">
+                        <col style="width: 50%;">
+                        <col style="width: 14%;">
                         <col style="width: 18%;">
                         <col style="width: 18%;">
                     </colgroup>
                     <thead
                         class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-xl md:text-2xl">
                         <tr>
-                            <th class="py-3 px-3 text-center">STT</th>
                             <th class="py-3 px-4 text-left">Họ và Tên</th>
                             <th class="py-3 px-3 text-center">Năm Sinh</th>
                             <th class="py-3 px-3 text-center">Số Tiền</th>
@@ -326,7 +304,7 @@
                         @if (queueList.Count == 0)
                         {
                             <tr id="empty-row">
-                                <td colspan="5" class="text-center py-16 text-slate-400 text-3xl font-bold italic">
+                                <td colspan="4" class="text-center py-16 text-slate-400 text-3xl font-bold italic">
                                     Không có bệnh nhân chờ lĩnh thuốc.
                                 </td>
                             </tr>
@@ -350,10 +328,6 @@
                                     onclick="onRowClickDuoc(this)"
                                     class="remote-item group cursor-pointer @(isNear ? "bg-yellow-100 border-l-[10px] border-yellow-500 shadow-md" : (pIsBhyt ? "border-l-[6px] border-blue-400 bg-blue-50/60" : "border-l-[6px] border-emerald-400 bg-emerald-50/50")) border-b border-slate-200"
                                     tabindex="0">
-                                    <td
-                                        class="py-4 px-3 font-bold text-center text-blue-900 @(isNear ? "text-4xl md:text-6xl font-black" : "text-3xl md:text-5xl font-bold")">
-                                        @p.Stt
-                                    </td>
                                     <td
                                         class="py-4 px-4 text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black tracking-tight" : "text-2xl md:text-4xl font-black")">
                                         <div class="patient-name-container select-none flex items-center min-w-0">
@@ -692,21 +666,19 @@
 
                     // Tỷ lệ cột khi chia đôi màn hình vs 1 màn hình:
                     const colWidths = isSplit
-                        ? `<col style="width: 8%;">
-                                   <col style="width: 42%;">
-                                   <col style="width: 14%;">
+                        ? `<col style="width: 48%;">
+                                   <col style="width: 16%;">
                                    <col style="width: 18%;">
                                    <col style="width: 18%;">`
-                        : `<col style="width: 7%;">
-                                   <col style="width: 45%;">
-                                   <col style="width: 12%;">
+                        : `<col style="width: 50%;">
+                                   <col style="width: 14%;">
                                    <col style="width: 18%;">
                                    <col style="width: 18%;">`;
 
                     let tbodyContent = '';
                     if (!rows || rows.length === 0) {
                         tbodyContent = `<tr>
-                                            <td colspan="5" class="text-center py-16 text-slate-300 italic font-bold text-lg">
+                                            <td colspan="4" class="text-center py-16 text-slate-300 italic font-bold text-lg">
                                                 Chưa có thêm bệnh nhân
                                             </td>
                                         </tr>`;
@@ -724,7 +696,6 @@
                                                 </colgroup>
                                                 <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-black">
                                                     <tr>
-                                                        <th class="text-center font-black">STT</th>
                                                         <th class="text-left font-black">Họ và Tên</th>
                                                         <th class="text-center font-black">Năm Sinh</th>
                                                         <th class="text-center font-black">Loại / Tiền</th>
@@ -787,9 +758,7 @@
                                                 onclick="onRowClickDuoc(this)"
                                                 class="remote-item group cursor-pointer ${rowClass}"
                                                 tabindex="0">
-                                            <td class="cell-stt ${pyClass} px-1 text-center">
-                                                ${p.stt}
-                                            </td>
+                                           
                                             <td class="${pyClass} px-3 text-blue-900">
                                                 <div class="patient-name-container select-none flex items-center min-w-0">
                                                     <span class="patient-name-text uppercase whitespace-normal break-words leading-tight max-w-full ${isNear ? 'text-red-700' : 'text-blue-900'}">

@@ -762,6 +762,14 @@
                 // Cập nhật các danh sách
                 refreshAllColumns();
 
+                // Tự động xóa/ẩn thông tin người dùng sau 5 giây để sẵn sàng cho lần quét tiếp theo
+                if (autoResetTimer) clearTimeout(autoResetTimer);
+                autoResetTimer = setTimeout(() => {
+                    resetPatientCard();
+                    setScanState('');
+                    setStatus('Sẵn sàng – Quét mã để tiếp nhận vào hàng chờ');
+                }, 5000);
+
                 if (scanInput) scanInput.focus({ preventScroll: true });
             } finally {
                 isScanning = false;
@@ -956,6 +964,7 @@
                     : `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-200 rounded font-black text-[10px] uppercase tracking-wide">BHYT</span>`;
 
                 const curOcua = String(item.oCua || '').trim();
+                const hasBeenCalled = Boolean(curOcua && curOcua !== '' && curOcua !== 'null');
                 const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
                 const safeTrangThai = 'Đang soạn';
 
@@ -972,13 +981,24 @@
                 const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
                 const cardCls = isHighlighted
                     ? 'border-2 border-emerald-500 bg-emerald-50/80 ring-4 ring-emerald-200 shadow-md animate-pulse'
-                    : 'border-2 border-slate-200 hover:border-slate-300 bg-white shadow-xs';
+                    : (hasBeenCalled
+                        ? 'border-2 border-blue-300 bg-blue-50/40 shadow-xs'
+                        : 'border-2 border-slate-200 hover:border-slate-300 bg-white shadow-xs');
+
+                const phatBtnHtml = hasBeenCalled
+                    ? `<button onclick="actionPhatThuoc('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                title="Đã phát thuốc hoàn tất (Ẩn khỏi TV)"
+                                class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase flex items-center gap-1.5 shadow-md transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0">
+                            <i class="fa-solid fa-check"></i> Đã phát
+                       </button>`
+                    : '';
 
                 html += `
                     <div class="${cardCls} rounded-xl p-3 flex items-center justify-between gap-2 transition overflow-hidden">
                         <div class="flex-1 min-w-0">
-                            <div class="font-black text-slate-900 text-sm md:text-base uppercase truncate leading-tight tracking-wide">
-                                ${escapeHtml(item.hoTen)}
+                            <div class="font-black text-slate-900 text-sm md:text-base uppercase truncate leading-tight tracking-wide flex items-center gap-2">
+                                <span>${escapeHtml(item.hoTen)}</span>
+                                ${hasBeenCalled ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200 uppercase tracking-wide"><i class="fa-solid fa-volume-high text-[9px] text-blue-600"></i> Đang gọi</span>' : ''}
                             </div>
                             <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                                 ${badge}
@@ -1001,11 +1021,7 @@
                                 ${assignBtns}
                             </div>
                         </div>
-                        <button onclick="actionPhatThuoc('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                title="Đã phát thuốc hoàn tất (Ẩn khỏi TV)"
-                                class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase flex items-center gap-1.5 shadow-sm transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0">
-                            <i class="fa-solid fa-check"></i> Đã phát
-                        </button>
+                        ${phatBtnHtml}
                     </div>`;
             }
 
@@ -1112,6 +1128,22 @@
         // ========================================================
         async function actionGoiCua(makb, mabn, hoTen, namSinh, oCua, isBhyt, trangThai) {
             try {
+                triggerHighlight(makb || mabn);
+
+                // Cập nhật ngay local cache để tên người được gọi nhảy lên đầu danh sách và hiện nút Phát tức thì
+                const key = (makb || mabn || '').trim();
+                if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
+                    const idx = rawChuaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                    if (idx !== -1) {
+                        const item = rawChuaGiaoData[idx];
+                        item.oCua = oCua;
+                        rawChuaGiaoData.splice(idx, 1);
+                        rawChuaGiaoData.unshift(item);
+                        renderChoGiaoList();
+                        renderChoThuList();
+                    }
+                }
+
                 const r = await fetch('/api/duoc-nhap/chi-dinh-o-cua', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

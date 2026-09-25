@@ -34,4 +34,7 @@ public class HangChoDuocTmd
 
     [Column("dagiao")]
     public decimal Dagiao { get; set; } = 0;
+
+    [Column("dathu")]
+    public bool? Dathu { get; set; } = false;
 }

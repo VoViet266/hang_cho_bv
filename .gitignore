@@ -21,3 +21,6 @@ appsetting*.json
 logs/
 backup/
 **/wwwroot/audio/cache/
+**/public/audio/cache/
+**/audio/cache/
+node_modules/

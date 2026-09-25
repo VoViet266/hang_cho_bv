@@ -93,6 +93,7 @@ public class DuocService : IDuocService
                     h.Makb,
                     h.Khochan,
                     h.Dagiao,
+                    h.Dathu,
                     h.Maba,
                     h.Ngaynhap,
                     h.Ngaygiao,
@@ -133,10 +134,11 @@ public class DuocService : IDuocService
                     h.Makb,
                     h.Khochan,
                     h.Dagiao,
+                    h.Dathu,
                     h.Maba,
                     h.Ngaynhap,
                     h.Ngaygiao,
-                    Taikhoan = h.Taikhoan,
+                    h.Taikhoan,
                     Holot = holot,
                     Ten = ten,
                     Ngaysinh = ngaysinh,
@@ -155,16 +157,19 @@ public class DuocService : IDuocService
                                  .First();
                     var maxKhochan = g.Max(x => x.Khochan);
                     var maxDagiao = g.Max(x => x.Dagiao);
+                    var latestNgayGiao = g.Max(x => x.Ngaygiao);
+                    var assignedOcua = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "";
                     return new
                     {
                         first.Mabn,
                         first.Makb,
                         Khochan = maxKhochan,
                         Dagiao = maxDagiao,
+                        Dathu = g.Any(x => x.Dathu == true),
                         first.Maba,
                         first.Ngaynhap,
-                        first.Ngaygiao,
-                        Taikhoan = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "",
+                        Ngaygiao = latestNgayGiao,
+                        Taikhoan = assignedOcua,
                         first.Holot,
                         first.Ten,
                         first.Ngaysinh,
@@ -172,7 +177,9 @@ public class DuocService : IDuocService
                         PrescriptionCount = g.Count()
                     };
                 })
-                .OrderBy(x => x.Ngaynhap ?? DateTime.MaxValue)
+                .OrderByDescending(x => !string.IsNullOrWhiteSpace(x.Taikhoan))
+                .ThenByDescending(x => !string.IsNullOrWhiteSpace(x.Taikhoan) ? x.Ngaygiao : DateTime.MinValue)
+                .ThenBy(x => x.Ngaynhap ?? DateTime.MaxValue)
                 .ThenBy(x => x.Makb)
                 .ThenBy(x => x.Mabn)
                 .ToList();
@@ -245,9 +252,8 @@ public class DuocService : IDuocService
                 var cleanMabn = item.Mabn?.Trim() ?? "";
                 decimal? soTien = null;
                 string soTienStr = string.Empty;
-                bool isDaThu = false;
-
                 var itemIsBhyt = (item.Khochan == 14 || item.Khochan == 1 || item.Khochan == 2);
+                bool isDaThu = itemIsBhyt || (item.Dathu == true);
 
                 if (!itemIsBhyt)
                 {
@@ -259,7 +265,7 @@ public class DuocService : IDuocService
                     {
                         soTien = dvInfo.TotalTien;
                         soTienStr = dvInfo.TotalTien > 0 ? $"{dvInfo.TotalTien:N0} ₫" : "—";
-                        isDaThu = dvInfo.DaThu;
+                        if (dvInfo.DaThu) isDaThu = true;
                     }
                     else
                     {

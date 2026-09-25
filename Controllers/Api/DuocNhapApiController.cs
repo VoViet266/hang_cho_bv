@@ -360,12 +360,19 @@ public class DuocNhapApiController : ControllerBase
                 // DỊCH VỤ: Lần 1 = Thêm (dagiao = 0), Lần 2 = Đã phát thuốc (dagiao = 1)
                 if (existing == null)
                 {
+                    bool isPaid = await _context.ChungTu.AsNoTracking()
+                        .AnyAsync(c => (c.Xoa == null || c.Xoa == 0)
+                                    && (c.Khochan == "13" || c.Khochan == "3")
+                                    && ((makb != "" && c.Makh == makb) || (mabn != "" && c.Mabn == mabn))
+                                    && (c.Dain ?? 0) != 0
+                                    && (c.Ngaylap == null || c.Ngaylap >= today.AddDays(-1)));
+
                     await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                        INSERT INTO current.hangchoduoc_tmd (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao)
-                        VALUES ({mabn}, {makb}, now(), now(), {req.OCua}, {targetKhochan}, 0, {ngayKcbVal}, {req.Maba}, 0)
+                        INSERT INTO current.hangchoduoc_tmd (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao, dathu)
+                        VALUES ({mabn}, {makb}, now(), now(), {req.OCua}, {targetKhochan}, 0, {ngayKcbVal}, {req.Maba}, 0, {isPaid})
                     ");
 
-                    _logger.LogInformation("Lần 1 Thêm Dịch vụ: makb={Makb}, mabn={Mabn}, khochan={Khochan}, oCua={OCua}", makb, mabn, targetKhochan, req.OCua);
+                    _logger.LogInformation("Lần 1 Thêm Dịch vụ: makb={Makb}, mabn={Mabn}, khochan={Khochan}, oCua={OCua}, dathu={IsPaid}", makb, mabn, targetKhochan, req.OCua, isPaid);
                     NotifyDuocQueuesUpdated(makb, mabn);
                     return Ok(new DuocNhapThemResponse
                     {
@@ -418,8 +425,8 @@ public class DuocNhapApiController : ControllerBase
                 if (existing == null)
                 {
                     await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                        INSERT INTO current.hangchoduoc_tmd (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao)
-                        VALUES ({mabn}, {makb}, now(), now(), {req.OCua}, {targetKhochan}, 0, {ngayKcbVal}, {req.Maba}, 0)
+                        INSERT INTO current.hangchoduoc_tmd (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao, dathu)
+                        VALUES ({mabn}, {makb}, now(), now(), {req.OCua}, {targetKhochan}, 0, {ngayKcbVal}, {req.Maba}, 0, true)
                     ");
 
                     _logger.LogInformation("Lần 1 Thêm BHYT: makb={Makb}, mabn={Mabn}, khochan={Khochan}, oCua={OCua}", makb, mabn, targetKhochan, req.OCua);
@@ -530,7 +537,7 @@ public class DuocNhapApiController : ControllerBase
 
             var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
                 UPDATE current.hangchoduoc_tmd
-                SET taikhoan = {oCua}
+                SET taikhoan = {oCua}, ngaygiao = now()
                 WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
                   AND xoa = 0
                   AND (ngaynhap IS NULL OR ngaynhap >= {today})
@@ -608,7 +615,9 @@ public class DuocNhapApiController : ControllerBase
                     h.Mabn,
                     h.Khochan,
                     h.Dagiao,
+                    h.Dathu,
                     h.Ngaynhap,
+                    h.Ngaygiao,
                     h.Taikhoan
                 })
                 .ToListAsync();
@@ -647,21 +656,28 @@ public class DuocNhapApiController : ControllerBase
                         ? bn
                         : (string.Empty, string.Empty, (DateTime?)null, (decimal?)null);
 
+                    var assignedOcua = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "";
+                    var latestNgayGiao = g.Max(x => x.Ngaygiao);
+
                     return new
                     {
                         first.Makb,
                         first.Mabn,
                         Khochan = g.Max(x => x.Khochan),
                         Dagiao = g.Max(x => x.Dagiao),
-                        Taikhoan = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "",
+                        Dathu = g.Any(x => x.Dathu == true),
+                        Taikhoan = assignedOcua,
                         first.Ngaynhap,
+                        Ngaygiao = latestNgayGiao,
                         Holot = holot,
                         Ten = ten,
                         Ngaysinh = ngaysinh,
                         Gioitinh = gioitinh
                     };
                 })
-                .OrderBy(x => x.Ngaynhap ?? DateTime.MaxValue)
+                .OrderByDescending(x => !string.IsNullOrWhiteSpace(x.Taikhoan))
+                .ThenByDescending(x => !string.IsNullOrWhiteSpace(x.Taikhoan) ? x.Ngaygiao : DateTime.MinValue)
+                .ThenBy(x => x.Ngaynhap ?? DateTime.MaxValue)
                 .ThenBy(x => x.Makb)
                 .ThenBy(x => x.Mabn)
                 .ToList();
@@ -731,7 +747,7 @@ public class DuocNhapApiController : ControllerBase
                 var key = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
                 decimal? soTien = null;
                 string soTienStr = string.Empty;
-                bool isDaThu = false;
+                bool isDaThu = isBhyt || (item.Dathu == true);
 
                 if (!isBhyt)
                 {
@@ -739,7 +755,7 @@ public class DuocNhapApiController : ControllerBase
                     {
                         soTien = dvInfo.TotalTien;
                         soTienStr = dvInfo.TotalTien > 0 ? $"{dvInfo.TotalTien:N0} ₫" : "—";
-                        isDaThu = dvInfo.DaThu;
+                        if (dvInfo.DaThu) isDaThu = true;
                     }
                     else
                     {
