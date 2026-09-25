@@ -370,7 +370,13 @@ public class DuocNhapBarcodeResultDto
     public string? Message { get; set; }
 
     [JsonPropertyName("loai")]
-    public int Loai { get; set; } // 13 = BHYT, 14 = Dịch vụ (đọc từ chungtu.khochan)
+    public int Loai { get; set; } // 13 = Dịch vụ, 14 = BHYT, 0 = Cả 2 toa
+
+    [JsonPropertyName("hasBhyt")]
+    public bool HasBhyt { get; set; }
+
+    [JsonPropertyName("hasDichVu")]
+    public bool HasDichVu { get; set; }
 
     [JsonPropertyName("makh")]
     public string? Makh { get; set; }
@@ -393,12 +399,26 @@ public class DuocNhapBarcodeResultDto
     [JsonPropertyName("ngayKcb")]
     public DateTime? NgayKcb { get; set; }
 
-    // Thông tin đơn thuốc từ chungtu (dùng cho loại 14)
+    // Thông tin chung
     [JsonPropertyName("sohd")]
     public string? Sohd { get; set; }
 
     [JsonPropertyName("maba")]
     public string? Maba { get; set; }
+
+    // Thông tin chi tiết Toa BHYT
+    [JsonPropertyName("sohdBhyt")]
+    public string? SohdBhyt { get; set; }
+
+    [JsonPropertyName("mabaBhyt")]
+    public string? MabaBhyt { get; set; }
+
+    // Thông tin chi tiết Toa Dịch Vụ
+    [JsonPropertyName("sohdDv")]
+    public string? SohdDv { get; set; }
+
+    [JsonPropertyName("mabaDv")]
+    public string? MabaDv { get; set; }
 
     [JsonPropertyName("thanhtien")]
     public decimal Thanhtien { get; set; }
@@ -428,10 +448,16 @@ public class DuocNhapThemRequest
     public string Mabn { get; set; } = string.Empty;
 
     [JsonPropertyName("loai")]
-    public int Loai { get; set; } // 13 = Dịch vụ, 14 = BHYT
+    public int? Loai { get; set; } // 13 = Dịch vụ, 14 = BHYT, 0 = Cả 2 toa
 
     [JsonPropertyName("khochan")]
-    public int Khochan { get; set; } // 13 = Dịch vụ, 14 = BHYT
+    public int? Khochan { get; set; } // 13 = Dịch vụ, 14 = BHYT, 0 = Cả 2 toa
+
+    [JsonPropertyName("hasBhyt")]
+    public bool? HasBhyt { get; set; }
+
+    [JsonPropertyName("hasDichVu")]
+    public bool? HasDichVu { get; set; }
 
     [JsonPropertyName("maba")]
     public string? Maba { get; set; }

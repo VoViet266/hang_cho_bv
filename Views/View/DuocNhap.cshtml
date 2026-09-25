@@ -136,66 +136,82 @@
                 <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                     <div class="flex items-center gap-1.5">
                         <i class="fa-solid fa-user-injured text-brand text-xs"></i>
-                        <span class="text-[11px] font-black uppercase tracking-wider text-slate-500">Thông tin tiếp
-                            nhận</span>
-                        </div>
-                        <div id="loai-badge" class="hidden">
-                            <span id="loai-badge-inner"
-                                  class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border"></span>
-                        </div>
+                        <span class="text-[11px] font-black uppercase tracking-wider text-slate-500">Thông tin tiếp nhận</span>
                     </div>
-                    <div class="flex items-start gap-3">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                            <i id="bn-gender-icon" class="fa-solid fa-person text-brand text-lg"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div id="p-hoten"
-                                 class="text-base font-black text-slate-900 uppercase tracking-wide leading-tight truncate">
-                            </div>
-                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-                                <span class="text-xs text-slate-500 flex items-center gap-1">
-                                    <i class="fa-regular fa-calendar text-slate-400"></i>
-                                    <span id="p-ngaysinh">—</span>
-                                </span>
-                                <span class="text-xs text-slate-500 flex items-center gap-1">
-                                    <i class="fa-solid fa-venus-mars text-slate-400"></i>
-                                    <span id="p-gioitinh">—</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dòng hiển thị Số đơn (SHĐ) & Mã bệnh án (MBA) -->
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span id="p-sohd-wrap"
-                              class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200 font-mono text-xs font-bold">
-                            <i class="fa-solid fa-file-invoice text-blue-600"></i>
-                            <span>Số đơn (SHĐ): <strong id="p-sohd" class="font-black text-blue-800">—</strong></span>
-                        </span>
-                  
-                    </div>
-
-                    <!-- Banner thông báo Toa BHYT -->
-                    <div id="p-bhyt-notice"
-                         class="hidden bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex items-center gap-2 text-xs font-bold text-blue-900">
-                        <i class="fa-solid fa-circle-check text-blue-600 text-base shrink-0"></i>
-                     
-                    </div>
-
-                    <div class="flex items-center justify-between pt-2 border-t border-slate-100">
-                        <button type="button" id="btn-copy-makb-card" onclick="copyCurrentPatientMakb(this, event)"
-                                title="Bấm để sao chép mã khám"
-                                class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-brand border border-blue-200 rounded-lg font-mono text-xs font-bold transition cursor-pointer active:scale-95">
-                            <i class="fa-regular fa-copy text-xs"></i>
-                            <span>MKB: <span id="p-makb" class="font-black"></span></span>
-                        </button>
-                        <button type="button" onclick="resetPatientCard()"
-                                class="text-xs text-slate-400 hover:text-danger font-bold flex items-center gap-1 transition cursor-pointer">
-                            <i class="fa-solid fa-xmark"></i> Đóng
-                        </button>
+                    <div id="loai-badge" class="hidden">
+                        <div id="loai-badge-inner" class="flex items-center gap-1"></div>
                     </div>
                 </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+                        <i id="bn-gender-icon" class="fa-solid fa-person text-brand text-lg"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div id="p-hoten"
+                             class="text-base font-black text-slate-900 uppercase tracking-wide leading-tight truncate">
+                        </div>
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                            <span class="text-xs text-slate-500 flex items-center gap-1">
+                                <i class="fa-regular fa-calendar text-slate-400"></i>
+                                <span id="p-ngaysinh">—</span>
+                            </span>
+                            <span class="text-xs text-slate-500 flex items-center gap-1">
+                                <i class="fa-solid fa-venus-mars text-slate-400"></i>
+                                <span id="p-gioitinh">—</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KHỐI 1: TOA BẢO HIỂM (BHYT) -->
+                <div id="p-bhyt-block" class="hidden bg-blue-50/80 border border-blue-200 rounded-xl p-2.5 flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-black text-blue-900 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved text-blue-600"></i> Toa Bảo Hiểm
+                        </span>
+                       
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap text-xs text-blue-950 font-bold">
+                        <span class="inline-flex items-center gap-1 font-mono">
+                            Số đơn: <strong id="p-sohd-bhyt" class="text-blue-900 font-black">—</strong>
+                        </span>
+                        <span id="p-maba-bhyt-wrap" class="hidden inline-flex items-center gap-1 font-mono text-slate-600">
+                            <span>(MBA: <strong id="p-maba-bhyt" class="text-slate-800 font-bold">—</strong>)</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- KHỐI 2: TOA DỊCH VỤ -->
+                <div id="p-dv-block" class="hidden bg-purple-50/80 border border-purple-200 rounded-xl p-2.5 flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-black text-purple-900 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-coins text-purple-600"></i> Toa Dịch Vụ
+                        </span>
+                      
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap text-xs text-purple-950 font-bold">
+                        <span class="inline-flex items-center gap-1 font-mono">
+                            Số đơn: <strong id="p-sohd-dv" class="text-purple-900 font-black">—</strong>
+                        </span>
+                        <span id="p-maba-dv-wrap" class="hidden inline-flex items-center gap-1 font-mono text-slate-600">
+                            <span>(MBA: <strong id="p-maba-dv" class="text-slate-800 font-bold">—</strong>)</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <button type="button" id="btn-copy-makb-card" onclick="copyCurrentPatientMakb(this, event)"
+                            title="Bấm để sao chép mã khám"
+                            class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-brand border border-blue-200 rounded-lg font-mono text-xs font-bold transition cursor-pointer active:scale-95">
+                        <i class="fa-regular fa-copy text-xs"></i>
+                        <span>MKB: <span id="p-makb" class="font-black"></span></span>
+                    </button>
+                    <button type="button" onclick="resetPatientCard()"
+                            class="text-xs text-slate-400 hover:text-danger font-bold flex items-center gap-1 transition cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i> Đóng
+                    </button>
+                </div>
+            </div>
 
                 <!-- Danh Sách Đơn Thuốc Dịch Vụ (Nếu có) -->
                 <div id="thuoc-section"
@@ -633,16 +649,28 @@
                         if (el) el.textContent = msg;
                     }
 
-                    function setLoaiBadge(loai) {
+                    function setLoaiBadge(data) {
                         const el = $id('loai-badge-inner');
                         const badgeWrap = $id('loai-badge');
                         if (!el || !badgeWrap) return;
-                        if (loai === 13 || loai === 3) {
-                            el.innerHTML = '<i class="fa-solid fa-coins mr-1"></i> TOA DỊCH VỤ';
-                            el.className = 'px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-purple-600 text-white shadow-xs';
+                        if (data.hasBhyt && data.hasDichVu) {
+                            el.innerHTML = `
+                                <span class="px-2 py-0.5 rounded bg-blue-600 text-white font-black text-[10px] tracking-wide shadow-2xs flex items-center gap-1">
+                                    <i class="fa-solid fa-shield-halved"></i> BẢO HIỂM
+                                </span>
+                                <span class="px-2 py-0.5 rounded bg-purple-600 text-white font-black text-[10px] tracking-wide shadow-2xs flex items-center gap-1">
+                                    <i class="fa-solid fa-coins"></i> DỊCH VỤ
+                                </span>`;
+                        } else if (data.hasDichVu) {
+                            el.innerHTML = `
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-purple-600 text-white shadow-xs flex items-center gap-1">
+                                    <i class="fa-solid fa-coins"></i> TOA DỊCH VỤ
+                                </span>`;
                         } else {
-                            el.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i> TOA BẢO HIỂM';
-                            el.className = 'px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-blue-600 text-white shadow-xs';
+                            el.innerHTML = `
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-blue-600 text-white shadow-xs flex items-center gap-1">
+                                    <i class="fa-solid fa-shield-halved"></i> TOA BẢO HIỂM
+                                </span>`;
                         }
                         badgeWrap.classList.remove('hidden');
                     }
@@ -653,26 +681,46 @@
                         if ($id('p-ngaysinh')) $id('p-ngaysinh').textContent = data.ngaySinh || '—';
                         if ($id('p-gioitinh')) $id('p-gioitinh').textContent = data.gioiTinh || '—';
                         if ($id('p-makb')) $id('p-makb').textContent = currentScannedMakb || '—';
-            
-                        const sohdVal = data.sohd || data.maba || '—';
-                        if ($id('p-sohd')) $id('p-sohd').textContent = sohdVal;
-            
-                        const mabaWrap = $id('p-maba-wrap');
-                        if (mabaWrap) {
-                            if (data.maba && data.maba !== data.sohd) {
-                                if ($id('p-maba')) $id('p-maba').textContent = data.maba;
-                                mabaWrap.classList.remove('hidden');
+
+                        // 1. Toa Bảo Hiểm (BHYT)
+                        const bhytBlock = $id('p-bhyt-block');
+                        if (bhytBlock) {
+                            if (data.hasBhyt) {
+                                bhytBlock.classList.remove('hidden');
+                                const sohdVal = data.sohdBhyt || data.mabaBhyt || data.sohd || data.maba || '—';
+                                if ($id('p-sohd-bhyt')) $id('p-sohd-bhyt').textContent = sohdVal;
+                                const mabaWrap = $id('p-maba-bhyt-wrap');
+                                if (mabaWrap) {
+                                    if (data.mabaBhyt && data.mabaBhyt !== data.sohdBhyt) {
+                                        if ($id('p-maba-bhyt')) $id('p-maba-bhyt').textContent = data.mabaBhyt;
+                                        mabaWrap.classList.remove('hidden');
+                                    } else {
+                                        mabaWrap.classList.add('hidden');
+                                    }
+                                }
                             } else {
-                                mabaWrap.classList.add('hidden');
+                                bhytBlock.classList.add('hidden');
                             }
                         }
 
-                        const bhytNotice = $id('p-bhyt-notice');
-                        if (bhytNotice) {
-                            if (data.loai === 14 || data.loai === 1 || data.loai === 2) {
-                                bhytNotice.classList.remove('hidden');
+                        // 2. Toa Dịch Vụ
+                        const dvBlock = $id('p-dv-block');
+                        if (dvBlock) {
+                            if (data.hasDichVu) {
+                                dvBlock.classList.remove('hidden');
+                                const sohdDvVal = data.sohdDv || data.mabaDv || data.sohd || data.maba || '—';
+                                if ($id('p-sohd-dv')) $id('p-sohd-dv').textContent = sohdDvVal;
+                                const mabaDvWrap = $id('p-maba-dv-wrap');
+                                if (mabaDvWrap) {
+                                    if (data.mabaDv && data.mabaDv !== data.sohdDv) {
+                                        if ($id('p-maba-dv')) $id('p-maba-dv').textContent = data.mabaDv;
+                                        mabaDvWrap.classList.remove('hidden');
+                                    } else {
+                                        mabaDvWrap.classList.add('hidden');
+                                    }
+                                }
                             } else {
-                                bhytNotice.classList.add('hidden');
+                                dvBlock.classList.add('hidden');
                             }
                         }
 
@@ -721,10 +769,10 @@
                         currentScannedMakb = '';
                         const pCard = $id('patient-card');
                         if (pCard) pCard.classList.add('hidden');
-                        const bhytNotice = $id('p-bhyt-notice');
-                        if (bhytNotice) bhytNotice.classList.add('hidden');
-                        const mabaWrap = $id('p-maba-wrap');
-                        if (mabaWrap) mabaWrap.classList.add('hidden');
+                        const bhytBlock = $id('p-bhyt-block');
+                        if (bhytBlock) bhytBlock.classList.add('hidden');
+                        const dvBlock = $id('p-dv-block');
+                        if (dvBlock) dvBlock.classList.add('hidden');
                         const thuocSec = $id('thuoc-section');
                         if (thuocSec) thuocSec.classList.add('hidden');
                         const thuocListEl = $id('thuoc-list');
@@ -798,13 +846,13 @@
                             if (scanInput) scanInput.value = '';
 
                             // 2. Hiển thị thông tin bệnh nhân
-                            setLoaiBadge(data.loai);
+                            setLoaiBadge(data);
                             showPatient(data);
 
-                            if (data.loai === 13) {
+                            if (data.hasDichVu) {
                                 thuocList = (data.danhSachThuoc && data.danhSachThuoc.length > 0)
                                     ? data.danhSachThuoc
-                                    : [{ sohd: data.sohd, maba: data.maba, thanhtien: data.thanhtien ?? data.Thanhtien ?? data.tienVat ?? 0 }];
+                                    : [{ sohd: data.sohdDv || data.sohd, maba: data.mabaDv || data.maba, thanhtien: data.thanhtien ?? 0 }];
                                 const thuocSec = $id('thuoc-section');
                                 if (thuocSec) thuocSec.classList.remove('hidden');
                                 const tListEl = $id('thuoc-list');
@@ -819,7 +867,6 @@
                             }
 
                             // 3. Tự động tiếp nhận vào hàng chờ
-                            const targetKhochan = (data.loai === 13) ? 13 : 14;
                             let res;
                             try {
                                 const r = await fetch('/api/duoc-nhap/them-hang-cho', {
@@ -828,8 +875,9 @@
                                     body: JSON.stringify({
                                         makb: data.makb,
                                         mabn: data.mabn,
+                                        hasBhyt: data.hasBhyt,
+                                        hasDichVu: data.hasDichVu,
                                         loai: data.loai,
-                                        khochan: targetKhochan,
                                         maba: data.maba,
                                         ngayKcb: data.ngayKcb,
                                         oCua: null
@@ -852,9 +900,9 @@
                             playScanBeep(true);
                             setScanState('success');
                             const msg = res.message || 'Đã tiếp nhận vào hàng chờ!';
-                            setStatus(`✓ ${msg}`);
+                            setStatus(`${msg}`);
                             triggerHighlight(data.makb || data.mabn);
-                            showUndoToast(`✓ Đã tiếp nhận: ${data.hoTen}`, null);
+                            showUndoToast(`Đã tiếp nhận: ${data.hoTen}`, null);
 
                             // Cập nhật các danh sách
                             refreshAllColumns();
