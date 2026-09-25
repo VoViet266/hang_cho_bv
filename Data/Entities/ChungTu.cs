@@ -23,8 +23,8 @@ public class ChungTu
     [Column("taikhoan")]
     public string? Taikhoan { get; set; }
 
-    [Column("tienvat")]
-    public decimal? Tienvat { get; set; }
+    [Column("thanhtien")]
+    public decimal? Thanhtien { get; set; }
 
     [Column("dathu")]
     public decimal? Dathu { get; set; }
@@ -33,7 +33,7 @@ public class ChungTu
     public DateTime? Ngaylap { get; set; }
 
     [Column("dain")]
-    public int Dain { get; set; } = 0;
+    public decimal? Dain { get; set; } = 0;
 
     [Column("xoa")]
     public decimal? Xoa { get; set; }

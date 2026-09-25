@@ -400,8 +400,8 @@ public class DuocNhapBarcodeResultDto
     [JsonPropertyName("maba")]
     public string? Maba { get; set; }
 
-    [JsonPropertyName("tienVat")]
-    public decimal TienVat { get; set; }
+    [JsonPropertyName("thanhtien")]
+    public decimal Thanhtien { get; set; }
 
     [JsonPropertyName("danhSachThuoc")]
     public List<DuocNhapThuocItemDto> DanhSachThuoc { get; set; } = new();
@@ -415,8 +415,8 @@ public class DuocNhapThuocItemDto
     [JsonPropertyName("maba")]
     public string? Maba { get; set; }
 
-    [JsonPropertyName("tienVat")]
-    public decimal TienVat { get; set; }
+    [JsonPropertyName("thanhtien")]
+    public decimal Thanhtien { get; set; }
 }
 
 public class DuocNhapThemRequest
@@ -520,6 +520,9 @@ public class DuocChuaGiaoItemDto
     [JsonPropertyName("dagiao")]
     public decimal Dagiao { get; set; }
 
+    [JsonPropertyName("daThu")]
+    public bool DaThu { get; set; }
+
     [JsonPropertyName("trangThai")]
     public string TrangThai { get; set; } = string.Empty;
 
@@ -570,4 +573,16 @@ public class DuocDaGiaoItemDto
 
     [JsonPropertyName("oCua")]
     public string OCua { get; set; } = string.Empty;
+}
+
+public class DuocHoanTacRequest
+{
+    [JsonPropertyName("makb")]
+    public string Makb { get; set; } = string.Empty;
+
+    [JsonPropertyName("mabn")]
+    public string Mabn { get; set; } = string.Empty;
+
+    [JsonPropertyName("loai")]
+    public string Loai { get; set; } = string.Empty; // "thu_tien" hoặc "phat_thuoc"
 }

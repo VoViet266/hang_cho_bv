@@ -26,7 +26,7 @@ public class TtsService : ITtsService
     private readonly IConfiguration _configuration;
     private readonly ILogger<TtsService> _logger;
     private readonly string _cacheDir;
-    private readonly ConcurrentDictionary<string, Task<TtsResult>> _inFlightTasks = new();
+    private readonly ConcurrentDictionary<string, Lazy<Task<TtsResult>>> _inFlightTasks = new();
 
     private const long MaxCacheSizeBytes = 300 * 1024 * 1024; // 300 MB
     private const long TargetCacheSizeBytes = 250 * 1024 * 1024; // 250 MB
@@ -68,13 +68,44 @@ public class TtsService : ITtsService
         var hash = ComputeMd5Hash($"{normalizedText}_{voiceName}_{speakingRate.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
         var filePath = Path.Combine(_cacheDir, $"{hash}.mp3");
 
-        // In-flight mutex để tránh dồn nhiều request đồng thời cho cùng 1 text
-        return await _inFlightTasks.GetOrAdd(hash, _ => GenerateInternalAsync(normalizedText, voiceName, speakingRate, hash, filePath))
-            .ContinueWith(t =>
+        // Kiểm tra nhanh file cache trên đĩa trước khi tạo Task
+        if (File.Exists(filePath))
+        {
+            try
             {
-                _inFlightTasks.TryRemove(hash, out _);
-                return t.Result;
-            });
+                var cachedBytes = await File.ReadAllBytesAsync(filePath);
+                return new TtsResult
+                {
+                    AudioBytes = cachedBytes,
+                    Hash = hash,
+                    FromCache = true,
+                    Source = "Disk-Cache",
+                    FilePath = filePath
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[TTS Cache] Đọc file cache bị lỗi, sẽ thử tạo lại");
+            }
+        }
+
+        // Dùng Lazy<Task> để đảm bảo dù có hàng chục client gọi cùng 1 mili-giây thì chỉ duy nhất 1 Task được chạy
+        var lazyTask = _inFlightTasks.GetOrAdd(
+            hash,
+            k => new Lazy<Task<TtsResult>>(
+                () => GenerateInternalAsync(normalizedText, voiceName, speakingRate, k, filePath),
+                LazyThreadSafetyMode.ExecutionAndPublication
+            )
+        );
+
+        try
+        {
+            return await lazyTask.Value;
+        }
+        finally
+        {
+            _inFlightTasks.TryRemove(hash, out _);
+        }
     }
 
     private async Task<TtsResult> GenerateInternalAsync(string normalizedText, string voiceName, double speakingRate, string hash, string filePath)
