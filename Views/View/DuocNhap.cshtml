@@ -291,7 +291,7 @@
                 </div>
             </div>
 
-            <!-- Tab 1: Danh Sách Chờ Phát (Đang Soạn) -->
+            <!-- Tab 1: Danh Sách Chờ Phát (Đang soạn thuốc thuốc) -->
             <div class="flex-grow overflow-y-auto overflow-x-hidden p-2.5 space-y-2 min-h-0 bg-slate-50/40" id="cho-giao-list">
                 <div id="cho-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-12">
                     <i class="fa-solid fa-clipboard-check text-3xl text-slate-300"></i>
@@ -798,11 +798,11 @@
             const countEl = $id('cho-thu-count');
             const query = ($id('search-thu-input')?.value || '').trim().toLowerCase();
 
-            // Chưa thu = Đơn Dịch Vụ (!isBhyt) và chưa in hóa đơn (!daThu && trangThai !== 'Đang soạn') và dagiao === 0
+            // Chưa thu = Đơn Dịch Vụ (!isBhyt) và chưa in hóa đơn (!daThu && trangThai !== 'Đang soạn thuốc thuốc') và dagiao === 0
             const choThuItems = rawChuaGiaoData.filter(item => {
                 if (Number(item.dagiao) !== 0) return false;
                 if (item.isBhyt) return false;
-                return !item.daThu && item.trangThai !== 'Đang soạn';
+                return !item.daThu && item.trangThai !== 'Đang soạn thuốc thuốc';
             });
             if (countEl) countEl.textContent = choThuItems.length;
             if (!container) return;
@@ -933,10 +933,10 @@
             const countEl = $id('cho-giao-count');
             const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
 
-            // Chờ phát = BHYT (isBhyt && dagiao === 0) HOẶC Dịch vụ đã in/thu (daThu || trangThai === 'Đang soạn')
+            // Chờ phát = BHYT (isBhyt && dagiao === 0) HOẶC Dịch vụ đã in/thu (daThu || trangThai === 'Đang soạn thuốc thuốc')
             const choGiaoItems = rawChuaGiaoData.filter(item => {
                 if (Number(item.dagiao) !== 0) return false;
-                return item.isBhyt || item.daThu || item.trangThai === 'Đang soạn';
+                return item.isBhyt || item.daThu || item.trangThai === 'Đang soạn thuốc thuốc';
             });
 
             if (countEl) countEl.textContent = choGiaoItems.length;
@@ -966,7 +966,7 @@
                 const curOcua = String(item.oCua || '').trim();
                 const hasBeenCalled = Boolean(curOcua && curOcua !== '' && curOcua !== 'null');
                 const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                const safeTrangThai = 'Đang soạn';
+                const safeTrangThai = 'Đang soạn thuốc thuốc';
 
                 const assignBtns = ['1', '2', '3', '4'].map(num => {
                     const isCurrent = curOcua === num;
@@ -998,13 +998,12 @@
                         <div class="flex-1 min-w-0">
                             <div class="font-black text-slate-900 text-sm md:text-base uppercase truncate leading-tight tracking-wide flex items-center gap-2">
                                 <span>${escapeHtml(item.hoTen)}</span>
-                                ${hasBeenCalled ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200 uppercase tracking-wide"><i class="fa-solid fa-volume-high text-[9px] text-blue-600"></i> Đang gọi</span>' : ''}
                             </div>
                             <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                                 ${badge}
                                 ${getOcuaBadge(item.oCua)}
                                 <span class="text-xs font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 flex items-center gap-1">
-                                    <i class="fa-solid fa-box-open text-blue-500"></i> Đang soạn
+                                    <i class="fa-solid fa-box-open text-blue-500"></i> Đang soạn thuốc thuốc
                                 </span>
                                 <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
                                         title="Bấm để sao chép mã khám"

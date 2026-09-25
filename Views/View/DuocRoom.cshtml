@@ -371,7 +371,7 @@
                                             {
                                                 <span
                                                     class="inline-block bg-blue-50 text-blue-800 px-3 md:px-5 py-1.5 rounded-xl text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-blue-300 shadow-sm @(isNear ? "animate-pulse-red" : "")">
-                                                    Đang soạn
+                                                    Đang soạn thuốc
                                                 </span>
                                             }
                                         </div>
@@ -744,13 +744,13 @@
                                         </td>`;
                     }
 
-                    // Cột Trạng Thái: Luôn hiển thị chuẩn xác 'Chờ thu' hoặc 'Đang soạn'
+                    // Cột Trạng Thái: Luôn hiển thị chuẩn xác 'Chờ thu' hoặc 'Đang soạn thuốc'
                     let col5Badge = '';
                     const isChoThu = (p.trangThai === "Chờ thu" || escapedStatus === "Chờ thu");
                     if (isChoThu) {
                         col5Badge = `<span class="badge-status p-1 md:px-3 md:py-1.5 inline-block bg-amber-50 text-amber-800 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Chờ thu</span>`;
                     } else {
-                        col5Badge = `<span class="badge-status p-1 md:px-3 md:py-1.5 inline-block bg-blue-50 text-blue-800 border-2 border-blue-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Đang soạn</span>`;
+                        col5Badge = `<span class="badge-status p-1 md:px-3 md:py-1.5 inline-block bg-blue-50 text-blue-800 border-2 border-blue-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Đang soạn thuốc</span>`;
                     }
 
                     return `<tr data-patient="${escapedName}" data-nam-sinh="${namSinh}" data-makb="${makb}" data-mabn="${mabn}" data-status="${escapedStatus || ''}" data-ocua="${p.oCua || ''}"
