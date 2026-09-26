@@ -389,7 +389,6 @@
                                         class="py-4 px-3 font-bold text-center text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black" : "text-2xl md:text-4xl font-bold")">
                                         @p.NamSinh
                                     </td>
-                                    <!-- Cột Loại/Tiền: Gộp BHYT + DV, DV→tiền, BHYT→badge loại toa -->
                                     <td class="py-4 px-3 text-center overflow-hidden">
                                         @if (p.HasBoth)
                                         {
@@ -877,7 +876,7 @@
                     let col5Badge = '';
                     const isChoThu = (p.trangThai === "Chờ thu" || escapedStatus === "Chờ thu");
                     if (isChoThu) {
-                        col5Badge = `<span class="badge-status p-1 md:px-3 md:py-1.5 inline-block bg-amber-50 text-amber-800 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Chờ thu</span>`;
+                        col5Badge = `<span class="badge-status p-1 md:px-3 md:py-1.5 inline-block bg-amber-50 text-amber-800 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Chờ thu tiền</span>`;
                     } else {
                         col5Badge = `<span class="badge-status p-1 md:px-3 md:py-1.5 inline-block bg-blue-50 text-blue-800 border-2 border-blue-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Đang soạn thuốc</span>`;
                     }

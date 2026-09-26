@@ -233,6 +233,9 @@ namespace HangChoKhamBenh.Web.Models
 
         [JsonPropertyName("namSinh")]
         public string? NamSinh { get; set; }
+
+        [JsonPropertyName("khochan")]
+        public int? Khochan { get; set; }
     }
 
     public class DuocChuaGiaoItemDto

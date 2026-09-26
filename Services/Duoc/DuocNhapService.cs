@@ -523,33 +523,13 @@ namespace HangChoKhamBenh.Web.Services
             if (cleanMakhs.Count == 0 && cleanMabns.Count == 0) return result;
 
             var yesterday = DateTime.Today.AddDays(-2);
-            var ctList = new List<ChungTuQueryDto>();
-
-            if (cleanMakhs.Count > 0)
-            {
-                var byMakh = await _context.ChungTu.AsNoTracking()
-                    .Where(c => (c.Xoa == null || c.Xoa == 0)
-                             && (c.Khochan == "13" || c.Khochan == "3")
-                             && (c.Ngaylap == null || c.Ngaylap >= yesterday)
-                             && c.Makh != null && cleanMakhs.Contains(c.Makh))
-                    .Select(c => new ChungTuQueryDto { Makh = c.Makh, Mabn = c.Mabn, Sohd = c.Sohd, Maba = c.Maba, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu, Khochan = c.Khochan })
-                    .ToListAsync();
-                ctList.AddRange(byMakh);
-            }
-
-            var foundMabns = ctList.Where(c => !string.IsNullOrEmpty(c.Mabn)).Select(c => c.Mabn!.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var remainingMabns = cleanMabns.Where(m => !foundMabns.Contains(m)).ToList();
-            if (remainingMabns.Count > 0)
-            {
-                var byMabn = await _context.ChungTu.AsNoTracking()
-                    .Where(c => (c.Xoa == null || c.Xoa == 0)
-                             && (c.Khochan == "13" || c.Khochan == "3")
-                             && (c.Ngaylap == null || c.Ngaylap >= yesterday)
-                             && c.Mabn != null && remainingMabns.Contains(c.Mabn))
-                    .Select(c => new ChungTuQueryDto { Makh = c.Makh, Mabn = c.Mabn, Sohd = c.Sohd, Maba = c.Maba, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu, Khochan = c.Khochan })
-                    .ToListAsync();
-                ctList.AddRange(byMabn);
-            }
+            var ctList = await _context.ChungTu.AsNoTracking()
+                .Where(c => (c.Xoa == null || c.Xoa == 0)
+                         && (c.Khochan == "13" || c.Khochan == "3")
+                         && (c.Ngaylap == null || c.Ngaylap >= yesterday)
+                         && ((c.Makh != null && cleanMakhs.Contains(c.Makh)) || (c.Mabn != null && cleanMabns.Contains(c.Mabn))))
+                .Select(c => new ChungTuQueryDto { Makh = c.Makh, Mabn = c.Mabn, Sohd = c.Sohd, Maba = c.Maba, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu, Khochan = c.Khochan })
+                .ToListAsync();
 
             var allKeys = cleanMakhs.Concat(cleanMabns).Distinct(StringComparer.OrdinalIgnoreCase);
             foreach (var key in allKeys)
@@ -722,7 +702,7 @@ namespace HangChoKhamBenh.Web.Services
                 {
                     if (!isDvPaid)
                     {
-                        // Toa DV chưa thu tiền: Hiển thị duy nhất ở Cột 1 (Chưa thu tiền), chưa hiển thị Đang soạn
+                        // 1. Toa DV chưa thu tiền: Hiển thị ở Cột 1 (Chưa thu tiền)
                         result.Add(new DuocChuaGiaoItemDto
                         {
                             Makb = item.Makb ?? "",
@@ -730,7 +710,7 @@ namespace HangChoKhamBenh.Web.Services
                             HoTen = hoTen ?? "",
                             NamSinh = namSinhStr,
                             GioiTinh = gioiTinhStr,
-                            Khochan = 0,
+                            Khochan = 13,
                             HasBhyt = true,
                             HasDichVu = true,
                             HasBoth = true,
@@ -740,6 +720,30 @@ namespace HangChoKhamBenh.Web.Services
                             TrangThai = "Chờ thu",
                             SoTien = soTien,
                             SoTienStr = soTienStr,
+                            Sohd = sohdStr,
+                            Maba = mabaStr,
+                            NgayNhapStr = ngayNhapStr,
+                            OCua = item.Taikhoan ?? ""
+                        });
+
+                        // 2. Toa BHYT: Hiển thị qua thẳng Cột 2 (Chờ phát thuốc / Chờ giao)
+                        result.Add(new DuocChuaGiaoItemDto
+                        {
+                            Makb = item.Makb ?? "",
+                            Mabn = item.Mabn ?? "",
+                            HoTen = hoTen ?? "",
+                            NamSinh = namSinhStr,
+                            GioiTinh = gioiTinhStr,
+                            Khochan = 14,
+                            HasBhyt = true,
+                            HasDichVu = true,
+                            HasBoth = true,
+                            IsBhyt = true,
+                            Dagiao = item.Dagiao,
+                            DaThu = true,
+                            TrangThai = "Đang soạn",
+                            SoTien = null,
+                            SoTienStr = "",
                             Sohd = sohdStr,
                             Maba = mabaStr,
                             NgayNhapStr = ngayNhapStr,
@@ -1072,13 +1076,39 @@ namespace HangChoKhamBenh.Web.Services
             var oCua = req.OCua?.Trim();
             var today = DateTime.Today.AddDays(-1);
 
-            var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-            UPDATE current.hangchoduoc_tmd
-            SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
-            WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
-              AND xoa = 0
-              AND (ngaynhap IS NULL OR ngaynhap >= {today})
-        ");
+            int rows;
+            if (req.Khochan == 14 || req.Khochan == 1 || req.Khochan == 2)
+            {
+                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                    UPDATE current.hangchoduoc_tmd
+                    SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
+                    WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
+                      AND (khochan = 14 OR khochan = 1 OR khochan = 2)
+                      AND xoa = 0
+                      AND (ngaynhap IS NULL OR ngaynhap >= {today})
+                ");
+            }
+            else if (req.Khochan == 13 || req.Khochan == 3)
+            {
+                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                    UPDATE current.hangchoduoc_tmd
+                    SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
+                    WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
+                      AND (khochan = 13 OR khochan = 3)
+                      AND xoa = 0
+                      AND (ngaynhap IS NULL OR ngaynhap >= {today})
+                ");
+            }
+            else
+            {
+                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                    UPDATE current.hangchoduoc_tmd
+                    SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
+                    WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
+                      AND xoa = 0
+                      AND (ngaynhap IS NULL OR ngaynhap >= {today})
+                ");
+            }
 
             return rows > 0;
         }

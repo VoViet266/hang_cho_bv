@@ -197,33 +197,13 @@ namespace HangChoKhamBenh.Web.Services
                     if (allMakhs.Count > 0 || allMabns.Count > 0)
                     {
                         var yesterday = DateTime.Today.AddDays(-2);
-                        var matchedChungTu = new List<ChungTuShortDto>();
-
-                        if (allMakhs.Count > 0)
-                        {
-                            var byMakh = await _context.ChungTu.AsNoTracking()
-                                .Where(c => (c.Xoa == null || c.Xoa == 0)
-                                         && (c.Khochan == "13" || c.Khochan == "3")
-                                         && (c.Ngaylap == null || c.Ngaylap >= yesterday)
-                                         && c.Makh != null && allMakhs.Contains(c.Makh))
-                                .Select(c => new ChungTuShortDto { Sohd = c.Sohd, Makh = c.Makh, Mabn = c.Mabn, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu })
-                                .ToListAsync();
-                            matchedChungTu.AddRange(byMakh);
-                        }
-
-                        var foundMabns = matchedChungTu.Where(c => !string.IsNullOrEmpty(c.Mabn)).Select(c => c.Mabn!.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                        var remainingMabns = allMabns.Where(m => !foundMabns.Contains(m)).ToList();
-                        if (remainingMabns.Count > 0)
-                        {
-                            var byMabn = await _context.ChungTu.AsNoTracking()
-                                .Where(c => (c.Xoa == null || c.Xoa == 0)
-                                         && (c.Khochan == "13" || c.Khochan == "3")
-                                         && (c.Ngaylap == null || c.Ngaylap >= yesterday)
-                                         && c.Mabn != null && remainingMabns.Contains(c.Mabn))
-                                .Select(c => new ChungTuShortDto { Sohd = c.Sohd, Makh = c.Makh, Mabn = c.Mabn, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu })
-                                .ToListAsync();
-                            matchedChungTu.AddRange(byMabn);
-                        }
+                        var matchedChungTu = await _context.ChungTu.AsNoTracking()
+                            .Where(c => (c.Xoa == null || c.Xoa == 0)
+                                     && (c.Khochan == "13" || c.Khochan == "3")
+                                     && (c.Ngaylap == null || c.Ngaylap >= yesterday)
+                                     && ((c.Makh != null && allMakhs.Contains(c.Makh)) || (c.Mabn != null && allMabns.Contains(c.Mabn))))
+                            .Select(c => new ChungTuShortDto { Sohd = c.Sohd, Makh = c.Makh, Mabn = c.Mabn, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu })
+                            .ToListAsync();
 
                         foreach (var g in dvPatients)
                         {
@@ -294,14 +274,6 @@ namespace HangChoKhamBenh.Web.Services
                         }
                     }
 
-                    // Xác định Loại Toa và Trạng Thái:
-                    // 1. Có cả 2 toa (BHYT + DV):
-                    //    - Chưa đóng tiền DV (!isPaidDv) -> Trạng thái: "Chờ thu", hiển thị giá tiền DV
-                    //    - Đã đóng tiền DV (isPaidDv)    -> Trạng thái: "Đang soạn", hiển thị giá tiền DV
-                    // 2. Chỉ có BHYT:
-                    //    - Trạng thái: "Đang soạn", Loại: "Toa BHYT", không hiện tiền
-                    // 3. Chỉ có Dịch Vụ:
-                    //    - Trạng thái: isPaidDv ? "Đang soạn" : "Chờ thu", hiển thị giá tiền DV
                     string loaiToaStr;
                     string trangThaiStr;
                     bool isBhytFlag;
@@ -309,18 +281,39 @@ namespace HangChoKhamBenh.Web.Services
 
                     if (item.HasBoth)
                     {
-                        loaiToaStr = "BHYT + Dịch Vụ";
-                        if (!isPaidDv)
+                        if (isBhyt)
                         {
-                            trangThaiStr = "Chờ thu";
-                            isBhytFlag = false;
-                            isDangSoanFlag = false;
-                        }
-                        else
-                        {
+                            // Trên màn hình BHYT: Đơn BHYT luôn sẵn sàng soạn thuốc
+                            loaiToaStr = "Toa BHYT";
                             trangThaiStr = "Đang soạn";
                             isBhytFlag = true;
                             isDangSoanFlag = true;
+                            soTien = null;
+                            soTienStr = "";
+                        }
+                        else if (isDichVu)
+                        {
+                            // Trên màn hình Dịch Vụ: Hiển thị trạng thái đơn DV
+                            loaiToaStr = "Toa Dịch Vụ";
+                            trangThaiStr = isPaidDv ? "Đang soạn" : "Chờ thu";
+                            isBhytFlag = false;
+                            isDangSoanFlag = isPaidDv;
+                        }
+                        else // isAll
+                        {
+                            loaiToaStr = "BHYT + Dịch Vụ";
+                            if (!isPaidDv)
+                            {
+                                trangThaiStr = "Chờ thu";
+                                isBhytFlag = false;
+                                isDangSoanFlag = false;
+                            }
+                            else
+                            {
+                                trangThaiStr = "Đang soạn";
+                                isBhytFlag = true;
+                                isDangSoanFlag = true;
+                            }
                         }
                     }
                     else if (item.HasBhyt)
