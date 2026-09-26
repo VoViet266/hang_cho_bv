@@ -53,6 +53,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IClinicService, ClinicService>();
 builder.Services.AddScoped<ICdhaService, CdhaService>();
 builder.Services.AddScoped<IDuocService, DuocService>();
+builder.Services.AddScoped<IDuocNhapService, DuocNhapService>();
 builder.Services.AddSingleton<ITtsService, TtsService>();
 
 // Realtime & Background Services
@@ -110,7 +111,7 @@ app.Use(async (context, next) =>
 app.UseRouting();
 
 // Health check endpoint
-app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+app.MapMethods("/health", ["GET", "HEAD"], () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 // Map SignalR Hub
 app.MapHub<QueueHub>("/queueHub");

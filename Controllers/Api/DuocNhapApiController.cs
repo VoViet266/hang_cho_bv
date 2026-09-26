@@ -1,1323 +1,197 @@
-using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using HangChoKhamBenh.Web.Data;
-using HangChoKhamBenh.Web.Data.Entities;
 using HangChoKhamBenh.Web.Hubs;
-using HangChoKhamBenh.Web.Models;
 using HangChoKhamBenh.Web.Services;
+using HangChoKhamBenh.Web.Models;
 
-namespace HangChoKhamBenh.Web.Controllers.Api;
-
-[ApiController]
-[Route("api/duoc-nhap")]
-public class DuocNhapApiController : ControllerBase
+namespace HangChoKhamBenh.Web.Controllers.Api
 {
-    private readonly AppDbContext _context;
-    private readonly ILogger<DuocNhapApiController> _logger;
-    private readonly IQueueRealtimeBroadcaster _broadcaster;
-    private readonly IHubContext<QueueHub> _hubContext;
-
-    public DuocNhapApiController(
-        AppDbContext context,
-        ILogger<DuocNhapApiController> logger,
-        IQueueRealtimeBroadcaster broadcaster,
-        IHubContext<QueueHub> hubContext)
+    [ApiController]
+    [Route("api/duoc-nhap")]
+    public class DuocNhapApiController : ControllerBase
     {
-        _context = context;
-        _logger = logger;
-        _broadcaster = broadcaster;
-        _hubContext = hubContext;
-    }
+        private readonly IDuocNhapService _duocNhapService;
+        private readonly ILogger<DuocNhapApiController> _logger;
+        private readonly IQueueRealtimeBroadcaster _broadcaster;
+        private readonly IHubContext<QueueHub> _hubContext;
 
-    /// <summary>
-    /// Tra cứu bằng makh (mã khám), makb, mabn hoặc sohd trong bảng chungtu, khambenh, psdangky, dmbenhnhan.
-    /// - Hỗ trợ tra cứu đa tầng: chungtu -> khambenh -> psdangky -> dmbenhnhan.
-    /// - Tự động nhận diện Dịch vụ (khochan = 13 hoặc 3) và BHYT (khochan = 14, 1, 2 hoặc mặc định).
-    /// - Không bao giờ báo lỗi từ chối khochan.
-    /// </summary>
-    [HttpGet("scan")]
-    public async Task<IActionResult> Scan([FromQuery] string? makh, [FromQuery] string? makb)
-    {
-        var rawCode = (!string.IsNullOrWhiteSpace(makh) ? makh : makb)?.Trim();
-        if (string.IsNullOrWhiteSpace(rawCode))
-            return Ok(new DuocNhapBarcodeResultDto { Success = false, Message = "Vui lòng nhập mã khám (makh) hoặc mã bệnh nhân." });
-
-        // Làm sạch mã (loại bỏ ký tự điều khiển từ máy quét mã vạch nếu có)
-        var code = rawCode.Replace("\r", "").Replace("\n", "").Replace("\t", "").Trim();
-
-        try
+        public DuocNhapApiController(
+            IDuocNhapService duocNhapService,
+            ILogger<DuocNhapApiController> logger,
+            IQueueRealtimeBroadcaster broadcaster,
+            IHubContext<QueueHub> hubContext)
         {
-            string actualMakh = code;
-            string mabn = "";
-            string maba = "";
-            string sohd = "";
-            int loai = 14; // Mặc định là 14 (BHYT)
-            decimal tongTien = 0;
-            var danhSachThuoc = new List<DuocNhapThuocItemDto>();
+            _duocNhapService = duocNhapService;
+            _logger = logger;
+            _broadcaster = broadcaster;
+            _hubContext = hubContext;
+        }
 
-            // 1. Tra cứu trực tiếp theo Makh trong chungtu (sử dụng B-tree index scan trên Makh, siêu nhanh < 1ms)
-            var ctList = await _context.ChungTu.AsNoTracking()
-                .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Makh == code)
-                .Select(c => new
+        /// <summary>
+        /// Tra cứu thông tin bệnh nhân và chứng từ đơn thuốc theo mã quét
+        /// </summary>
+        [HttpGet("scan")]
+        public async Task<IActionResult> Scan([FromQuery] string? makh, [FromQuery] string? makb)
+        {
+            var result = await _duocNhapService.ScanAsync(makh, makb);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Thêm hoặc cập nhật trạng thái trong hàng chờ dược
+        /// </summary>
+        [HttpPost("them-hang-cho")]
+        public async Task<IActionResult> ThemHangCho([FromBody] DuocNhapThemRequest req)
+        {
+            var result = await _duocNhapService.ThemHangChoAsync(req);
+            if (result.Success)
+            {
+                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
+            }
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Lấy danh sách chưa giao cho quầy dược (Cột 1 Chưa thu, Cột 2 Chờ phát)
+        /// </summary>
+        [HttpGet("chua-giao")]
+        [HttpGet("danh-sach-chua-giao")]
+        public async Task<IActionResult> LayDanhSachChuaGiao()
+        {
+            var result = await _duocNhapService.LayDanhSachChuaGiaoAsync();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Cập nhật trạng thái phát thuốc (dagiao = 1)
+        /// </summary>
+        [HttpPost("cap-nhat-trang-thai")]
+        public async Task<IActionResult> CapNhatTrangThai([FromBody] DuocCapNhatTrangThaiRequest req)
+        {
+            var success = await _duocNhapService.CapNhatTrangThaiAsync(req);
+            if (success)
+            {
+                _logger.LogInformation("Phát thuốc thành công: makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
+                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
+                return Ok(new { success = true, message = "Đã phát thuốc thành công!" });
+            }
+            return Ok(new { success = false, message = "Không tìm thấy dữ liệu để cập nhật." });
+        }
+
+        /// <summary>
+        /// Chỉ định ô cửa và phát loa gọi bệnh nhân
+        /// </summary>
+        [HttpPost("chi-dinh-o-cua")]
+        public async Task<IActionResult> ChiDinhOCua([FromBody] DuocCapNhatTrangThaiRequest req)
+        {
+            var (success, hoTen, namSinh, oCua) = await _duocNhapService.ChiDinhOCuaAsync(req);
+            if (success)
+            {
+                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
+
+                if (!string.IsNullOrEmpty(oCua))
                 {
-                    c.Makh,
-                    c.Mabn,
-                    c.Sohd,
-                    c.Maba,
-                    c.Khochan,
-                    c.Thanhtien
-                })
-                .ToListAsync();
-
-            // 2. Nếu chưa có, tra theo Makb trong khambenh (sử dụng PK index, < 0.5ms)
-            if (ctList.Count == 0)
-            {
-                var kb = await _context.KhamBenh.AsNoTracking()
-                    .Where(k => (k.Xoa == null || k.Xoa == 0) && k.Makb == code)
-                    .OrderByDescending(k => k.Ngaykcb)
-                    .Select(k => new { k.Makb, k.Mabn, k.Ngaykcb })
-                    .FirstOrDefaultAsync();
-
-                if (kb != null)
-                {
-                    actualMakh = kb.Makb;
-                    mabn = kb.Mabn;
-
-                    if (!string.IsNullOrEmpty(actualMakh))
+                    var cleanTrangThai = string.IsNullOrWhiteSpace(req.TrangThai) ? "Đang soạn" : req.TrangThai.Trim();
+                    _ = Task.Run(async () =>
                     {
-                        ctList = await _context.ChungTu.AsNoTracking()
-                            .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Makh == actualMakh)
-                            .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
-                            .ToListAsync();
-                    }
-                    if (ctList.Count == 0 && !string.IsNullOrEmpty(mabn))
-                    {
-                        ctList = await _context.ChungTu.AsNoTracking()
-                            .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == mabn)
-                            .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
-                            .ToListAsync();
-                    }
-                }
-            }
-
-            // 3. Nếu chưa có, tra theo Mabn trong chungtu (sử dụng index scan trên Mabn, < 1ms)
-            if (ctList.Count == 0)
-            {
-                ctList = await _context.ChungTu.AsNoTracking()
-                    .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == code)
-                    .Select(c => new
-                    {
-                        c.Makh,
-                        c.Mabn,
-                        c.Sohd,
-                        c.Maba,
-                        c.Khochan,
-                        c.Thanhtien
-                    })
-                    .ToListAsync();
-            }
-
-            // 4. Nếu chưa có, tra theo Sohd trong chungtu (sử dụng index scan trên Sohd, < 1ms)
-            if (ctList.Count == 0)
-            {
-                ctList = await _context.ChungTu.AsNoTracking()
-                    .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Sohd == code)
-                    .Select(c => new
-                    {
-                        c.Makh,
-                        c.Mabn,
-                        c.Sohd,
-                        c.Maba,
-                        c.Khochan,
-                        c.Thanhtien
-                    })
-                    .ToListAsync();
-            }
-
-            // 5. Nếu chưa có, tra psdangky theo Makb (sử dụng PK index)
-            if (ctList.Count == 0 && string.IsNullOrEmpty(mabn))
-            {
-                var dk = await _context.PsDangKy.AsNoTracking()
-                    .Where(d => (d.Xoa == null || d.Xoa == 0) && d.Makb == code)
-                    .OrderByDescending(d => d.Ngaydk)
-                    .Select(d => new { d.Makb, d.Mabn })
-                    .FirstOrDefaultAsync();
-
-                if (dk != null)
-                {
-                    actualMakh = dk.Makb;
-                    mabn = dk.Mabn;
-
-                    if (!string.IsNullOrEmpty(mabn))
-                    {
-                        ctList = await _context.ChungTu.AsNoTracking()
-                            .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == mabn)
-                            .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
-                            .ToListAsync();
-                    }
-                }
-            }
-
-            // 6. Nếu vẫn chưa có mabn, kiểm tra trong dmbenhnhan bằng mabn (PK index, < 0.2ms)
-            if (string.IsNullOrEmpty(mabn))
-            {
-                var bnCheck = await _context.DmBenhNhan.AsNoTracking()
-                    .Where(b => b.Mabn == code)
-                    .Select(b => b.Mabn)
-                    .FirstOrDefaultAsync();
-
-                if (!string.IsNullOrEmpty(bnCheck))
-                {
-                    mabn = bnCheck;
-                }
-            }
-
-            // Lấy mabn từ ctList nếu chưa có
-            if (string.IsNullOrEmpty(mabn) && ctList.Count > 0)
-            {
-                mabn = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Mabn))?.Mabn ?? "";
-            }
-
-            // 7. Nếu có mabn, nạp thêm tất cả chứng từ của bệnh nhân trong 2 ngày gần nhất để gom cả BHYT và Dịch vụ (nếu có)
-            if (!string.IsNullOrEmpty(mabn))
-            {
-                var yesterday = DateTime.Today.AddDays(-1);
-                var allPatientCt = await _context.ChungTu.AsNoTracking()
-                    .Where(c => (c.Xoa == null || c.Xoa == 0)
-                             && c.Mabn == mabn
-                             && (c.Ngaylap == null || c.Ngaylap >= yesterday))
-                    .Select(c => new
-                    {
-                        c.Makh,
-                        c.Mabn,
-                        c.Sohd,
-                        c.Maba,
-                        c.Khochan,
-                        c.Thanhtien
-                    })
-                    .ToListAsync();
-
-                if (allPatientCt.Count > 0)
-                {
-                    var existingKeys = ctList.Select(c => $"{c.Makh}_{c.Sohd}_{c.Khochan}").ToHashSet(StringComparer.OrdinalIgnoreCase);
-                    foreach (var item in allPatientCt)
-                    {
-                        var k = $"{item.Makh}_{item.Sohd}_{item.Khochan}";
-                        if (!existingKeys.Contains(k))
+                        try
                         {
-                            ctList.Add(item);
-                            existingKeys.Add(k);
+                            await _hubContext.Clients.All.SendAsync("duoc_trigger_speak", new
+                            {
+                                hoTen,
+                                namSinh,
+                                oCua,
+                                makb = req.Makb ?? "",
+                                mabn = req.Mabn ?? "",
+                                isBhyt = req.IsBhyt ?? true,
+                                trangThai = cleanTrangThai
+                            });
                         }
-                    }
-                }
-            }
-
-            if (ctList.Count > 0)
-            {
-                var firstCt = ctList[0];
-                if (string.IsNullOrEmpty(mabn)) mabn = firstCt.Mabn ?? "";
-                if (string.IsNullOrEmpty(actualMakh) || actualMakh == code)
-                {
-                    actualMakh = !string.IsNullOrWhiteSpace(firstCt.Makh) ? firstCt.Makh : code;
-                }
-                maba = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Maba))?.Maba ?? firstCt.Maba ?? "";
-                sohd = firstCt.Sohd ?? "";
-            }
-            else
-            {
-                // Không có chứng từ, kiểm tra có thông tin bệnh nhân không
-                if (string.IsNullOrEmpty(mabn))
-                {
-                    return Ok(new DuocNhapBarcodeResultDto
-                    {
-                        Success = false,
-                        Message = $"Không tìm thấy thông tin bệnh nhân hoặc chứng từ với mã '{code}'."
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Lỗi gửi SignalR duoc_trigger_speak");
+                        }
                     });
                 }
+
+                return Ok(new { success = true, message = $"Đã chỉ định Ô {oCua} cho bệnh nhân {hoTen}!" });
             }
 
-            // 8. Tra cứu thông tin bệnh nhân từ DmBenhNhan và KhamBenh
-            string hoTen = "";
-            string ngaySinh = "";
-            string gioiTinh = "";
-            DateTime? ngayKcb = null;
+            return Ok(new { success = false, message = "Không tìm thấy bệnh nhân để cập nhật." });
+        }
 
-            if (!string.IsNullOrWhiteSpace(mabn))
+        /// <summary>
+        /// Lấy lịch sử phát thuốc hôm nay
+        /// </summary>
+        [HttpGet("da-giao")]
+        [HttpGet("danh-sach-da-giao")]
+        public async Task<IActionResult> LayDanhSachDaGiao()
+        {
+            var result = await _duocNhapService.LayDanhSachDaGiaoAsync();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Hoàn tác phát thuốc / không mua: Đưa bệnh nhân quay lại hàng chờ (dagiao = 0)
+        /// </summary>
+        [HttpPost("hoan-tac")]
+        public async Task<IActionResult> HoanTac([FromBody] DuocHoanTacRequest req)
+        {
+            var success = await _duocNhapService.HoanTacAsync(req.Makb ?? "", req.Mabn ?? "");
+            if (success)
             {
-                var bn = await _context.DmBenhNhan.AsNoTracking()
-                    .Where(b => b.Mabn == mabn)
-                    .Select(b => new { b.Holot, b.Ten, b.Ngaysinh, b.Gioitinh })
-                    .FirstOrDefaultAsync();
-
-                if (bn != null)
-                {
-                    hoTen = $"{bn.Holot} {bn.Ten}".Trim();
-                    ngaySinh = bn.Ngaysinh.HasValue ? bn.Ngaysinh.Value.ToString("dd/MM/yyyy") : "";
-                    gioiTinh = bn.Gioitinh switch { 1 => "Nam", 2 => "Nữ", _ => "" };
-                }
-
-                if (!string.IsNullOrEmpty(actualMakh))
-                {
-                    var kb = await _context.KhamBenh.AsNoTracking()
-                        .Where(k => k.Makb == actualMakh && (k.Xoa == null || k.Xoa == 0))
-                        .OrderByDescending(k => k.Ngaykcb)
-                        .Select(k => (DateTime?)k.Ngaykcb)
-                        .FirstOrDefaultAsync();
-                    ngayKcb = kb;
-                }
-                if (ngayKcb == null)
-                {
-                    var kb = await _context.KhamBenh.AsNoTracking()
-                        .Where(k => k.Mabn == mabn && (k.Xoa == null || k.Xoa == 0))
-                        .OrderByDescending(k => k.Ngaykcb)
-                        .Select(k => k.Ngaykcb)
-                        .FirstOrDefaultAsync();
-                    ngayKcb = kb;
-                }
+                _logger.LogInformation("Hoàn tác makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
+                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
+                return Ok(new { success = true, message = "Đã hoàn tác thành công, đưa bệnh nhân trở lại danh sách chờ!" });
             }
+            return Ok(new { success = false, message = "Không tìm thấy dữ liệu để hoàn tác." });
+        }
 
-            if (string.IsNullOrEmpty(hoTen))
+        /// <summary>
+        /// Đánh dấu khách không mua thuốc dịch vụ (dagiao = 3)
+        /// </summary>
+        [HttpPost("khong-mua")]
+        public async Task<IActionResult> KhongMua([FromBody] DuocCapNhatTrangThaiRequest req)
+        {
+            var success = await _duocNhapService.KhongMuaAsync(req.Makb ?? "", req.Mabn ?? "");
+            if (success)
             {
-                hoTen = !string.IsNullOrEmpty(actualMakh) ? actualMakh : mabn;
+                _logger.LogInformation("Đánh dấu không mua makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
+                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
+                return Ok(new { success = true, message = "Đã chuyển đơn vào danh sách Không mua!" });
             }
+            return Ok(new { success = false, message = "Không tìm thấy dữ liệu để cập nhật." });
+        }
 
-            if (ngayKcb == null)
+        /// <summary>
+        /// Lấy danh sách khách không mua thuốc hôm nay
+        /// </summary>
+        [HttpGet("khong-mua")]
+        [HttpGet("danh-sach-khong-mua")]
+        public async Task<IActionResult> LayDanhSachKhongMua()
+        {
+            var result = await _duocNhapService.LayDanhSachKhongMuaAsync();
+            return Ok(result);
+        }
+
+        private void NotifyDuocQueuesUpdated(string? makb, string? mabn)
+        {
+            _ = Task.Run(async () =>
             {
-                ngayKcb = DateTime.Now;
-            }
-
-            // 9. Phân loại độc lập Toa BHYT và Toa Dịch Vụ
-            bool hasDv = false;
-            bool hasBhyt = false;
-            string sohdBhyt = "";
-            string mabaBhyt = "";
-            string sohdDv = "";
-            string mabaDv = "";
-
-            if (ctList.Count > 0)
-            {
-                var dvItems = ctList.Where(c => c.Khochan == "13" || c.Khochan == "3" || (c.Khochan != null && (c.Khochan.Trim() == "13" || c.Khochan.Trim() == "3"))).ToList();
-                var bhytItems = ctList.Where(c => c.Khochan == "14" || c.Khochan == "1" || c.Khochan == "2" || (c.Khochan != null && (c.Khochan.Trim() == "14" || c.Khochan.Trim() == "1" || c.Khochan.Trim() == "2"))).ToList();
-
-                hasDv = dvItems.Count > 0;
-                hasBhyt = bhytItems.Count > 0;
-
-                // Nếu không phân loại được theo khochan thì mặc định là BHYT
-                if (!hasDv && !hasBhyt)
+                try
                 {
-                    hasBhyt = true;
+                    await Task.WhenAll(
+                        _broadcaster.CheckAndBroadcastRoomAsync("duoc", "all", true),
+                        _broadcaster.CheckAndBroadcastRoomAsync("duoc", "bhyt", true),
+                        _broadcaster.CheckAndBroadcastRoomAsync("duoc", "dichvu", true)
+                    );
                 }
-
-                if (hasBhyt && bhytItems.Count > 0)
+                catch (Exception ex)
                 {
-                    sohdBhyt = bhytItems.FirstOrDefault(c => !string.IsNullOrEmpty(c.Sohd))?.Sohd ?? "";
-                    mabaBhyt = bhytItems.FirstOrDefault(c => !string.IsNullOrEmpty(c.Maba))?.Maba ?? "";
+                    _logger.LogError(ex, "Lỗi broadcast NotifyDuocQueuesUpdated makb={Makb}, mabn={Mabn}", makb, mabn);
                 }
-
-                if (hasDv)
-                {
-                    var distinctDv = dvItems
-                        .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? string.Empty))
-                        .Select(g => g.First())
-                        .ToList();
-
-                    tongTien = distinctDv.Sum(c => c.Thanhtien ?? 0);
-                    danhSachThuoc = distinctDv.Select(c => new DuocNhapThuocItemDto
-                    {
-                        Sohd = c.Sohd,
-                        Maba = c.Maba,
-                        Thanhtien = c.Thanhtien ?? 0
-                    }).ToList();
-
-                    sohdDv = dvItems.FirstOrDefault(c => !string.IsNullOrEmpty(c.Sohd))?.Sohd ?? "";
-                    mabaDv = dvItems.FirstOrDefault(c => !string.IsNullOrEmpty(c.Maba))?.Maba ?? "";
-                }
-
-                maba = !string.IsNullOrEmpty(mabaBhyt) ? mabaBhyt : mabaDv;
-                sohd = !string.IsNullOrEmpty(sohdBhyt) ? sohdBhyt : sohdDv;
-                loai = (hasBhyt && hasDv) ? 0 : (hasDv ? 13 : 14);
-            }
-            else
-            {
-                hasBhyt = true;
-                hasDv = false;
-                loai = 14;
-            }
-
-            return Ok(new DuocNhapBarcodeResultDto
-            {
-                Success = true,
-                Loai = loai,
-                HasBhyt = hasBhyt,
-                HasDichVu = hasDv,
-                Makh = actualMakh,
-                Makb = actualMakh,
-                Mabn = mabn,
-                HoTen = hoTen,
-                NgaySinh = ngaySinh,
-                GioiTinh = gioiTinh,
-                NgayKcb = ngayKcb,
-                Sohd = sohd,
-                Maba = maba,
-                SohdBhyt = sohdBhyt,
-                MabaBhyt = mabaBhyt,
-                SohdDv = sohdDv,
-                MabaDv = mabaDv,
-                Thanhtien = tongTien,
-                DanhSachThuoc = danhSachThuoc
             });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi scan makh={Makh}", code);
-            return Ok(new DuocNhapBarcodeResultDto { Success = false, Message = "Lỗi hệ thống khi tra cứu: " + ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Thêm hoặc cập nhật trạng thái trong hangchoduoc_tmd:
-    /// - Hỗ trợ tiếp nhận cả 2 toa (BHYT & Dịch vụ) nếu bệnh nhân có cả 2.
-    /// - Toa BHYT: Vào hàng chờ BHYT (khochan = 14, dathu = true -> Chờ phát).
-    /// - Toa Dịch vụ: Vào hàng chờ Dịch vụ (khochan = 13, dathu = isPaid -> Chưa thu nếu dain == 0, Chờ phát nếu dain != 0).
-    /// </summary>
-    [HttpPost("them-hang-cho")]
-    public async Task<IActionResult> ThemHangCho([FromBody] DuocNhapThemRequest req)
-    {
-        var makb = req.Makb?.Trim() ?? "";
-        var mabn = req.Mabn?.Trim() ?? "";
-
-        if (string.IsNullOrWhiteSpace(makb) && string.IsNullOrWhiteSpace(mabn))
-            return Ok(new DuocNhapThemResponse { Success = false, Message = "Thiếu mã khám hoặc mã bệnh nhân." });
-
-        if (string.IsNullOrEmpty(makb)) makb = mabn;
-        if (string.IsNullOrEmpty(mabn)) mabn = makb;
-
-        try
-        {
-            DateTime? ngayKcbVal = req.NgayKcb ?? DateTime.Now;
-            var today = DateTime.UtcNow.Date;
-            var yesterday = today.AddDays(-1);
-
-            bool shouldAddBhyt = (req.HasBhyt == true) || (req.Khochan == 14) || (req.Loai == 14) || (req.Loai == 0);
-            bool shouldAddDichVu = (req.HasDichVu == true) || (req.Khochan == 13) || (req.Khochan == 3) || (req.Loai == 13) || (req.Loai == 0);
-
-            if (!shouldAddBhyt && !shouldAddDichVu)
-            {
-                shouldAddBhyt = true;
-            }
-
-            List<string> addedMessages = new();
-
-            // 1. XỬ LÝ TOA BẢO HIỂM (BHYT): khochan = 14 -> Mặc định dathu = true, dagiao = 0 (vào Chờ phát)
-            if (shouldAddBhyt)
-            {
-                HangChoDuocTmd? existingBhyt = null;
-                if (!string.IsNullOrEmpty(makb))
-                {
-                    existingBhyt = await _context.HangChoDuocTmd
-                        .Where(h => h.Makb == makb && h.Khochan == 14 && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today))
-                        .OrderByDescending(h => h.Ngaynhap)
-                        .FirstOrDefaultAsync();
-                }
-                if (existingBhyt == null && !string.IsNullOrEmpty(mabn))
-                {
-                    existingBhyt = await _context.HangChoDuocTmd
-                        .Where(h => h.Mabn == mabn && h.Khochan == 14 && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today))
-                        .OrderByDescending(h => h.Ngaynhap)
-                        .FirstOrDefaultAsync();
-                }
-
-                if (existingBhyt == null)
-                {
-                    await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                        INSERT INTO current.hangchoduoc_tmd (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao, dathu)
-                        VALUES ({mabn}, {makb}, now(), now(), {req.OCua}, 14, 0, {ngayKcbVal}, {req.Maba}, 0, true)
-                    ");
-                    addedMessages.Add("Toa BHYT -> Chờ phát");
-                }
-                else if (existingBhyt.Dagiao == 0 && req.HasBhyt != true)
-                {
-                    await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                        UPDATE current.hangchoduoc_tmd
-                        SET dagiao = 1, ngaygiao = now(), taikhoan = COALESCE({req.OCua}, taikhoan)
-                        WHERE ((makb = {makb} AND makb <> '') OR (mabn = {mabn} AND mabn <> '')) AND khochan = 14 AND dagiao = 0 AND xoa = 0
-                    ");
-                }
-            }
-
-            // 2. XỬ LÝ TOA DỊCH VỤ: khochan = 13 -> dathu = isPaid, dagiao = 0 (Chưa thu nếu dain == 0, Chờ phát nếu dain != 0)
-            if (shouldAddDichVu)
-            {
-                bool isPaid = false;
-                if (!string.IsNullOrEmpty(makb))
-                {
-                    isPaid = await _context.ChungTu.AsNoTracking()
-                        .AnyAsync(c => (c.Xoa == null || c.Xoa == 0)
-                                    && (c.Khochan == "13" || c.Khochan == "3")
-                                    && c.Makh == makb
-                                    && (c.Dain ?? 0) != 0
-                                    && (c.Ngaylap == null || c.Ngaylap >= yesterday));
-                }
-                if (!isPaid && !string.IsNullOrEmpty(mabn))
-                {
-                    isPaid = await _context.ChungTu.AsNoTracking()
-                        .AnyAsync(c => (c.Xoa == null || c.Xoa == 0)
-                                    && (c.Khochan == "13" || c.Khochan == "3")
-                                    && c.Mabn == mabn
-                                    && (c.Dain ?? 0) != 0
-                                    && (c.Ngaylap == null || c.Ngaylap >= yesterday));
-                }
-
-                HangChoDuocTmd? existingDv = null;
-                if (!string.IsNullOrEmpty(makb))
-                {
-                    existingDv = await _context.HangChoDuocTmd
-                        .Where(h => h.Makb == makb && (h.Khochan == 13 || h.Khochan == 3) && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today))
-                        .OrderByDescending(h => h.Ngaynhap)
-                        .FirstOrDefaultAsync();
-                }
-                if (existingDv == null && !string.IsNullOrEmpty(mabn))
-                {
-                    existingDv = await _context.HangChoDuocTmd
-                        .Where(h => h.Mabn == mabn && (h.Khochan == 13 || h.Khochan == 3) && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today))
-                        .OrderByDescending(h => h.Ngaynhap)
-                        .FirstOrDefaultAsync();
-                }
-
-                if (existingDv == null)
-                {
-                    await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                        INSERT INTO current.hangchoduoc_tmd (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao, dathu)
-                        VALUES ({mabn}, {makb}, now(), now(), {req.OCua}, 13, 0, {ngayKcbVal}, {req.Maba}, 0, {isPaid})
-                    ");
-                    addedMessages.Add(isPaid ? "Toa Dịch vụ -> Chờ phát" : "Toa Dịch vụ -> Chưa thu");
-                }
-                else if (existingDv.Dagiao == 3)
-                {
-                    // Đã từng không mua -> Giờ quét lại thì kích hoạt lại vào Chưa thu
-                    await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                        UPDATE current.hangchoduoc_tmd
-                        SET dagiao = 0, ngaygiao = now(), taikhoan = COALESCE({req.OCua}, taikhoan), dathu = {isPaid}
-                        WHERE ((makb = {makb} AND makb <> '') OR (mabn = {mabn} AND mabn <> '')) AND (khochan = 13 OR khochan = 3) AND xoa = 0
-                    ");
-                    addedMessages.Add(isPaid ? "Kích hoạt lại Dịch vụ -> Chờ phát" : "Kích hoạt lại Dịch vụ -> Chưa thu");
-                }
-            }
-
-            NotifyDuocQueuesUpdated(makb, mabn);
-
-            string msg = addedMessages.Count > 0
-                ? $"Đã tiếp nhận: {string.Join(", ", addedMessages)}."
-                : "Đã cập nhật hàng chờ thành công.";
-
-            return Ok(new DuocNhapThemResponse
-            {
-                Success = true,
-                Action = "them",
-                Dagiao = 0,
-                Khochan = (shouldAddBhyt && shouldAddDichVu) ? 0 : (shouldAddDichVu ? 13 : 14),
-                OCua = req.OCua,
-                Message = msg
-            });
-        }
-
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi thêm/cập nhật hàng chờ dược makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
-            return Ok(new DuocNhapThemResponse { Success = false, Message = "Lỗi hệ thống: " + ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Cập nhật trạng thái trực tiếp bằng nút bấm ở ô bên phải (Đã phát / Thanh toán)
-    /// </summary>
-    [HttpPost("cap-nhat-trang-thai")]
-    public async Task<IActionResult> CapNhatTrangThai([FromBody] DuocCapNhatTrangThaiRequest req)
-    {
-        var makb = req.Makb?.Trim() ?? "";
-        var mabn = req.Mabn?.Trim() ?? "";
-        if (string.IsNullOrEmpty(makb) && string.IsNullOrEmpty(mabn))
-            return Ok(new { success = false, message = "Thiếu mã khám hoặc mã bệnh nhân." });
-
-        try
-        {
-            var oCua = req.OCua?.Trim();
-            var today = DateTime.Today.AddDays(-1);
-
-            var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                UPDATE current.hangchoduoc_tmd
-                SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
-                WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
-                  AND xoa = 0
-                  AND (ngaynhap IS NULL OR ngaynhap >= {today})
-            ");
-
-            _logger.LogInformation("Cập nhật trạng thái makb={Makb}, mabn={Mabn}, targetDagiao={TargetDagiao}, oCua={OCua}, rows={Rows}", makb, mabn, req.TargetDagiao, oCua, rows);
-            NotifyDuocQueuesUpdated(makb, mabn);
-            return Ok(new { success = true, message = "Đã cập nhật trạng thái thành công!" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi cập nhật trạng thái cho makb={Makb}", req.Makb);
-            return Ok(new { success = false, message = "Lỗi khi cập nhật: " + ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Chỉ định ô cửa (Ô 1, Ô 2, Ô 3, Ô 4...) và phát loa gọi bệnh nhân
-    /// </summary>
-    [HttpPost("chi-dinh-o-cua")]
-    public async Task<IActionResult> ChiDinhOCua([FromBody] DuocCapNhatTrangThaiRequest req)
-    {
-        var makb = req.Makb?.Trim() ?? "";
-        var mabn = req.Mabn?.Trim() ?? "";
-        if (string.IsNullOrEmpty(makb) && string.IsNullOrEmpty(mabn))
-            return Ok(new { success = false, message = "Thiếu mã khám hoặc mã bệnh nhân." });
-
-        try
-        {
-            var oCua = req.OCua?.Trim() ?? "";
-            var today = DateTime.Today.AddDays(-1);
-
-            var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                UPDATE current.hangchoduoc_tmd
-                SET taikhoan = {oCua}, ngaygiao = now()
-                WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
-                  AND xoa = 0
-                  AND (ngaynhap IS NULL OR ngaynhap >= {today})
-            ");
-
-            var hoTen = req.HoTen?.Trim() ?? "";
-            var namSinh = req.NamSinh?.Trim() ?? "";
-            if ((string.IsNullOrEmpty(hoTen) || string.IsNullOrEmpty(namSinh)) && !string.IsNullOrEmpty(mabn))
-            {
-                var bn = await _context.DmBenhNhan.AsNoTracking()
-                    .Where(b => b.Mabn == mabn)
-                    .Select(b => new { b.Holot, b.Ten, b.Ngaysinh })
-                    .FirstOrDefaultAsync();
-                if (bn != null)
-                {
-                    if (string.IsNullOrEmpty(hoTen)) hoTen = $"{bn.Holot} {bn.Ten}".Trim();
-                    if (string.IsNullOrEmpty(namSinh) && bn.Ngaysinh.HasValue) namSinh = bn.Ngaysinh.Value.ToString("yyyy");
-                }
-            }
-
-            _logger.LogInformation("Chỉ định ô cửa & gọi loa makb={Makb}, oCua={OCua}, hoTen={HoTen}, namSinh={NamSinh}, rows={Rows}", makb, oCua, hoTen, namSinh, rows);
-            NotifyDuocQueuesUpdated(makb, mabn);
-
-            // Phát loa gọi bệnh nhân qua SignalR tới màn hình TV
-            if (!string.IsNullOrEmpty(hoTen) && !string.IsNullOrEmpty(oCua))
-            {
-                _logger.LogInformation("[SignalR Broadcast] Gửi duoc_trigger_speak: hoTen={HoTen}, namSinh={NamSinh}, oCua={OCua}", hoTen, namSinh, oCua);
-                await _hubContext.Clients.All.SendAsync("duoc_trigger_speak", new
-                {
-                    hoTen = hoTen,
-                    namSinh = namSinh,
-                    oCua = oCua,
-                    isBhyt = req.IsBhyt ?? true,
-                    trangThai = req.TrangThai ?? ""
-                });
-            }
-
-            return Ok(new { success = true, message = $"Đã gọi bệnh nhân đến Ô {oCua}!" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi chỉ định ô cửa");
-            return Ok(new { success = false, message = "Lỗi khi chỉ định: " + ex.Message });
-        }
-    }
-
-    private void NotifyDuocQueuesUpdated(string? makb = null, string? mabn = null)
-    {
-        _ = _broadcaster.CheckAndBroadcastRoomAsync("duoc", "bhyt", force: true);
-        _ = _broadcaster.CheckAndBroadcastRoomAsync("duoc", "dichvu", force: true);
-    }
-
-    private class ChungTuQueryDto
-    {
-        public string? Makh { get; set; }
-        public string? Mabn { get; set; }
-        public string? Sohd { get; set; }
-        public string? Maba { get; set; }
-        public decimal? Thanhtien { get; set; }
-        public decimal? Dain { get; set; }
-        public string? Khochan { get; set; }
-    }
-
-    private async Task<Dictionary<string, (string Holot, string Ten, DateTime? Ngaysinh, decimal? Gioitinh)>> LoadPatientInfoAsync(List<string> mabnList)
-    {
-        var bnDict = new Dictionary<string, (string Holot, string Ten, DateTime? Ngaysinh, decimal? Gioitinh)>(StringComparer.OrdinalIgnoreCase);
-        if (mabnList.Count == 0) return bnDict;
-
-        var bnRecords = await _context.DmBenhNhan.AsNoTracking()
-            .Where(bn => bn.Mabn != null && mabnList.Contains(bn.Mabn))
-            .Select(bn => new { bn.Mabn, bn.Holot, bn.Ten, bn.Ngaysinh, bn.Gioitinh })
-            .ToListAsync();
-
-        foreach (var b in bnRecords)
-        {
-            if (!string.IsNullOrEmpty(b.Mabn))
-                bnDict[b.Mabn] = (b.Holot ?? "", b.Ten ?? "", b.Ngaysinh, b.Gioitinh);
-        }
-        return bnDict;
-    }
-
-    private async Task<Dictionary<string, (decimal TotalTien, string Sohd, string Maba, bool DaThu)>> LoadChungTuInfoAsync(
-        IEnumerable<string?> makhs,
-        IEnumerable<string?> mabns,
-        bool isDichVuOnly = false)
-    {
-        var result = new Dictionary<string, (decimal TotalTien, string Sohd, string Maba, bool DaThu)>(StringComparer.OrdinalIgnoreCase);
-        var cleanMakhs = makhs.Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        var cleanMabns = mabns.Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-
-        if (cleanMakhs.Count == 0 && cleanMabns.Count == 0) return result;
-
-        var yesterday = DateTime.Today.AddDays(-1);
-        var ctList = new List<ChungTuQueryDto>();
-
-        if (cleanMakhs.Count > 0)
-        {
-            var byMakh = await _context.ChungTu.AsNoTracking()
-                .Where(c => (c.Xoa == null || c.Xoa == 0)
-                         && (c.Khochan == "13" || c.Khochan == "3")
-                         && (c.Ngaylap == null || c.Ngaylap >= yesterday)
-                         && c.Makh != null && cleanMakhs.Contains(c.Makh))
-                .Select(c => new ChungTuQueryDto { Makh = c.Makh, Mabn = c.Mabn, Sohd = c.Sohd, Maba = c.Maba, Thanhtien = c.Thanhtien, Dain = c.Dain, Khochan = c.Khochan })
-                .ToListAsync();
-            ctList.AddRange(byMakh);
-        }
-
-        var foundMabns = ctList.Where(c => !string.IsNullOrEmpty(c.Mabn)).Select(c => c.Mabn!.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var remainingMabns = cleanMabns.Where(m => !foundMabns.Contains(m)).ToList();
-        if (remainingMabns.Count > 0)
-        {
-            var byMabn = await _context.ChungTu.AsNoTracking()
-                .Where(c => (c.Xoa == null || c.Xoa == 0)
-                         && (c.Khochan == "13" || c.Khochan == "3")
-                         && (c.Ngaylap == null || c.Ngaylap >= yesterday)
-                         && c.Mabn != null && remainingMabns.Contains(c.Mabn))
-                .Select(c => new ChungTuQueryDto { Makh = c.Makh, Mabn = c.Mabn, Sohd = c.Sohd, Maba = c.Maba, Thanhtien = c.Thanhtien, Dain = c.Dain, Khochan = c.Khochan })
-                .ToListAsync();
-            ctList.AddRange(byMabn);
-        }
-
-        var allKeys = cleanMakhs.Concat(cleanMabns).Distinct(StringComparer.OrdinalIgnoreCase);
-        foreach (var key in allKeys)
-        {
-            var matched = ctList.Where(c => (!string.IsNullOrEmpty(c.Makh) && string.Equals(c.Makh.Trim(), key, StringComparison.OrdinalIgnoreCase))
-                                         || (!string.IsNullOrEmpty(c.Mabn) && string.Equals(c.Mabn.Trim(), key, StringComparison.OrdinalIgnoreCase)))
-                                .ToList();
-            if (matched.Count == 0) continue;
-
-            var distinctBySohd = matched
-                .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? string.Empty))
-                .Select(g => g.First())
-                .ToList();
-
-            decimal totalTien = distinctBySohd.Sum(c => c.Thanhtien ?? 0);
-            var firstWithSohd = matched.FirstOrDefault(c => !string.IsNullOrEmpty(c.Sohd));
-            string sohd = firstWithSohd?.Sohd ?? matched[0].Sohd ?? "";
-            string maba = matched.FirstOrDefault(c => !string.IsNullOrEmpty(c.Maba))?.Maba ?? matched[0].Maba ?? "";
-            bool daThu = distinctBySohd.Any(c => (c.Dain ?? 0) != 0);
-
-            result[key] = (totalTien, sohd, maba, daThu);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Lấy danh sách chưa giao (chưa hoàn tất) cho quầy nhập dược:
-    /// - Bao gồm cả BHYT (khochan = 14, 1, 2) và Dịch Vụ (khochan = 13, 3).
-    /// - Không bao giờ trả về rỗng nếu DB có dữ liệu hôm nay.
-    /// </summary>
-    [HttpGet("danh-sach-chua-giao")]
-    public async Task<IActionResult> LayDanhSachChuaGiao()
-    {
-        try
-        {
-            var today = DateTime.Today;
-
-            // Lấy danh sách hangchoduoc_tmd hôm nay:
-            // BHYT và Dịch vụ chưa phát thuốc: dagiao == 0
-            var rawHangCho = await _context.HangChoDuocTmd.AsNoTracking()
-                .Where(h => h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today)
-                         && h.Dagiao == 0
-                         && (h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2 || h.Khochan == 13 || h.Khochan == 3))
-                .OrderBy(h => h.Ngaynhap)
-                .ThenBy(h => h.Makb)
-                .ThenBy(h => h.Mabn)
-                .Select(h => new
-                {
-                    h.Makb,
-                    h.Mabn,
-                    h.Khochan,
-                    h.Dagiao,
-                    h.Dathu,
-                    h.Maba,
-                    h.Ngaynhap,
-                    h.Ngaygiao,
-                    h.Taikhoan
-                })
-                .ToListAsync();
-
-            var mabnList = rawHangCho
-                .Select(h => h.Mabn)
-                .Where(m => !string.IsNullOrWhiteSpace(m))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            var bnDict = await LoadPatientInfoAsync(mabnList);
-
-            // Gom nhóm theo (Makb + Loại toa 13/14) để phân biệt rõ ràng từng toa (Toa BHYT và Toa Dịch Vụ)
-            var grouped = rawHangCho
-                .GroupBy(x => $"{(!string.IsNullOrWhiteSpace(x.Makb) ? x.Makb.Trim() : (!string.IsNullOrWhiteSpace(x.Mabn) ? x.Mabn.Trim() : string.Empty))}_{((x.Khochan == 13 || x.Khochan == 3) ? 13 : 14)}")
-                .Select(g =>
-                {
-                    var first = g.OrderBy(x => x.Ngaynhap ?? DateTime.MaxValue)
-                                 .ThenBy(x => x.Makb)
-                                 .ThenBy(x => x.Mabn)
-                                 .First();
-                    var (holot, ten, ngaysinh, gioitinh) = bnDict.TryGetValue(first.Mabn ?? "", out var bn)
-                        ? bn
-                        : (string.Empty, string.Empty, (DateTime?)null, (decimal?)null);
-
-                    var assignedOcua = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "";
-                    var assignedMaba = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Maba)).Select(x => x.Maba).FirstOrDefault() ?? "";
-                    var latestNgayGiao = g.Max(x => x.Ngaygiao);
-                    var khochanVal = first.Khochan;
-
-                    return new
-                    {
-                        first.Makb,
-                        first.Mabn,
-                        Khochan = khochanVal,
-                        Dagiao = g.Max(x => x.Dagiao),
-                        Dathu = g.Any(x => x.Dathu == true),
-                        Taikhoan = assignedOcua,
-                        Maba = assignedMaba,
-                        first.Ngaynhap,
-                        Ngaygiao = latestNgayGiao,
-                        Holot = holot,
-                        Ten = ten,
-                        Ngaysinh = ngaysinh,
-                        Gioitinh = gioitinh
-                    };
-                })
-                .OrderByDescending(x => !string.IsNullOrWhiteSpace(x.Taikhoan))
-                .ThenByDescending(x => !string.IsNullOrWhiteSpace(x.Taikhoan) ? x.Ngaygiao : DateTime.MinValue)
-                .ThenBy(x => x.Ngaynhap ?? DateTime.MaxValue)
-                .ThenBy(x => x.Makb)
-                .ThenBy(x => x.Mabn)
-                .ToList();
-
-            var dvPatients = grouped.Where(g => g.Khochan == 13 || g.Khochan == 3).ToList();
-            var dvMakhs = dvPatients.Select(g => g.Makb).Where(m => !string.IsNullOrWhiteSpace(m));
-            var dvMabns = dvPatients.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m));
-            var infoMap = await LoadChungTuInfoAsync(dvMakhs, dvMabns, isDichVuOnly: true);
-
-            var result = grouped.Select(item =>
-            {
-                var hoTen = $"{item.Holot} {item.Ten}".Trim();
-                if (string.IsNullOrEmpty(hoTen))
-                {
-                    hoTen = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
-                }
-
-                bool isBhyt = (item.Khochan == 14 || item.Khochan == 1 || item.Khochan == 2);
-                var gMakb = item.Makb?.Trim() ?? "";
-                var gMabn = item.Mabn?.Trim() ?? "";
-                var key = !string.IsNullOrEmpty(gMakb) ? gMakb : gMabn;
-
-                decimal? soTien = null;
-                string soTienStr = string.Empty;
-                string sohdStr = string.Empty;
-                string mabaStr = string.Empty;
-                bool isDaThu = isBhyt;
-
-                if (!string.IsNullOrEmpty(key) && infoMap.TryGetValue(key, out var info))
-                {
-                    sohdStr = info.Sohd;
-                    mabaStr = info.Maba;
-                    if (!isBhyt)
-                    {
-                        soTien = info.TotalTien;
-                        soTienStr = info.TotalTien > 0 ? $"{info.TotalTien:N0} ₫" : "—";
-                        isDaThu = info.DaThu;
-                    }
-                }
-                else
-                {
-                    if (!isBhyt)
-                    {
-                        soTienStr = "—";
-                        isDaThu = item.Dathu;
-                    }
-                }
-
-                if (isBhyt && string.IsNullOrEmpty(sohdStr) && !string.IsNullOrEmpty(item.Maba))
-                {
-                    sohdStr = item.Maba;
-                    mabaStr = item.Maba;
-                }
-
-                string trangThaiStr = (!isBhyt && !isDaThu) ? "Chờ thu" : "Đang soạn";
-
-                return new DuocChuaGiaoItemDto
-                {
-                    Makb = item.Makb ?? "",
-                    Mabn = item.Mabn ?? "",
-                    HoTen = hoTen ?? "",
-                    NamSinh = item.Ngaysinh.HasValue ? item.Ngaysinh.Value.ToString("yyyy") : "",
-                    GioiTinh = item.Gioitinh == 1 ? "Nam" : (item.Gioitinh == 2 ? "Nữ" : ""),
-                    Khochan = item.Khochan,
-                    IsBhyt = isBhyt,
-                    Dagiao = item.Dagiao,
-                    DaThu = isDaThu,
-                    TrangThai = trangThaiStr,
-                    SoTien = soTien,
-                    SoTienStr = soTienStr,
-                    Sohd = sohdStr,
-                    Maba = mabaStr,
-                    NgayNhapStr = item.Ngaynhap.HasValue ? item.Ngaynhap.Value.ToString("HH:mm") : "",
-                    OCua = item.Taikhoan ?? ""
-                };
-            }).ToList();
-
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi lấy danh sách chưa giao");
-            return Ok(new List<DuocChuaGiaoItemDto>());
-        }
-    }
-
-    /// <summary>
-    /// Lấy danh sách các đơn thuốc đã hoàn tất / đã giao hôm nay (Lịch sử phát thuốc)
-    /// </summary>
-    [HttpGet("danh-sach-da-giao")]
-    public async Task<IActionResult> LayDanhSachDaGiao()
-    {
-        try
-        {
-            var today = DateTime.Today;
-
-            // Lịch sử đã phát thuốc hôm nay: dagiao >= 1
-            var rawDaGiao = await _context.HangChoDuocTmd.AsNoTracking()
-                .Where(h => h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today)
-                         && h.Dagiao >= 1
-                         && (h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2 || h.Khochan == 13 || h.Khochan == 3))
-                .OrderByDescending(h => h.Ngaygiao)
-                .Select(h => new
-                {
-                    h.Makb,
-                    h.Mabn,
-                    h.Khochan,
-                    h.Dagiao,
-                    h.Ngaygiao,
-                    h.Taikhoan
-                })
-                .Take(80)
-                .ToListAsync();
-
-            var mabnList = rawDaGiao
-                .Select(h => h.Mabn)
-                .Where(m => !string.IsNullOrWhiteSpace(m))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            var bnDict = await LoadPatientInfoAsync(mabnList);
-
-            var grouped = rawDaGiao
-                .GroupBy(x => !string.IsNullOrWhiteSpace(x.Makb) ? x.Makb.Trim() : (!string.IsNullOrWhiteSpace(x.Mabn) ? x.Mabn.Trim() : string.Empty))
-                .Select(g =>
-                {
-                    var first = g.First();
-                    var (holot, ten, ngaysinh, gioitinh) = bnDict.TryGetValue(first.Mabn ?? "", out var bn)
-                        ? bn
-                        : (string.Empty, string.Empty, (DateTime?)null, (decimal?)null);
-                    return new
-                    {
-                        first.Makb,
-                        first.Mabn,
-                        Khochan = g.Max(x => x.Khochan),
-                        Dagiao = g.Max(x => x.Dagiao),
-                        Ngaygiao = first.Ngaygiao,
-                        Taikhoan = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "",
-                        Holot = holot,
-                        Ten = ten,
-                        Ngaysinh = ngaysinh,
-                        Gioitinh = gioitinh
-                    };
-                })
-                .OrderByDescending(x => x.Ngaygiao)
-                .ToList();
-
-            var dvGrouped = grouped.Where(g => g.Khochan == 13 || g.Khochan == 3).ToList();
-            var dvMakhs = dvGrouped.Select(g => g.Makb).Where(m => !string.IsNullOrWhiteSpace(m));
-            var dvMabns = dvGrouped.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m));
-            var daGiaoInfoMap = await LoadChungTuInfoAsync(dvMakhs, dvMabns, isDichVuOnly: true);
-
-            var result = grouped.Select(item =>
-            {
-                var hoTen = $"{item.Holot} {item.Ten}".Trim();
-                if (string.IsNullOrEmpty(hoTen))
-                {
-                    hoTen = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
-                }
-
-                bool isBhyt = item.Khochan == 14 || item.Khochan == 1 || item.Khochan == 2;
-                var key = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
-                string sohdStr = "";
-                string mabaStr = "";
-                string soTienStr = "";
-
-                if (!string.IsNullOrEmpty(key) && daGiaoInfoMap.TryGetValue(key, out var dgInfo))
-                {
-                    sohdStr = dgInfo.Sohd;
-                    mabaStr = dgInfo.Maba;
-                    soTienStr = dgInfo.TotalTien > 0 ? $"{dgInfo.TotalTien:N0} ₫" : "";
-                }
-
-                return new DuocDaGiaoItemDto
-                {
-                    Makb = item.Makb ?? "",
-                    Mabn = item.Mabn ?? "",
-                    HoTen = hoTen ?? "",
-                    NamSinh = item.Ngaysinh.HasValue ? item.Ngaysinh.Value.ToString("yyyy") : "",
-                    GioiTinh = item.Gioitinh == 1 ? "Nam" : (item.Gioitinh == 2 ? "Nữ" : ""),
-                    Khochan = item.Khochan,
-                    IsBhyt = isBhyt,
-                    Dagiao = item.Dagiao,
-                    SoTienStr = soTienStr,
-                    Sohd = sohdStr,
-                    Maba = mabaStr,
-                    NgayGiaoStr = item.Ngaygiao.ToString("HH:mm"),
-                    OCua = item.Taikhoan ?? ""
-                };
-            }).ToList();
-
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi lấy danh sách đã giao (lịch sử)");
-            return Ok(new List<DuocDaGiaoItemDto>());
-        }
-    }
-
-    /// <summary>
-    /// Lấy danh sách các đơn thuốc dịch vụ đã thu tiền hôm nay (Lịch sử thu tiền)
-    /// </summary>
-    [HttpGet("danh-sach-da-thu")]
-    public async Task<IActionResult> LayDanhSachDaThu()
-    {
-        try
-        {
-            var today = DateTime.Today;
-
-            // Dịch vụ đã thu: (khochan == 13 || khochan == 3) && dagiao >= 1
-            var rawDaThu = await _context.HangChoDuocTmd.AsNoTracking()
-                .Where(h => h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today)
-                         && (h.Khochan == 13 || h.Khochan == 3) && h.Dagiao >= 1)
-                .OrderByDescending(h => h.Ngaygiao)
-                .Select(h => new
-                {
-                    h.Makb,
-                    h.Mabn,
-                    h.Khochan,
-                    h.Dagiao,
-                    h.Ngaygiao,
-                    h.Ngaynhap,
-                    h.Taikhoan
-                })
-                .Take(80)
-                .ToListAsync();
-
-            var mabnList = rawDaThu
-                .Select(h => h.Mabn)
-                .Where(m => !string.IsNullOrWhiteSpace(m))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            var bnDict = await LoadPatientInfoAsync(mabnList);
-
-            var grouped = rawDaThu
-                .GroupBy(x => !string.IsNullOrWhiteSpace(x.Makb) ? x.Makb.Trim() : (!string.IsNullOrWhiteSpace(x.Mabn) ? x.Mabn.Trim() : string.Empty))
-                .Select(g =>
-                {
-                    var first = g.First();
-                    var (holot, ten, ngaysinh, gioitinh) = bnDict.TryGetValue(first.Mabn ?? "", out var bn)
-                        ? bn
-                        : (string.Empty, string.Empty, (DateTime?)null, (decimal?)null);
-                    return new
-                    {
-                        first.Makb,
-                        first.Mabn,
-                        Khochan = g.Max(x => x.Khochan),
-                        Dagiao = g.Max(x => x.Dagiao),
-                        Ngaygiao = first.Ngaygiao,
-                        Ngaynhap = first.Ngaynhap,
-                        Taikhoan = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "",
-                        Holot = holot,
-                        Ten = ten,
-                        Ngaysinh = ngaysinh,
-                        Gioitinh = gioitinh
-                    };
-                })
-                .OrderByDescending(x => x.Ngaygiao)
-                .ToList();
-
-            var allMakhs = grouped.Select(g => g.Makb).Where(m => !string.IsNullOrWhiteSpace(m));
-            var allMabns = grouped.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m));
-            var dvInfoMap = await LoadChungTuInfoAsync(allMakhs, allMabns, isDichVuOnly: true);
-
-            var result = grouped.Select(item =>
-            {
-                var hoTen = $"{item.Holot} {item.Ten}".Trim();
-                if (string.IsNullOrEmpty(hoTen))
-                {
-                    hoTen = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
-                }
-
-                var key = (!string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn) ?? "";
-                decimal? soTien = null;
-                string soTienStr = string.Empty;
-                string sohdStr = string.Empty;
-                string mabaStr = string.Empty;
-
-                if (!string.IsNullOrEmpty(key) && dvInfoMap.TryGetValue(key, out var dvInfo))
-                {
-                    soTien = dvInfo.TotalTien;
-                    soTienStr = dvInfo.TotalTien > 0 ? $"{dvInfo.TotalTien:N0} ₫" : "—";
-                    sohdStr = dvInfo.Sohd;
-                    mabaStr = dvInfo.Maba;
-                }
-                else
-                {
-                    soTienStr = "—";
-                }
-
-                return new DuocChuaGiaoItemDto
-                {
-                    Makb = item.Makb ?? "",
-                    Mabn = item.Mabn ?? "",
-                    HoTen = hoTen ?? "",
-                    NamSinh = item.Ngaysinh.HasValue ? item.Ngaysinh.Value.ToString("yyyy") : "",
-                    GioiTinh = item.Gioitinh == 1 ? "Nam" : (item.Gioitinh == 2 ? "Nữ" : ""),
-                    Khochan = item.Khochan,
-                    IsBhyt = false,
-                    Dagiao = item.Dagiao,
-                    TrangThai = item.Dagiao >= 2 ? "Đã phát thuốc" : "Đã thu tiền (Đang soạn)",
-                    SoTien = soTien,
-                    SoTienStr = soTienStr,
-                    Sohd = sohdStr,
-                    Maba = mabaStr,
-                    NgayNhapStr = item.Ngaygiao.ToString("HH:mm"),
-                    OCua = item.Taikhoan ?? ""
-                };
-            }).ToList();
-
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi lấy danh sách đã thu (lịch sử thu tiền)");
-            return Ok(new List<DuocChuaGiaoItemDto>());
-        }
-    }
-
-    /// <summary>
-    /// Hoàn tác phát thuốc / không mua: Đưa bệnh nhân quay lại danh sách Chờ phát / Chờ thu (dagiao = 0)
-    /// </summary>
-    [HttpPost("hoan-tac")]
-    public async Task<IActionResult> HoanTac([FromBody] DuocHoanTacRequest req)
-    {
-        var makb = req.Makb?.Trim() ?? "";
-        var mabn = req.Mabn?.Trim() ?? "";
-        if (string.IsNullOrEmpty(makb) && string.IsNullOrEmpty(mabn))
-            return Ok(new { success = false, message = "Thiếu mã khám hoặc mã bệnh nhân." });
-
-        try
-        {
-            var today = DateTime.Today.AddDays(-1);
-            var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                UPDATE current.hangchoduoc_tmd
-                SET dagiao = 0, ngaygiao = now()
-                WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
-                  AND xoa = 0
-                  AND (ngaynhap IS NULL OR ngaynhap >= {today})
-            ");
-
-            _logger.LogInformation("Hoàn tác makb={Makb}, mabn={Mabn}, rows={Rows}", makb, mabn, rows);
-            NotifyDuocQueuesUpdated(makb, mabn);
-
-            return Ok(new { success = true, message = "Đã hoàn tác thành công, đưa bệnh nhân trở lại danh sách chờ!" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi hoàn tác cho makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
-            return Ok(new { success = false, message = "Lỗi hoàn tác: " + ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Đánh dấu khách không mua thuốc dịch vụ (dagiao = 3, ẩn khỏi TV và danh sách chờ thu)
-    /// </summary>
-    [HttpPost("khong-mua")]
-    public async Task<IActionResult> KhongMua([FromBody] DuocCapNhatTrangThaiRequest req)
-    {
-        var makb = req.Makb?.Trim() ?? "";
-        var mabn = req.Mabn?.Trim() ?? "";
-        if (string.IsNullOrEmpty(makb) && string.IsNullOrEmpty(mabn))
-            return Ok(new { success = false, message = "Thiếu mã khám hoặc mã bệnh nhân." });
-
-        try
-        {
-            var today = DateTime.Today.AddDays(-1);
-            var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                UPDATE current.hangchoduoc_tmd
-                SET dagiao = 3, ngaygiao = now()
-                WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
-                  AND xoa = 0
-                  AND (ngaynhap IS NULL OR ngaynhap >= {today})
-            ");
-
-            _logger.LogInformation("Đánh dấu khách không mua thuốc: makb={Makb}, mabn={Mabn}, rows={Rows}", makb, mabn, rows);
-            NotifyDuocQueuesUpdated(makb, mabn);
-            return Ok(new { success = true, message = "Đã chuyển đơn vào danh sách Không mua!" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi đánh dấu không mua cho makb={Makb}", req.Makb);
-            return Ok(new { success = false, message = "Lỗi khi xử lý: " + ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Lấy danh sách các đơn thuốc dịch vụ khách không mua hôm nay (Lịch sử không mua)
-    /// </summary>
-    [HttpGet("danh-sach-khong-mua")]
-    public async Task<IActionResult> LayDanhSachKhongMua()
-    {
-        try
-        {
-            var today = DateTime.Today;
-
-            // Khách không mua: dagiao == 3
-            var rawKhongMua = await _context.HangChoDuocTmd.AsNoTracking()
-                .Where(h => h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today)
-                         && h.Dagiao == 3)
-                .OrderByDescending(h => h.Ngaygiao)
-                .Select(h => new
-                {
-                    h.Makb,
-                    h.Mabn,
-                    h.Khochan,
-                    h.Dagiao,
-                    h.Ngaygiao,
-                    h.Ngaynhap,
-                    h.Taikhoan
-                })
-                .Take(80)
-                .ToListAsync();
-
-            var mabnList = rawKhongMua
-                .Select(h => h.Mabn)
-                .Where(m => !string.IsNullOrWhiteSpace(m))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            var bnDict = await LoadPatientInfoAsync(mabnList);
-
-            var grouped = rawKhongMua
-                .GroupBy(x => !string.IsNullOrWhiteSpace(x.Makb) ? x.Makb.Trim() : (!string.IsNullOrWhiteSpace(x.Mabn) ? x.Mabn.Trim() : string.Empty))
-                .Select(g =>
-                {
-                    var first = g.First();
-                    var (holot, ten, ngaysinh, gioitinh) = bnDict.TryGetValue(first.Mabn ?? "", out var bn)
-                        ? bn
-                        : (string.Empty, string.Empty, (DateTime?)null, (decimal?)null);
-                    return new
-                    {
-                        first.Makb,
-                        first.Mabn,
-                        Khochan = g.Max(x => x.Khochan),
-                        Dagiao = g.Max(x => x.Dagiao),
-                        Ngaygiao = first.Ngaygiao,
-                        Ngaynhap = first.Ngaynhap,
-                        Taikhoan = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "",
-                        Holot = holot,
-                        Ten = ten,
-                        Ngaysinh = ngaysinh,
-                        Gioitinh = gioitinh
-                    };
-                })
-                .OrderByDescending(x => x.Ngaygiao)
-                .ToList();
-
-            var allMakhs = grouped.Select(g => g.Makb).Where(m => !string.IsNullOrWhiteSpace(m));
-            var allMabns = grouped.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m));
-            var kmInfoMap = await LoadChungTuInfoAsync(allMakhs, allMabns, isDichVuOnly: true);
-
-            var result = grouped.Select(item =>
-            {
-                var hoTen = $"{item.Holot} {item.Ten}".Trim();
-                if (string.IsNullOrEmpty(hoTen))
-                {
-                    hoTen = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
-                }
-
-                var key = (!string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn) ?? "";
-                decimal? soTien = null;
-                string soTienStr = string.Empty;
-                string sohdStr = string.Empty;
-                string mabaStr = string.Empty;
-
-                if (!string.IsNullOrEmpty(key) && kmInfoMap.TryGetValue(key, out var kmInfo))
-                {
-                    soTien = kmInfo.TotalTien;
-                    soTienStr = kmInfo.TotalTien > 0 ? $"{kmInfo.TotalTien:N0} ₫" : "—";
-                    sohdStr = kmInfo.Sohd;
-                    mabaStr = kmInfo.Maba;
-                }
-                else
-                {
-                    soTienStr = "—";
-                }
-
-                return new DuocChuaGiaoItemDto
-                {
-                    Makb = item.Makb ?? "",
-                    Mabn = item.Mabn ?? "",
-                    HoTen = hoTen ?? "",
-                    NamSinh = item.Ngaysinh.HasValue ? item.Ngaysinh.Value.ToString("yyyy") : "",
-                    GioiTinh = item.Gioitinh == 1 ? "Nam" : (item.Gioitinh == 2 ? "Nữ" : ""),
-                    Khochan = item.Khochan,
-                    IsBhyt = false,
-                    Dagiao = item.Dagiao,
-                    TrangThai = "Không mua",
-                    SoTien = soTien,
-                    SoTienStr = soTienStr,
-                    Sohd = sohdStr,
-                    Maba = mabaStr,
-                    NgayNhapStr = item.Ngaygiao.ToString("HH:mm"),
-                    OCua = item.Taikhoan ?? ""
-                };
-            }).ToList();
-
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi lấy danh sách không mua");
-            return Ok(new List<DuocChuaGiaoItemDto>());
         }
     }
 }
-
 

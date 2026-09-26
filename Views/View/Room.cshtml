@@ -18,40 +18,43 @@
     <link rel="stylesheet" href="/board.css">
     <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: '#1e40af',
-                        danger: '#dc2626',
-                        success: '#16a34a',
-                        accent: '#0f172a',
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            brand: '#1e40af',
+                            danger: '#dc2626',
+                            success: '#16a34a',
+                            accent: '#0f172a',
+                        }
                     }
                 }
             }
-        }
     </script>
     <style>
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
+            .no-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
 
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+            .no-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
     </style>
 </head>
 
 <body class="tv-board bg-slate-100 text-slate-900 font-sans flex flex-col h-screen overflow-hidden select-none">
 
     <!-- Top Bar Header -->
-    <header class="tv-header flex flex-col md:flex-row justify-between items-start md:items-center bg-white py-1 px-2.5 border-2 border-slate-300 shadow-sm gap-2 shrink-0">
+    <header
+        class="tv-header flex flex-col md:flex-row justify-between items-start md:items-center bg-white py-1 px-2.5 border-2 border-slate-300 shadow-sm gap-2 shrink-0">
         <!-- Logo & Đồng hồ -->
         <div class="tv-brand flex items-center bg-white gap-3">
             <img src="/logo_tam-minh-duc.png" alt="Logo" class="h-12 md:h-14 object-contain">
             <div class="tabular-nums">
-                <div id="date-str" class="tv-clock-date text-xs text-slate-500 font-bold uppercase tracking-widest leading-tight"></div>
+                <div id="date-str"
+                     class="tv-clock-date text-xs text-slate-500 font-bold uppercase tracking-widest leading-tight">
+                </div>
                 <div id="time-str" class="tv-clock-time text-xl md:text-2xl font-black text-brand leading-none"></div>
             </div>
         </div>
@@ -72,14 +75,16 @@
             {
                 <div class="tv-stat bg-slate-50 px-3 py-1 text-center min-w-[90px] rounded border border-slate-200 hidden sm:block">
                     <span class="block text-slate-500 font-bold text-[10px] uppercase tracking-wide">Tổng ĐK</span>
-                    <span id="totalDKPlus" class="block text-brand font-black text-lg md:text-xl tabular-nums leading-none mt-0.5">
+                    <span id="totalDKPlus"
+                          class="block text-brand font-black text-lg md:text-xl tabular-nums leading-none mt-0.5">
                         @room.TotalDKPlus
                     </span>
                 </div>
 
                 <div class="tv-stat tv-stat--waiting bg-red-50 px-3 py-1 text-center min-w-[90px] rounded border border-red-200">
                     <span class="block text-danger font-bold text-[10px] uppercase tracking-wide">Đang chờ</span>
-                    <span id="totalWaiting" class="block text-danger font-black text-lg md:text-xl tabular-nums leading-none mt-0.5">
+                    <span id="totalWaiting"
+                          class="block text-danger font-black text-lg md:text-xl tabular-nums leading-none mt-0.5">
                         @room.TotalWaiting
                     </span>
                 </div>
@@ -87,31 +92,31 @@
 
             <!-- Nút xem danh sách bệnh nhân đã xóa/ẩn -->
             <button id="hiddenPatientsBtn" onclick="toggleHiddenModal(true)"
-                class="remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-600 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer relative"
-                tabindex="0" aria-label="Danh sách bệnh nhân đã xóa/ẩn"
-                title="Danh sách bệnh nhân đã xóa/ẩn (Phím H)">
+                    class="remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-600 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer relative"
+                    tabindex="0" aria-label="Danh sách bệnh nhân đã xóa/ẩn" title="Danh sách bệnh nhân đã xóa/ẩn (Phím H)">
                 <i class="fas fa-user-slash"></i>
-                <span id="hiddenBadgeCount" class="hidden absolute -top-1.5 -right-1.5 bg-danger text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">0</span>
+                <span id="hiddenBadgeCount"
+                      class="hidden absolute -top-1.5 -right-1.5 bg-danger text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">0</span>
             </button>
 
             <!-- Nút Chia phòng -->
             <button onclick="toggleRoomModal(true)"
-                class="remote-item icon-button bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                tabindex="0" aria-label="Chọn phòng hiển thị" title="Chia màn hình phòng khám (Phím M)">
+                    class="remote-item icon-button bg-blue-50 hover:bg-brand hover:text-white text-brand border-2 border-blue-300 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                    tabindex="0" aria-label="Chọn phòng hiển thị" title="Chia màn hình phòng khám (Phím M)">
                 <i class="fas fa-th-large"></i>
             </button>
 
             <!-- Nút bật âm thanh -->
             <button id="soundToggleBtn" onclick="toggleSound()"
-                class="remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                tabindex="0" aria-label="Bật hoặc tắt âm thanh" title="Bật/Tắt âm thanh (Phím A hoặc S)">
+                    class="remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                    tabindex="0" aria-label="Bật hoặc tắt âm thanh" title="Bật/Tắt âm thanh (Phím A hoặc S)">
                 <i id="soundIcon" class="fas fa-volume-mute text-slate-400"></i>
             </button>
 
             <!-- Nút quay lại -->
             <a href="/kham-benh"
-                class="remote-item icon-button bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
-                tabindex="0" aria-label="Về danh sách phòng khám" title="Về danh sách phòng khám">
+               class="remote-item icon-button bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
+               tabindex="0" aria-label="Về danh sách phòng khám" title="Về danh sách phòng khám">
                 <i class="fas fa-arrow-left"></i>
             </a>
         </div>
@@ -127,11 +132,12 @@
 
             <!-- ================= CHẾ ĐỘ 1 PHÒNG TOÀN MÀN HÌNH ================= -->
             <div id="room-card-@room.Maphong"
-                class="room-container flex-grow overflow-y-auto bg-white border-2 border-slate-300 rounded-xl flex flex-col shadow-sm"
-                data-room-type="room" data-room-id="@room.Maphong"
-                data-room-name="@(string.IsNullOrEmpty(room.Tenphong) ? room.Maphong : room.Tenphong)">
+                 class="room-container flex-grow overflow-y-auto bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm"
+                 data-room-type="room" data-room-id="@room.Maphong"
+                 data-room-name="@(string.IsNullOrEmpty(room.Tenphong) ? room.Maphong : room.Tenphong)">
 
-                <table class="patient-table patient-table--single w-full text-left border-collapse" style="table-layout: fixed;">
+                <table class="patient-table patient-table--single w-full text-left border-collapse"
+                       style="table-layout: fixed;">
                     <colgroup>
                         <col style="width: 7%;">
                         <col style="width: 44%;">
@@ -139,7 +145,8 @@
                         <col style="width: 17%;">
                         <col style="width: 22%;">
                     </colgroup>
-                    <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-2xl md:text-3xl">
+                    <thead
+                        class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-2xl md:text-3xl">
                         <tr>
                             <th class="py-3 px-4 text-center whitespace-nowrap">STT</th>
                             <th class="py-3 px-4">Họ và Tên</th>
@@ -181,11 +188,11 @@
                                     ? System.Text.RegularExpressions.Regex.Match(patient.DobStr, @"(19\d{2}|20\d{2})").Value
                                     : (patient.Ngaysinh.HasValue ? patient.Ngaysinh.Value.ToString("yyyy") : "");
 
-                                var patientKey = (!string.IsNullOrEmpty(patient.Makb) ? patient.Makb : (!string.IsNullOrEmpty(patient.Mabn) ? patient.Mabn : $"{currentPatientName}_{patient.DobStr}")).Trim();
+                                var patientKey = (!string.IsNullOrEmpty(patient.Makb) ? patient.Makb :
+                    (!string.IsNullOrEmpty(patient.Mabn) ? patient.Mabn :
+                    $"{currentPatientName}_{patient.DobStr}")).Trim();
 
-                                <tr data-patient="@currentPatientName"
-                                    data-patient-key="@patientKey"
-                                    data-dob-year="@dobYear"
+                                <tr data-patient="@currentPatientName" data-patient-key="@patientKey" data-dob-year="@dobYear"
                                     data-room="@(string.IsNullOrEmpty(room.Tenphong) ? room.Maphong : room.Tenphong)"
                                     onclick="onRowClick(this)"
                                     class="remote-item cursor-pointer @(isNear ? "bg-yellow-100 border-l-8 border-yellow-500 shadow-md" : "border-b border-slate-200")"
@@ -221,21 +228,21 @@
                                         <div class="flex items-center justify-center gap-2 flex-nowrap min-w-0">
                                             @if (isNear)
                                             {
-                                                <span class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl text-xl md:text-3xl font-black uppercase whitespace-nowrap">
+                                                <span class="inline-block bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg text-xl md:text-3xl font-black uppercase whitespace-nowrap">
                                                     Tới lượt
                                                 </span>
                                             }
                                             else
                                             {
-                                                <span class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-lg md:text-2xl font-bold border-2 border-slate-200 shadow-sm whitespace-nowrap">
+                                                <span class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-lg md:text-2xl font-bold border-2 border-slate-200 shadow-sm whitespace-nowrap">
                                                     Chờ lượt khám
                                                 </span>
                                             }
                                             <button type="button" title="Xóa/Ẩn khỏi màn hình"
-                                                aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
-                                                onclick="removePatientFromElement(this, event)"
-                                                class="btn-hide-patient p-2 text-slate-300 hover:text-danger hover:bg-red-50 rounded-lg transition-colors cursor-pointer shrink-0"
-                                                tabindex="0">
+                                                    aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                                                    onclick="removePatientFromElement(this, event)"
+                                                    class="btn-hide-patient p-2 text-slate-300 hover:text-danger hover:bg-red-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                                                    tabindex="0">
                                                 <i class="fas fa-trash-alt text-lg md:text-2xl"></i>
                                             </button>
                                         </div>
@@ -247,8 +254,9 @@
                 </table>
 
                 <div id="speechData" data-room-type="room" data-room-id="@room.Maphong"
-                    data-patient="@nextPatientNameToRead" data-dob-year="@nextPatientDobYearToRead" data-room="@(string.IsNullOrEmpty(room.Tenphong) ? room.Maphong : room.Tenphong)"
-                    style="display: none;"></div>
+                     data-patient="@nextPatientNameToRead" data-dob-year="@nextPatientDobYearToRead"
+                     data-room="@(string.IsNullOrEmpty(room.Tenphong) ? room.Maphong : room.Tenphong)"
+                     style="display: none;"></div>
             </div>
         }
         else
@@ -267,8 +275,8 @@
                     string nextPatientDobYear = "";
 
                     <div id="room-card-@roomId"
-                        class="room-container bg-white text-slate-900 rounded-xl shadow-sm border-2 border-slate-300 flex flex-col overflow-hidden h-full"
-                        data-room-type="room" data-room-id="@roomId" data-room-name="@roomTitle">
+                         class="room-container bg-white text-slate-900 rounded-lg shadow-sm border-2 border-slate-300 flex flex-col overflow-hidden h-full"
+                         data-room-type="room" data-room-id="@roomId" data-room-name="@roomTitle">
 
                         <!-- Quadrant Header -->
                         <div class="tv-quadrant-header bg-white px-3 py-1 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
@@ -285,7 +293,8 @@
                                 </div>
                                 <div class="bg-red-50 border border-red-200 px-2 py-0.5 rounded text-center">
                                     <span class="text-danger font-bold text-[10px] uppercase">Đang chờ:</span>
-                                    <span id="total-wait-@roomId" class="text-danger font-black text-sm md:text-base tabular-nums">
+                                    <span id="total-wait-@roomId"
+                                          class="text-danger font-black text-sm md:text-base tabular-nums">
                                         @rData.TotalWaiting
                                     </span>
                                 </div>
@@ -294,7 +303,8 @@
 
                         <!-- Quadrant Table -->
                         <div class="flex-grow overflow-y-auto no-scrollbar bg-white">
-                            <table class="patient-table patient-table--split w-full text-left border-collapse" style="table-layout: fixed;">
+                            <table class="patient-table patient-table--split w-full text-left border-collapse"
+                                   style="table-layout: fixed;">
                                 <colgroup>
                                     <col style="width: 8%;">
                                     <col style="width: 58%;">
@@ -341,13 +351,11 @@
                                             var pYear = !string.IsNullOrEmpty(p.DobStr) && p.DobStr != "Chưa cập nhật"
                                                 ? System.Text.RegularExpressions.Regex.Match(p.DobStr, @"(19\d{2}|20\d{2})").Value
                                                 : (p.Ngaysinh.HasValue ? p.Ngaysinh.Value.ToString("yyyy") : "");
-                                            var pKey = (!string.IsNullOrEmpty(p.Makb) ? p.Makb : (!string.IsNullOrEmpty(p.Mabn) ? p.Mabn : $"{pName}_{p.DobStr}")).Trim();
+                                            var pKey = (!string.IsNullOrEmpty(p.Makb) ? p.Makb : (!string.IsNullOrEmpty(p.Mabn) ? p.Mabn
+                            : $"{pName}_{p.DobStr}")).Trim();
 
-                                            <tr data-patient="@pName"
-                                                data-patient-key="@pKey"
-                                                data-dob-year="@pYear"
-                                                data-room="@roomTitle"
-                                                onclick="onRowClick(this)"
+                                            <tr data-patient="@pName" data-patient-key="@pKey" data-dob-year="@pYear"
+                                                data-room="@roomTitle" onclick="onRowClick(this)"
                                                 class="remote-item cursor-pointer @(isNear ? "bg-yellow-100 border-l-8 border-yellow-500 shadow-md font-black" : "border-b border-slate-200")"
                                                 tabindex="0">
                                                 <td class="py-2.5 px-2 text-center font-bold text-blue-900 @(isNear ? "text-2xl md:text-4xl lg:text-5xl font-black" : "text-xl md:text-3xl font-bold")">
@@ -383,12 +391,11 @@
                                                                 Chờ
                                                             </span>
                                                         }
-                                                        <button type="button"
-                                                            title="Xóa/Ẩn khỏi màn hình"
-                                                            aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
-                                                            onclick="removePatientFromElement(this, event)"
-                                                            class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0"
-                                                            tabindex="0">
+                                                        <button type="button" title="Xóa/Ẩn khỏi màn hình"
+                                                                aria-label="Xóa bệnh nhân khỏi danh sách hiển thị"
+                                                                onclick="removePatientFromElement(this, event)"
+                                                                class="btn-hide-patient p-1 text-slate-300 hover:text-danger hover:bg-red-50 rounded transition-colors cursor-pointer shrink-0"
+                                                                tabindex="0">
                                                             <i class="fas fa-trash-alt text-xs"></i>
                                                         </button>
                                                     </div>
@@ -400,7 +407,8 @@
                             </table>
                         </div>
 
-                        <div id="speech-track-@roomId" data-patient="@nextPatient" data-dob-year="@nextPatientDobYear" data-room="@roomTitle" style="display:none;"></div>
+                        <div id="speech-track-@roomId" data-patient="@nextPatient" data-dob-year="@nextPatientDobYear"
+                             data-room="@roomTitle" style="display:none;"></div>
                     </div>
                 }
             </div>
@@ -408,13 +416,16 @@
     </main>
 
     <!-- Modal Cấu Hình Chia Phòng -->
-    <div id="roomModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border-2 border-slate-300 rounded-2xl w-full max-w-2xl p-5 text-slate-900 shadow-2xl flex flex-col max-h-[85vh]">
+    <div id="roomModal"
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div
+            class="bg-white border-2 border-slate-300 rounded-lg w-full max-w-2xl p-5 text-slate-900 shadow-2xl flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center pb-3 border-b-2 border-slate-200">
                 <h3 class="text-lg md:text-xl font-black text-brand flex items-center gap-2 uppercase">
                     <i class="fas fa-th-large text-danger"></i> Cấu hình phòng hiển thị trên TV
                 </h3>
-                <button onclick="toggleRoomModal(false)" class="text-slate-400 hover:text-danger text-2xl font-bold cursor-pointer transition-colors">
+                <button onclick="toggleRoomModal(false)"
+                        class="text-slate-400 hover:text-danger text-2xl font-bold cursor-pointer transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -428,20 +439,23 @@
                 <div class="flex justify-between items-center mb-3 shrink-0">
                     <span class="text-xs text-slate-500 font-semibold">Danh sách các phòng khám:</span>
                     <button type="button" onclick="clearRoomSelection()"
-                        class="remote-item bg-red-50 hover:bg-red-100 text-danger text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors"
-                        tabindex="0">
+                            class="remote-item bg-red-50 hover:bg-red-100 text-danger text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors"
+                            tabindex="0">
                         <i class="fas fa-trash-alt mr-1"></i> Bỏ chọn hết
                     </button>
                 </div>
 
                 <!-- Checkbox list -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto p-2 bg-slate-50 rounded-xl border-2 border-slate-200 flex-grow">
+                <div
+                    class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto p-2 bg-slate-50 rounded-lg border-2 border-slate-200 flex-grow">
                     @foreach (var r in allAvailableRooms)
                     {
                         bool isChecked = selectedRoomIds.Contains(r.Id);
-                        <label class="remote-item flex items-center gap-2 p-2 bg-white hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border border-slate-300 shadow-2xs" tabindex="0">
+                        <label
+                            class="remote-item flex items-center gap-2 p-2 bg-white hover:bg-blue-50 rounded-lg cursor-pointer transition-colors border border-slate-300 shadow-2xs"
+                            tabindex="0">
                             <input type="checkbox" name="roomSelection" value="@r.Id" @(isChecked ? "checked" : "")
-                                class="w-4 h-4 rounded text-brand focus:ring-brand cursor-pointer pointer-events-none">
+                                   class="w-4 h-4 rounded text-brand focus:ring-brand cursor-pointer pointer-events-none">
                             <span class="text-xs md:text-sm font-bold text-slate-800 truncate">
                                 @r.Name
                             </span>
@@ -456,13 +470,13 @@
                 </span>
                 <div class="flex gap-2">
                     <button onclick="toggleRoomModal(false)"
-                        class="remote-item px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs md:text-sm border border-slate-300 transition-colors cursor-pointer"
-                        tabindex="0">
+                            class="remote-item px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-xs md:text-sm border border-slate-300 transition-colors cursor-pointer"
+                            tabindex="0">
                         Hủy
                     </button>
                     <button onclick="applyRoomSelection('/room')"
-                        class="remote-item px-5 py-2 bg-brand hover:bg-blue-800 text-white rounded-xl font-black text-xs md:text-sm shadow-md transition-colors cursor-pointer"
-                        tabindex="0">
+                            class="remote-item px-5 py-2 bg-brand hover:bg-blue-800 text-white rounded-lg font-black text-xs md:text-sm shadow-md transition-colors cursor-pointer"
+                            tabindex="0">
                         Áp Dụng
                     </button>
                 </div>
@@ -471,13 +485,16 @@
     </div>
 
     <!-- Modal Danh Sách Bệnh Nhân Đã Xóa / Ẩn -->
-    <div id="hiddenPatientsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white border-2 border-slate-300 rounded-2xl w-full max-w-xl p-5 text-slate-900 shadow-2xl flex flex-col max-h-[85vh]">
+    <div id="hiddenPatientsModal"
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div
+            class="bg-white border-2 border-slate-300 rounded-lg w-full max-w-xl p-5 text-slate-900 shadow-2xl flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center pb-3 border-b-2 border-slate-200">
                 <h3 class="text-base md:text-lg font-black text-danger flex items-center gap-2 uppercase">
                     <i class="fas fa-user-slash"></i> Danh Sách Bệnh Nhân Đã Xóa / Ẩn
                 </h3>
-                <button onclick="toggleHiddenModal(false)" class="text-slate-400 hover:text-danger text-2xl font-bold cursor-pointer transition-colors">
+                <button onclick="toggleHiddenModal(false)"
+                        class="text-slate-400 hover:text-danger text-2xl font-bold cursor-pointer transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -488,13 +505,13 @@
 
             <div class="flex justify-between items-center pt-3 border-t-2 border-slate-200 shrink-0">
                 <button onclick="restoreAllHiddenPatients()"
-                    class="remote-item px-4 py-2 bg-green-50 hover:bg-green-600 hover:text-white text-green-700 rounded-xl font-black text-xs md:text-sm border border-green-300 transition-colors cursor-pointer"
-                    tabindex="0">
+                        class="remote-item px-4 py-2 bg-green-50 hover:bg-green-600 hover:text-white text-green-700 rounded-lg font-black text-xs md:text-sm border border-green-300 transition-colors cursor-pointer"
+                        tabindex="0">
                     <i class="fas fa-undo mr-1"></i> Khôi phục tất cả
                 </button>
                 <button onclick="toggleHiddenModal(false)"
-                    class="remote-item px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs md:text-sm border border-slate-300 transition-colors cursor-pointer"
-                    tabindex="0">
+                        class="remote-item px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-xs md:text-sm border border-slate-300 transition-colors cursor-pointer"
+                        tabindex="0">
                     Đóng
                 </button>
             </div>
