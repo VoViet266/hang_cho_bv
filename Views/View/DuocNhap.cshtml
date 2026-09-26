@@ -362,9 +362,7 @@
                 let lastActionData = null; // { makb, mabn, hoTen, actionType }
                 let undoToastTimer = null;
 
-                // ========================================================
-                // ĐỒNG HỒ & FORMAT
-                // ========================================================
+    
                 function updateTime() {
                     const now = new Date();
                     const dateEl = $id('date-str');
@@ -394,9 +392,6 @@
                     return `<span class="px-2 py-0.5 rounded-md text-[11px] font-black uppercase border ${cls}"><i class="fa-solid fa-door-open mr-0.5"></i> Ô ${escapeHtml(val)}</span>`;
                 }
 
-                // ========================================================
-                // ÂM THANH BEEP PHẢN HỒI
-                // ========================================================
                 let nhapAudioCtx = null;
                 function getNhapAudioContext() {
                     if (!nhapAudioCtx) {
@@ -451,9 +446,7 @@
                     }, 3500);
                 }
 
-                // ========================================================
-                // TOAST & HOÀN TÁC BANNER (GỌN GÀNG, NHANH CHÓNG)
-                // ========================================================
+                
                 function showUndoToast(msg, actionPayload, isError = false) {
                     const toast = $id('undo-toast');
                     const msgEl = $id('undo-toast-msg');

@@ -196,11 +196,12 @@ namespace HangChoKhamBenh.Web.Services
 
                     if (allMakhs.Count > 0 || allMabns.Count > 0)
                     {
-                        var yesterday = DateTime.Today.AddDays(-2);
+                        var today = DateTime.Today;
+                        var tomorrow = today.AddDays(1);
                         var matchedChungTu = await _context.ChungTu.AsNoTracking()
                             .Where(c => (c.Xoa == null || c.Xoa == 0)
                                      && (c.Khochan == "13" || c.Khochan == "3")
-                                     && (c.Ngaylap == null || c.Ngaylap >= yesterday)
+                                     && c.Ngaylap >= today && c.Ngaylap < tomorrow
                                      && ((c.Makh != null && allMakhs.Contains(c.Makh)) || (c.Mabn != null && allMabns.Contains(c.Mabn))))
                             .Select(c => new ChungTuShortDto { Sohd = c.Sohd, Makh = c.Makh, Mabn = c.Mabn, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu })
                             .ToListAsync();

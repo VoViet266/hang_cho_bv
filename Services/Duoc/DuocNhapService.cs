@@ -32,6 +32,9 @@ namespace HangChoKhamBenh.Web.Services
 
             try
             {
+                var today = DateTime.Today;
+                var tomorrow = today.AddDays(1);
+
                 string actualMakh = code;
                 string mabn = "";
                 string maba = "";
@@ -39,9 +42,9 @@ namespace HangChoKhamBenh.Web.Services
                 int loai = 14;
                 decimal tongTien = 0;
 
-                // 1. Tra cứu theo Makh trong chungtu
+                // 1. Tra cứu theo Makh trong chungtu (chỉ lấy đơn thuốc trong ngày hôm nay)
                 var ctList = await _context.ChungTu.AsNoTracking()
-                    .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Makh == code)
+                    .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Makh == code && c.Ngaylap >= today && c.Ngaylap < tomorrow)
                     .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
                     .ToListAsync();
 
@@ -49,7 +52,7 @@ namespace HangChoKhamBenh.Web.Services
                 if (ctList.Count == 0)
                 {
                     var kb = await _context.KhamBenh.AsNoTracking()
-                        .Where(k => (k.Xoa == null || k.Xoa == 0) && k.Makb == code)
+                        .Where(k => (k.Xoa == null || k.Xoa == 0) && k.Makb == code && (k.Ngaykcb == null || (k.Ngaykcb >= today && k.Ngaykcb < tomorrow)))
                         .OrderByDescending(k => k.Ngaykcb)
                         .Select(k => new { k.Makb, k.Mabn, k.Ngaykcb })
                         .FirstOrDefaultAsync();
@@ -62,34 +65,34 @@ namespace HangChoKhamBenh.Web.Services
                         if (!string.IsNullOrEmpty(actualMakh))
                         {
                             ctList = await _context.ChungTu.AsNoTracking()
-                                .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Makh == actualMakh)
+                                .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Makh == actualMakh && c.Ngaylap >= today && c.Ngaylap < tomorrow)
                                 .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
                                 .ToListAsync();
                         }
                         if (ctList.Count == 0 && !string.IsNullOrEmpty(mabn))
                         {
                             ctList = await _context.ChungTu.AsNoTracking()
-                                .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == mabn)
+                                .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == mabn && c.Ngaylap >= today && c.Ngaylap < tomorrow)
                                 .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
                                 .ToListAsync();
                         }
                     }
                 }
 
-                // 3. Tra cứu theo Mabn trong chungtu
+                // 3. Tra cứu theo Mabn trong chungtu (chỉ lấy đơn thuốc trong ngày hôm nay)
                 if (ctList.Count == 0)
                 {
                     ctList = await _context.ChungTu.AsNoTracking()
-                        .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == code)
+                        .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == code && c.Ngaylap >= today && c.Ngaylap < tomorrow)
                         .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
                         .ToListAsync();
                 }
 
-                // 4. Tra cứu theo Sohd trong chungtu
+                // 4. Tra cứu theo Sohd trong chungtu (chỉ lấy đơn thuốc trong ngày hôm nay)
                 if (ctList.Count == 0)
                 {
                     ctList = await _context.ChungTu.AsNoTracking()
-                        .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Sohd == code)
+                        .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Sohd == code && c.Ngaylap >= today && c.Ngaylap < tomorrow)
                         .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
                         .ToListAsync();
                 }
@@ -98,7 +101,7 @@ namespace HangChoKhamBenh.Web.Services
                 if (ctList.Count == 0 && string.IsNullOrEmpty(mabn))
                 {
                     var dk = await _context.PsDangKy.AsNoTracking()
-                        .Where(d => (d.Xoa == null || d.Xoa == 0) && d.Makb == code)
+                        .Where(d => (d.Xoa == null || d.Xoa == 0) && d.Makb == code && (d.Ngaydk == null || (d.Ngaydk >= today && d.Ngaydk < tomorrow)))
                         .OrderByDescending(d => d.Ngaydk)
                         .Select(d => new { d.Makb, d.Mabn })
                         .FirstOrDefaultAsync();
@@ -111,40 +114,33 @@ namespace HangChoKhamBenh.Web.Services
                         if (!string.IsNullOrEmpty(mabn))
                         {
                             ctList = await _context.ChungTu.AsNoTracking()
-                                .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == mabn)
+                                .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Mabn == mabn && c.Ngaylap >= today && c.Ngaylap < tomorrow)
                                 .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
                                 .ToListAsync();
                         }
                     }
                 }
 
-                // 6. Tra cứu dmbenhnhan bằng mabn
-                if (string.IsNullOrEmpty(mabn))
+                // 6. Nếu không tìm thấy chứng từ đơn thuốc trong ngày hôm nay -> Dừng và thông báo
+                if (ctList.Count == 0)
                 {
-                    var bnCheck = await _context.DmBenhNhan.AsNoTracking()
-                        .Where(b => b.Mabn == code)
-                        .Select(b => b.Mabn)
-                        .FirstOrDefaultAsync();
-
-                    if (!string.IsNullOrEmpty(bnCheck))
+                    return new DuocNhapBarcodeResultDto
                     {
-                        mabn = bnCheck;
-                    }
+                        Success = false,
+                        Message = $"Không tìm thấy đơn thuốc hôm nay với mã '{code}'."
+                    };
                 }
 
-                if (string.IsNullOrEmpty(mabn) && ctList.Count > 0)
-                {
-                    mabn = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Mabn))?.Mabn ?? "";
-                }
+                mabn = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Mabn))?.Mabn ?? mabn;
 
-                // 7. Nạp thêm tất cả chứng từ 2 ngày gần nhất của bệnh nhân
+                // 7. Nạp thêm tất cả chứng từ trong ngày hôm nay của bệnh nhân
                 if (!string.IsNullOrEmpty(mabn))
                 {
-                    var yesterday = DateTime.Today.AddDays(-1);
                     var allPatientCt = await _context.ChungTu.AsNoTracking()
                         .Where(c => (c.Xoa == null || c.Xoa == 0)
                                  && c.Mabn == mabn
-                                 && (c.Ngaylap == null || c.Ngaylap >= yesterday))
+                                 && c.Ngaylap >= today
+                                 && c.Ngaylap < tomorrow)
                         .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Maba, c.Khochan, c.Thanhtien })
                         .ToListAsync();
 
@@ -163,28 +159,14 @@ namespace HangChoKhamBenh.Web.Services
                     }
                 }
 
-                if (ctList.Count > 0)
+                var firstCt = ctList[0];
+                if (string.IsNullOrEmpty(mabn)) mabn = firstCt.Mabn ?? "";
+                if (string.IsNullOrEmpty(actualMakh) || actualMakh == code)
                 {
-                    var firstCt = ctList[0];
-                    if (string.IsNullOrEmpty(mabn)) mabn = firstCt.Mabn ?? "";
-                    if (string.IsNullOrEmpty(actualMakh) || actualMakh == code)
-                    {
-                        actualMakh = !string.IsNullOrWhiteSpace(firstCt.Makh) ? firstCt.Makh : code;
-                    }
-                    maba = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Maba))?.Maba ?? firstCt.Maba ?? "";
-                    sohd = firstCt.Sohd ?? "";
+                    actualMakh = !string.IsNullOrWhiteSpace(firstCt.Makh) ? firstCt.Makh : code;
                 }
-                else
-                {
-                    if (string.IsNullOrEmpty(mabn))
-                    {
-                        return new DuocNhapBarcodeResultDto
-                        {
-                            Success = false,
-                            Message = $"Không tìm thấy thông tin bệnh nhân hoặc chứng từ với mã '{code}'."
-                        };
-                    }
-                }
+                maba = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Maba))?.Maba ?? firstCt.Maba ?? "";
+                sohd = firstCt.Sohd ?? "";
 
                 // 8. Tra cứu thông tin bệnh nhân
                 string hoTen = "";
@@ -334,8 +316,8 @@ namespace HangChoKhamBenh.Web.Services
             try
             {
                 DateTime? ngayKcbVal = req.NgayKcb ?? DateTime.Now;
-                var today = DateTime.UtcNow.Date;
-                var yesterday = today.AddDays(-1);
+                var today = DateTime.Today;
+                var tomorrow = today.AddDays(1);
 
                 bool shouldAddBhyt = (req.HasBhyt == true) || (req.Khochan == 14) || (req.Loai == 14) || (req.Loai == 0);
                 bool shouldAddDichVu = (req.HasDichVu == true) || (req.Khochan == 13) || (req.Khochan == 3) || (req.Loai == 13) || (req.Loai == 0);
@@ -354,14 +336,14 @@ namespace HangChoKhamBenh.Web.Services
                     if (!string.IsNullOrEmpty(makb))
                     {
                         existingBhyt = await _context.HangChoDuocTmd
-                            .Where(h => h.Makb == makb && h.Khochan == 14 && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= yesterday || h.Ngaygiao >= yesterday))
+                            .Where(h => h.Makb == makb && h.Khochan == 14 && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today))
                             .OrderByDescending(h => h.Ngaynhap)
                             .FirstOrDefaultAsync();
                     }
                     if (existingBhyt == null && !string.IsNullOrEmpty(mabn))
                     {
                         existingBhyt = await _context.HangChoDuocTmd
-                            .Where(h => h.Mabn == mabn && h.Khochan == 14 && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= yesterday || h.Ngaygiao >= yesterday))
+                            .Where(h => h.Mabn == mabn && h.Khochan == 14 && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today))
                             .OrderByDescending(h => h.Ngaynhap)
                             .FirstOrDefaultAsync();
                     }
@@ -405,7 +387,7 @@ namespace HangChoKhamBenh.Web.Services
                                         && (c.Khochan == "13" || c.Khochan == "3")
                                         && c.Makh == makb
                                         && ((c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0)
-                                        && (c.Ngaylap == null || c.Ngaylap >= yesterday));
+                                        && c.Ngaylap >= today && c.Ngaylap < tomorrow);
                     }
                     if (!isPaid && !string.IsNullOrEmpty(mabn))
                     {
@@ -414,21 +396,21 @@ namespace HangChoKhamBenh.Web.Services
                                         && (c.Khochan == "13" || c.Khochan == "3")
                                         && c.Mabn == mabn
                                         && ((c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0)
-                                        && (c.Ngaylap == null || c.Ngaylap >= yesterday));
+                                        && c.Ngaylap >= today && c.Ngaylap < tomorrow);
                     }
 
                     HangChoDuocTmd? existingDv = null;
                     if (!string.IsNullOrEmpty(makb))
                     {
                         existingDv = await _context.HangChoDuocTmd
-                            .Where(h => h.Makb == makb && (h.Khochan == 13 || h.Khochan == 3) && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= yesterday || h.Ngaygiao >= yesterday))
+                            .Where(h => h.Makb == makb && (h.Khochan == 13 || h.Khochan == 3) && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today))
                             .OrderByDescending(h => h.Ngaynhap)
                             .FirstOrDefaultAsync();
                     }
                     if (existingDv == null && !string.IsNullOrEmpty(mabn))
                     {
                         existingDv = await _context.HangChoDuocTmd
-                            .Where(h => h.Mabn == mabn && (h.Khochan == 13 || h.Khochan == 3) && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= yesterday || h.Ngaygiao >= yesterday))
+                            .Where(h => h.Mabn == mabn && (h.Khochan == 13 || h.Khochan == 3) && h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today))
                             .OrderByDescending(h => h.Ngaynhap)
                             .FirstOrDefaultAsync();
                     }
@@ -522,11 +504,12 @@ namespace HangChoKhamBenh.Web.Services
 
             if (cleanMakhs.Count == 0 && cleanMabns.Count == 0) return result;
 
-            var yesterday = DateTime.Today.AddDays(-2);
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
             var ctList = await _context.ChungTu.AsNoTracking()
                 .Where(c => (c.Xoa == null || c.Xoa == 0)
                          && (c.Khochan == "13" || c.Khochan == "3")
-                         && (c.Ngaylap == null || c.Ngaylap >= yesterday)
+                         && c.Ngaylap >= today && c.Ngaylap < tomorrow
                          && ((c.Makh != null && cleanMakhs.Contains(c.Makh)) || (c.Mabn != null && cleanMabns.Contains(c.Mabn))))
                 .Select(c => new ChungTuQueryDto { Makh = c.Makh, Mabn = c.Mabn, Sohd = c.Sohd, Maba = c.Maba, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu, Khochan = c.Khochan })
                 .ToListAsync();
@@ -666,21 +649,10 @@ namespace HangChoKhamBenh.Web.Services
 
                 if (item.HasDichVu)
                 {
-                    bool foundInfo = false;
-                    (decimal TotalTien, string Sohd, string Maba, bool DaThu) info = default;
-
-                    if (!string.IsNullOrEmpty(gMakb) && infoMap.TryGetValue(gMakb, out info))
+                    if ((!string.IsNullOrEmpty(gMakb) && infoMap.TryGetValue(gMakb, out var info)) ||
+                        (!string.IsNullOrEmpty(gMabn) && infoMap.TryGetValue(gMabn, out info)))
                     {
-                        foundInfo = true;
-                    }
-                    else if (!string.IsNullOrEmpty(gMabn) && infoMap.TryGetValue(gMabn, out info))
-                    {
-                        foundInfo = true;
-                    }
-
-                    if (foundInfo)
-                    {
-                        sohdStr = info.Sohd;
+                        sohdStr = info.Sohd ?? "";
                         if (!string.IsNullOrEmpty(info.Maba)) mabaStr = info.Maba;
                         soTien = info.TotalTien;
                         soTienStr = info.TotalTien > 0 ? $"{info.TotalTien:N0} ₫" : "—";
@@ -1074,7 +1046,7 @@ namespace HangChoKhamBenh.Web.Services
             if (string.IsNullOrEmpty(makb) && string.IsNullOrEmpty(mabn)) return false;
 
             var oCua = req.OCua?.Trim();
-            var today = DateTime.Today.AddDays(-1);
+            var today = DateTime.Today;
 
             int rows;
             if (req.Khochan == 14 || req.Khochan == 1 || req.Khochan == 2)
@@ -1121,7 +1093,7 @@ namespace HangChoKhamBenh.Web.Services
                 return (false, "", "", "");
 
             var oCua = req.OCua?.Trim() ?? "";
-            var today = DateTime.Today.AddDays(-1);
+            var today = DateTime.Today;
 
             var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
             UPDATE current.hangchoduoc_tmd
@@ -1156,7 +1128,7 @@ namespace HangChoKhamBenh.Web.Services
             var cleanMabn = mabn.Trim();
             if (string.IsNullOrEmpty(cleanMakb) && string.IsNullOrEmpty(cleanMabn)) return false;
 
-            var today = DateTime.Today.AddDays(-1);
+            var today = DateTime.Today;
             var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
             UPDATE current.hangchoduoc_tmd
             SET dagiao = 0, ngaygiao = now(), ngaynhap = now()
