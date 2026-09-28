@@ -116,155 +116,113 @@
             }
 
             .duoc-patient-table th {
-                overflow: visible !important;
-                text-overflow: clip !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
                 white-space: nowrap !important;
-                font-size: clamp(14px, 1.25vw, 22px) !important;
                 font-weight: 900 !important;
-                padding: 10px 4px !important;
-                letter-spacing: 0.01em !important;
+                letter-spacing: 0 !important;
                 text-align: center !important;
                 color: #1e3a8a !important;
             }
 
             .duoc-patient-table th:first-child {
                 text-align: left !important;
-                padding-left: 12px !important;
             }
 
             .duoc-patient-table td {
-                overflow: visible !important;
-                text-overflow: clip !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
                 vertical-align: middle !important;
             }
 
             .duoc-patient-table .patient-name-container {
-                overflow: visible !important;
+                overflow: hidden !important;
                 max-width: 100% !important;
                 min-width: 0 !important;
             }
 
             .duoc-patient-table .patient-name-text {
-                display: inline-block !important;
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
                 white-space: normal !important;
                 word-break: break-word !important;
-                overflow: visible !important;
-                text-overflow: clip !important;
-                line-height: 1.18 !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                line-height: 1.15 !important;
                 max-width: 100% !important;
-                font-size: clamp(23px, 2.1vw, 48px) !important;
                 font-weight: 900 !important;
                 letter-spacing: -0.01em !important;
                 color: #1e3a8a !important;
             }
 
-            .duoc-patient-table td.cell-namsinh {
-                font-size: clamp(16px, 1.5vw, 32px) !important;
-                font-weight: 800 !important;
-                text-align: center !important;
-                white-space: nowrap !important;
-                overflow: visible !important;
-                text-overflow: clip !important;
-                color: #1e3a8a !important;
-                padding-left: 2px !important;
-                padding-right: 2px !important;
-            }
-
+            /* --- CHẾ ĐỘ 1 BẢNG (KHI ÍT BỆNH NHÂN <= 10): CHỮ VỪA VẶN, HÀI HÒA, KHÔNG BỊ PHÓNG TO QUÁ ĐÀ --- */
             .duoc-table-single th {
-                font-size: clamp(16px, 1.45vw, 25px) !important;
-                font-weight: 900 !important;
-                padding: 12px 6px !important;
-                letter-spacing: 0.02em !important;
-                text-align: center !important;
-                color: #1e3a8a !important;
+                font-size: clamp(13px, 1.15vw, 17px) !important;
+                padding: 6px 3px !important;
             }
 
             .duoc-table-single th:first-child {
-                text-align: left !important;
-                padding-left: 14px !important;
+                padding-left: 12px !important;
             }
 
             .duoc-table-single .patient-name-text {
-                font-size: clamp(28px, 2.65vw, 45px) !important;
+                font-size: clamp(16px, 1.45vw, 24px) !important;
                 color: #1e3a8a !important;
             }
 
             .duoc-table-single td.cell-namsinh {
-                font-size: clamp(20px, 1.9vw, 32px) !important;
+                font-size: clamp(15px, 1.3vw, 20px) !important;
+                font-weight: 800 !important;
+                text-align: center !important;
             }
 
             .duoc-table-single .badge-money {
-                font-size: clamp(22px, 2.0vw, 36px) !important;
-                font-weight: 900 !important;
-                padding: 6px 14px !important;
-            }
-
-            .duoc-table-single .badge-ocua {
-                font-size: clamp(18px, 1.6vw, 28px) !important;
-                font-weight: 900 !important;
-                padding: 5px 12px !important;
+                font-size: clamp(13px, 1.15vw, 17px) !important;
+                font-weight: 800 !important;
+                padding: 3px 8px !important;
             }
 
             .duoc-table-single .badge-status {
-                font-size: clamp(16px, 1.4vw, 24px) !important;
-                font-weight: 900 !important;
-                padding: 5px 12px !important;
-            }
-
-            /* --- CHẾ ĐỘ 2 BẢNG (KHI FULL TRÀN MÀN HÌNH): CHỮ TO RÕ, CÂN ĐỐI 2 BÊN --- */
-            .duoc-table-split th {
-                font-size: clamp(12px, 1.0vw, 16px) !important;
-                font-weight: 900 !important;
-                padding: 6px 2px !important;
-                letter-spacing: 0 !important;
-                text-align: center !important;
-                color: #1e3a8a !important;
+                font-size: clamp(12px, 1.0vw, 15.5px) !important;
+                font-weight: 800 !important;
+                padding: 3px 6px !important;
                 white-space: nowrap !important;
             }
 
+            /* --- CHẾ ĐỘ 2 BẢNG (KHI NHIỀU BỆNH NHÂN HOẶC PHÂN TRANG): CHỮ CÂN ĐỐI 2 BÊN --- */
+            .duoc-table-split th {
+                font-size: clamp(12px, 1.05vw, 16px) !important;
+                padding: 6px 2px !important;
+            }
+
             .duoc-table-split th:first-child {
-                text-align: left !important;
                 padding-left: 10px !important;
             }
 
             .duoc-table-split .patient-name-text {
-                font-size: clamp(23px, 2.0vw, 34px) !important;
+                font-size: clamp(14px, 1.25vw, 21px) !important;
                 color: #1e3a8a !important;
             }
 
             .duoc-table-split td.cell-namsinh {
-                font-size: clamp(17px, 1.5vw, 25px) !important;
+                font-size: clamp(13px, 1.15vw, 18px) !important;
+                font-weight: 800 !important;
+                text-align: center !important;
             }
 
             .duoc-table-split .badge-money {
-                font-size: clamp(19px, 1.7vw, 28px) !important;
-                font-weight: 900 !important;
-                padding: 4px 10px !important;
-            }
-
-            .duoc-table-split .badge-ocua {
-                font-size: clamp(15px, 1.35vw, 22px) !important;
-                font-weight: 900 !important;
-                padding: 3px 8px !important;
+                font-size: clamp(11px, 0.95vw, 15px) !important;
+                font-weight: 800 !important;
+                padding: 2px 5px !important;
             }
 
             .duoc-table-split .badge-status {
-                font-size: clamp(14px, 1.2vw, 20px) !important;
-                font-weight: 900 !important;
-                padding: 3px 8px !important;
-            }
-
-            /* Tự động lấp đầy 100% chiều cao bảng, chia đều các hàng, không để lại khoảng trống thừa ở đáy */
-            .duoc-patient-table.table-fill-height {
-                height: 100% !important;
-            }
-
-            .duoc-patient-table.table-fill-height tbody {
-                height: 100% !important;
-            }
-
-            .duoc-patient-table.table-fill-height tbody tr {
-                height: 1% !important;
+                font-size: clamp(10px, 0.85vw, 13.5px) !important;
+                font-weight: 800 !important;
+                padding: 2px 4px !important;
+                letter-spacing: -0.01em !important;
+                white-space: nowrap !important;
             }
     </style>
 </head>
@@ -304,6 +262,16 @@
                 <span id="totalWaiting"
                       class="block text-danger font-black text-lg md:text-xl tabular-nums leading-none mt-0.5">
                     @Model.TotalWaiting
+                </span>
+            </div>
+
+            <!-- Badge Phân Trang (Hiện khi có nhiều trang) -->
+            <div id="pageBadge"
+                class="hidden bg-blue-50 px-2.5 py-1 text-center min-w-[70px] rounded border border-blue-200">
+                <span class="block text-brand font-bold text-[10px] uppercase tracking-wide">Trang</span>
+                <span id="pageBadgeText"
+                      class="block text-brand font-black text-lg md:text-xl tabular-nums leading-none mt-0.5">
+                    1/1
                 </span>
             </div>
 
@@ -373,9 +341,7 @@
 
                                 <tr data-key="@rowKey" data-patient="@currentPatientName" data-nam-sinh="@(p.NamSinh ?? "")" data-makb="@(p.Makb ?? "")" data-mabn="@(p.Mabn ?? "")" data-status="@(p.TrangThai ?? "")" data-ocua="@(p.OCua ?? "")"
                                     data-room-type="duoc"
-                                    onclick="onRowClickDuoc(this)"
-                                    class="remote-item group cursor-pointer @(isNear ? "row-toi-luot-active bg-yellow-100 border-l-[10px] border-yellow-500 shadow-md" : (pIsBhyt ? "border-l-[6px] border-blue-400 bg-blue-50/60" : "border-l-[6px] border-emerald-400 bg-emerald-50/50")) border-b border-slate-200"
-                                    tabindex="0">
+                                    class="@(isNear ? "row-toi-luot-active bg-yellow-100 border-l-[10px] border-yellow-500 shadow-md" : (pIsBhyt ? "border-l-[6px] border-blue-400 bg-blue-50/60" : "border-l-[6px] border-emerald-400 bg-emerald-50/50")) border-b border-slate-200">
                                     <td
                                         class="py-4 px-4 text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black tracking-tight" : "text-2xl md:text-4xl font-black")">
                                         <div class="patient-name-container select-none flex items-center min-w-0">
@@ -452,7 +418,6 @@
 
     <!-- SCRIPTS -->
         <script src="/js/signalr.min.js?v=@DateTime.UtcNow.Ticks"></script>
-        <script src="/js/remoteNav.js?v=@DateTime.UtcNow.Ticks"></script>
         <script src="/js/audioQueue.js?v=@DateTime.UtcNow.Ticks"></script>
         <script>
                 let DUOC_TYPE = '@Model.DuocType'; // "bhyt", "dichvu", or "all"
@@ -484,7 +449,6 @@
 
                 // Trạng thái âm thanh: Mặc định luôn BẬT
                 let isSoundEnabled = localStorage.getItem("duocSoundEnabled") !== "false";
-                // Trạng thái tự động gọi loa: Mặc định TẮT (để quầy bấm chọn cửa phát loa)
                 let isAutoSpeakEnabled = localStorage.getItem("duocAutoSpeakEnabled") === "true";
                 let audioUnlocked = false;
 
@@ -507,7 +471,6 @@
                     gapMs: 350,
                 });
 
-                // Mở khóa âm thanh cho trình duyệt
                 function unlockAudio() {
                     if (audioUnlocked) return;
                     audioUnlocked = true;
@@ -518,24 +481,20 @@
                     } catch (e) { }
                 }
 
-                ['click', 'keydown', 'touchstart', 'mousemove'].forEach(evt => {
-                    document.addEventListener(evt, unlockAudio, { passive: true, once: true });
-                });
-
                 function updateSoundIcon() {
                     const icon = document.getElementById('soundIcon');
                     const btn = document.getElementById('soundToggleBtn');
                     if (isSoundEnabled) {
                         if (icon) icon.className = 'fas fa-volume-up text-green-600';
                         if (btn) {
-                            btn.title = 'Loa tổng: ĐANG BẬT (Phím A / S để tắt, Space để đọc lại)';
-                            btn.className = 'remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer';
+                            btn.title = 'Loa tổng: ĐANG BẬT';
+                            btn.className = 'icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer';
                         }
                     } else {
                         if (icon) icon.className = 'fas fa-volume-mute text-slate-400';
                         if (btn) {
-                            btn.title = 'Loa tổng: ĐANG TẮT (Phím A / S để bật)';
-                            btn.className = 'remote-item icon-button bg-white border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer';
+                            btn.title = 'Loa tổng: ĐANG TẮT';
+                            btn.className = 'icon-button bg-white border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer';
                         }
                     }
                 }
@@ -554,12 +513,6 @@
                         audioQueue.clear();
                     }
                 }
-
-                function onRowClickDuoc(el) {
-                    // Click vào màn hình hiển thị chỉ mở khóa AudioContext trình duyệt, KHÔNG phát âm thanh
-                    unlockAudio();
-                }
-                window.onRowClickDuoc = onRowClickDuoc;
 
                 // Xác định nội dung hành động gọi loa: 'đóng tiền' hoặc 'nhận thuốc'
                 function getActionText(status, daThu) {
@@ -600,35 +553,7 @@
                 setInterval(updateTime, 1000);
                 updateTime();
 
-                // Toàn màn hình TV
-                function toggleFullScreen() {
-                    if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen().catch(() => { });
-                    } else {
-                        if (document.exitFullscreen) document.exitFullscreen();
-                    }
-                }
-
-                // Phím tắt bàn phím
-                window.addEventListener('keydown', (e) => {
-                    if (e.key === 'F11') {
-                        e.preventDefault();
-                        toggleFullScreen();
-                    } else if (e.key === 'a' || e.key === 'A' || e.key === 's' || e.key === 'S') {
-                        toggleSound();
-                    } else if (e.code === 'Space' || e.key === ' ') {
-                        e.preventDefault();
-                        unlockAudio();
-                        if (currentTopPatient) {
-                            audioQueue.clear();
-                            speakTargetPatient(currentTopPatient);
-                        }
-                    } else if (e.key === 'Escape') {
-                        window.location.href = '/duoc';
-                    }
-                });
-
-                // Biến toàn cục lưu danh sách bệnh nhân đang hiển thị để resize mượt mà
+                // Biến toàn cục lưu danh sách bệnh nhân đang hiển thị
                 let currentActiveList = [];
 
                 // ═══════════════ HIỆU ỨNG FLIP CHUYỂN HÀNG MƯỢT MÀ (GLIDE TO TOP / REORDER) ═══════════════
@@ -656,21 +581,18 @@
                             const deltaX = oldRect.left - newRect.left;
                             const deltaY = oldRect.top - newRect.top;
 
-                            // Nếu vị trí thay đổi (chạy lên đầu hoặc dời chỗ)
                             if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
                                 row.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
                                 row.style.transition = 'none';
-                                row.style.zIndex = deltaY > 0 ? '40' : '15'; // Đang chạy lên trên thì nằm trên các hàng khác
+                                row.style.zIndex = deltaY > 0 ? '40' : '15';
                                 animatingRows.push(row);
                             }
                         } else {
-                            // Hàng mới xuất hiện
                             row.classList.add('row-glide-enter');
                         }
                     });
 
                     if (animatingRows.length > 0) {
-                        // Buộc trình duyệt tính layout trước khi kích hoạt transition
                         void container.offsetHeight;
 
                         requestAnimationFrame(() => {
@@ -692,11 +614,54 @@
                     }
                 }
 
-                function buildSplitView(list) {
+                // ═══════════════ QUẢN LÝ PHÂN TRANG & SỐ HÀNG TỰ ĐỘNG THEO CHIỀU CAO ═══════════════
+                const PAGE_ROTATION_INTERVAL = 8000; // Tự động xoay trang mỗi 8 giây
+                let currentPageIndex = 0;
+                let paginationTimer = null;
+
+                function calculateRowsPerColumn() {
+                    const container = document.getElementById('paginationContainer');
+                    const totalHeight = container ? container.clientHeight : (window.innerHeight - 145);
+                    const theadHeight = 44;
+                    const availableBodyHeight = Math.max(200, totalHeight - theadHeight);
+                    
+                    // Chiều cao tiêu chuẩn 1 hàng: ~68px (rõ nét trên TV)
+                    // Tối thiểu 10 hàng / 1 ô. Nếu màn hình to hoặc zoom nhỏ -> tự động +1, +2... hàng
+                    const TARGET_ROW_HEIGHT = 68;
+                    let rows = Math.floor(availableBodyHeight / TARGET_ROW_HEIGHT);
+                    if (rows < 10) rows = 10;
+                    if (rows > 30) rows = 30;
+                    return rows;
+                }
+
+                function getRowHeightPx(rowsCount) {
+                    const container = document.getElementById('paginationContainer');
+                    const totalHeight = container ? container.clientHeight : (window.innerHeight - 145);
+                    const theadHeight = 44;
+                    const availableBodyHeight = Math.max(200, totalHeight - theadHeight);
+                    return Math.floor(availableBodyHeight / rowsCount);
+                }
+
+                function updatePageIndicator(current, total) {
+                    const badge = document.getElementById('pageBadge');
+                    const badgeText = document.getElementById('pageBadgeText');
+                    if (!badge || !badgeText) return;
+                    if (total > 1) {
+                        badgeText.textContent = `${current}/${total}`;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+
+                function renderDuocView(list = currentActiveList, preservePage = false) {
                     const container = document.getElementById('paginationContainer');
                     if (!container) return;
 
-                    // 1. Lưu vết tọa độ của tất cả các hàng hiện tại trước khi cập nhật DOM
+                    if (!list) list = [];
+                    currentActiveList = list;
+
+                    // 1. Lưu vết tọa độ các hàng hiện tại cho hiệu ứng FLIP
                     const oldPositions = new Map();
                     const existingRows = container.querySelectorAll('tbody tr[data-key]');
                     existingRows.forEach(row => {
@@ -706,7 +671,9 @@
                         }
                     });
 
-                    if (!list || list.length === 0) {
+                    if (list.length === 0) {
+                        if (paginationTimer) { clearInterval(paginationTimer); paginationTimer = null; }
+                        updatePageIndicator(0, 0);
                         container.innerHTML = `
                             <div class="room-container flex-grow bg-white border-2 border-slate-300 rounded-lg flex items-center justify-center shadow-sm h-full">
                                 <p class="text-center text-slate-400 text-2xl md:text-4xl font-bold italic">Không có bệnh nhân chờ lĩnh thuốc.</p>
@@ -714,85 +681,99 @@
                         return;
                     }
 
-                    currentActiveList = list;
+                    // 2. Tính số hàng mỗi ô động theo chiều cao màn hình (tối thiểu 10 hàng / ô)
+                    const rowsPerCol = calculateRowsPerColumn();
+                    const pageCapacity = rowsPerCol * 2;
+                    const rowHeightPx = getRowHeightPx(rowsPerCol);
 
-                    // 2. Tính toán sức chứa chiều cao chính xác
-                    const containerHeight = container.clientHeight || (window.innerHeight - 140);
-                    // Hàng đơn: header ~48px, mỗi hàng ~70px
-                    const singleCapacity = Math.max(1, Math.floor((containerHeight - 48) / 70));
-                    // Hàng chia đôi: header ~42px, mỗi hàng ~52px
-                    const splitCapacity = Math.max(1, Math.floor((containerHeight - 42) / 52));
+                    // 3. Tính số trang
+                    const totalPages = Math.ceil(list.length / pageCapacity);
+                    if (!preservePage || currentPageIndex >= totalPages) {
+                        currentPageIndex = 0;
+                    }
 
-                    const needsSplit = list.length > singleCapacity;
+                    updatePageIndicator(currentPageIndex + 1, totalPages);
 
-                    if (!needsSplit) {
-                        // CHẾ ĐỘ 1 BẢNG (CHỮ SIÊU TO)
+                    // Lấy danh sách bệnh nhân thuộc trang hiện tại
+                    const startIdx = currentPageIndex * pageCapacity;
+                    const pageItems = list.slice(startIdx, startIdx + pageCapacity);
+
+                    // Nếu số bệnh nhân <= rowsPerCol: Hiện 1 BẢNG DUY NHẤT TOÀN MÀN HÌNH (gộp lại thành 1)
+                    if (list.length <= rowsPerCol) {
                         container.innerHTML = `
-                            <div id="singleBoardWrapper" class="room-container flex-grow w-full bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm overflow-hidden h-full">
-                                ${buildTableHtml(list, false, false)}
+                            <div class="room-container flex-grow bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm overflow-hidden h-full w-full">
+                                ${buildTableHtml(pageItems, false, rowHeightPx)}
                             </div>`;
                     } else {
-                        // CHẾ ĐỘ 2 BẢNG (CHIA ĐÔI MÀN HÌNH ĐẦY ĐỦ)
-                        const fitCount = splitCapacity;
-                        const col1Data = list.slice(0, fitCount);
-                        const col2Data = list.slice(fitCount);
+                        // Khi > rowsPerCol bệnh nhân: SPLIT THÀNH 2 CỘT (Cột 1: rowsPerCol BN đầu, Cột 2: các BN tiếp theo)
+                        const col1Data = pageItems.slice(0, rowsPerCol);
+                        const col2Data = pageItems.slice(rowsPerCol, pageCapacity);
 
                         container.innerHTML = `
                             <div class="flex-grow flex flex-row gap-3 h-full overflow-hidden w-full min-w-0">
-                                <!-- CỘT 1 -->
+                                <!-- Ô 1 (CỘT 1) -->
                                 <div id="col1Container" class="room-container flex-1 min-w-0 bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm overflow-hidden h-full">
-                                    ${buildTableHtml(col1Data, true, true)}
+                                    ${buildTableHtml(col1Data, true, rowHeightPx)}
                                 </div>
-                                <!-- CỘT 2 -->
+                                <!-- Ô 2 (CỘT 2) -->
                                 <div id="col2Container" class="room-container flex-1 min-w-0 bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm overflow-hidden h-full">
-                                    ${buildTableHtml(col2Data, true, col2Data.length >= fitCount)}
+                                    ${buildTableHtml(col2Data, true, rowHeightPx)}
                                 </div>
                             </div>`;
                     }
 
-                    // 3. Kích hoạt hiệu ứng FLIP animation mượt mà
                     applyFlipAnimation(container, oldPositions);
+
+                    // Tự động xoay trang nếu có hơn 1 trang
+                    if (totalPages > 1) {
+                        if (!paginationTimer) {
+                            paginationTimer = setInterval(() => {
+                                const currentRowsPerCol = calculateRowsPerColumn();
+                                const currentCapacity = currentRowsPerCol * 2;
+                                const currentTotalPages = Math.ceil(currentActiveList.length / currentCapacity);
+                                if (currentTotalPages > 1) {
+                                    currentPageIndex = (currentPageIndex + 1) % currentTotalPages;
+                                    renderDuocView(currentActiveList, true);
+                                } else {
+                                    clearInterval(paginationTimer);
+                                    paginationTimer = null;
+                                    updatePageIndicator(1, 1);
+                                }
+                            }, PAGE_ROTATION_INTERVAL);
+                        }
+                    } else {
+                        if (paginationTimer) { clearInterval(paginationTimer); paginationTimer = null; }
+                    }
                 }
 
-                function buildTableHtml(rows, isSplit, fillHeight = false) {
-                    const pyClass = isSplit ? 'py-2 md:py-2.5' : 'py-2.5 md:py-3.5';
+                function buildTableHtml(rows, isSplit, rowHeightPx) {
+                    const pyClass = isSplit ? 'py-1' : 'py-2';
                     const modeClass = isSplit ? 'duoc-table-split' : 'duoc-table-single';
 
-                    const colWidths = isSplit
-                        ? `<col style="width: 48%;">
-                           <col style="width: 16%;">
-                           <col style="width: 18%;">
-                           <col style="width: 18%;">`
-                        : `<col style="width: 50%;">
-                           <col style="width: 14%;">
-                           <col style="width: 18%;">
-                           <col style="width: 18%;">`;
+                    const colWidths = `<col style="width: 42%;">
+                                       <col style="width: 10%;">
+                                       <col style="width: 20%;">
+                                       <col style="width: 28%;">`;
 
+                    const rowList = rows || [];
                     let tbodyContent = '';
-                    if (!rows || rows.length === 0) {
-                        tbodyContent = `<tr>
-                                            <td colspan="4" class="text-center py-16 text-slate-300 italic font-bold text-lg">
-                                                Chưa có thêm bệnh nhân
-                                            </td>
-                                        </tr>`;
-                    } else {
-                        tbodyContent = rows.map(p => buildRowHtml(p, isSplit, pyClass)).join('');
+
+                    for (let i = 0; i < rowList.length; i++) {
+                        tbodyContent += buildRowHtml(rowList[i], isSplit, pyClass, rowHeightPx);
                     }
 
-                    const fillClass = fillHeight ? 'table-fill-height' : '';
-
                     return `
-                        <div class="flex-grow overflow-y-auto no-scrollbar w-full flex flex-col h-full">
-                            <table class="patient-table duoc-patient-table ${modeClass} ${fillClass} w-full text-left border-collapse" style="table-layout: fixed;">
+                        <div class="flex-grow overflow-hidden w-full bg-white" style="height: 100%; display: block;">
+                            <table class="patient-table duoc-patient-table ${modeClass} w-full text-left border-collapse" style="table-layout: fixed; height: auto !important; margin-bottom: auto;">
                                 <colgroup>
                                     ${colWidths}
                                 </colgroup>
-                                <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-black">
+                                <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-black" style="height: 44px;">
                                     <tr>
-                                        <th class="text-left font-black">Họ và Tên</th>
-                                        <th class="text-center font-black">Năm Sinh</th>
-                                        <th class="text-center font-black">Số Tiền</th>
-                                        <th class="text-center font-black">Trạng Thái</th>
+                                        <th class="py-2.5 px-3 text-left font-black">Họ và Tên</th>
+                                        <th class="py-2.5 px-1 text-center font-black">Năm Sinh</th>
+                                        <th class="py-2.5 px-1 text-center font-black">Số Tiền</th>
+                                        <th class="py-2.5 px-1 text-center font-black">Trạng Thái</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-200">
@@ -802,7 +783,7 @@
                         </div>`;
                 }
 
-                function buildRowHtml(p, isSplit, pyClass) {
+                function buildRowHtml(p, isSplit, pyClass, rowHeightPx) {
                     const isNear = p.isToiLuot;
                     const pIsBhyt = p.isBhyt;
                     const rawName = (p.tenBenhNhan || '').trim();
@@ -824,25 +805,31 @@
                         rowClass = 'border-l-[4px] md:border-l-[6px] border-emerald-400 bg-emerald-50/50 border-b border-slate-200';
                     }
 
-                    // Cột Loại / Tiền
+                    // Cột Tiền / BHYT
                     let col4Html = '';
                     if (p.soTienStr && p.soTienStr !== '—' && p.soTienStr !== '') {
                         col4Html = `<td class="${pyClass} px-1 text-center">
-                                        <span class="badge-money inline-block rounded border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs font-bold">
-                                            ${escapeHtml(p.soTienStr)}
-                                        </span>
+                                        <div class="flex items-center justify-center min-w-0 max-w-full">
+                                            <span class="badge-money inline-block rounded-lg border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs font-extrabold max-w-full">
+                                                ${escapeHtml(p.soTienStr)}
+                                            </span>
+                                        </div>
                                     </td>`;
                     } else if (!pIsBhyt) {
                         col4Html = `<td class="${pyClass} px-1 text-center">
-                                        <span class="badge-money inline-block rounded border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
-                                            ${escapeHtml(p.soTienStr || '—')}
-                                        </span>
+                                        <div class="flex items-center justify-center min-w-0 max-w-full">
+                                            <span class="badge-money inline-block rounded-lg border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs max-w-full">
+                                                ${escapeHtml(p.soTienStr || '—')}
+                                            </span>
+                                        </div>
                                     </td>`;
                     } else {
                         col4Html = `<td class="${pyClass} px-1 text-center">
-                                        <span class="badge-money inline-block rounded border p-1 uppercase whitespace-nowrap bg-blue-100 text-blue-800 border-blue-300 shadow-2xs">
-                                            BHYT
-                                        </span>
+                                        <div class="flex items-center justify-center min-w-0 max-w-full">
+                                            <span class="badge-money inline-block rounded-lg border font-extrabold uppercase whitespace-nowrap bg-blue-100 text-blue-800 border-blue-300 shadow-2xs max-w-full">
+                                                BHYT
+                                            </span>
+                                        </div>
                                     </td>`;
                     }
 
@@ -850,46 +837,36 @@
                     let col5Badge = '';
                     const isChoThu = (p.trangThai === "Chờ thu" || escapedStatus === "Chờ thu");
                     if (isChoThu) {
-                        col5Badge = `<span class="badge-status p-1 md:px-3 md:py-1.5 inline-block bg-amber-50 text-amber-800 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Chờ thu tiền</span>`;
+                        col5Badge = `<span class="badge-status inline-block bg-amber-50 text-amber-800 border-2 border-amber-300 font-extrabold uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Chờ thu tiền</span>`;
                     } else {
-                        col5Badge = `<span class="badge-status p-1 md:px-3 md:py-1.5 inline-block bg-blue-50 text-blue-800 border-2 border-blue-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Đang soạn thuốc</span>`;
+                        col5Badge = `<span class="badge-status inline-block bg-blue-50 text-blue-800 border-2 border-blue-300 font-extrabold uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Đang soạn thuốc</span>`;
                     }
+
+                    const heightStyle = rowHeightPx ? `style="height: ${rowHeightPx}px;"` : '';
 
                     return `<tr data-key="${rowKey}" data-patient="${escapedName}" data-nam-sinh="${namSinh}" data-makb="${makb}" data-mabn="${mabn}" data-status="${escapedStatus || ''}" data-ocua="${p.oCua || ''}"
                                 data-room-type="duoc"
-                                onclick="onRowClickDuoc(this)"
-                                class="remote-item group cursor-pointer ${rowClass}"
-                                tabindex="0">
+                                ${heightStyle}
+                                class="${rowClass}">
                             
-                                <td class="${pyClass} px-3 text-blue-900">
+                                <td class="${pyClass} px-2.5 text-blue-900">
                                     <div class="patient-name-container select-none flex items-center min-w-0">
                                         <span class="patient-name-text uppercase whitespace-normal break-words leading-tight max-w-full ${isNear ? 'text-red-700 font-black' : 'text-blue-900 font-black'}">
                                             ${escapedName.toUpperCase()}
                                         </span>
                                     </div>
                                 </td>
-                                <td class="cell-namsinh ${pyClass} px-1 text-center font-black">
+                                <td class="cell-namsinh ${pyClass} px-1 text-center font-black text-blue-900">
                                     ${namSinh}
                                 </td>
                                 ${col4Html}
                                 <td class="${pyClass} px-1 text-center">
-                                    <div class="flex items-center justify-center min-w-0">
+                                    <div class="flex items-center justify-center min-w-0 max-w-full">
                                         ${col5Badge}
                                     </div>
                                 </td>
                             </tr>`;
                 }
-
-                // Tự động tính toán lại và chia cột khi thay đổi kích thước màn hình / F11
-                let resizeTimer;
-                window.addEventListener('resize', () => {
-                    clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(() => {
-                        if (currentActiveList && currentActiveList.length > 0) {
-                            buildSplitView(currentActiveList);
-                        }
-                    }, 100);
-                });
 
                 // ═══════════════ SIGNALR REALTIME & POLLING FALLBACK ═══════════════
                 let hubConnection = null;
@@ -1007,8 +984,8 @@
                     const titleEl = document.querySelector('.tv-room-title');
                     if (titleEl && data.title) titleEl.textContent = data.title;
 
-                    // Rebuild split view
-                    buildSplitView(list);
+                    // Render danh sách (bảo lưu trang đang xem nếu hợp lệ)
+                    renderDuocView(list, true);
                 }
 
                 function escapeHtml(str) {
@@ -1025,13 +1002,12 @@
 
                 // Khởi tạo bảng phân trang từ dữ liệu SSR
                 (function initFromSSR() {
-                    // Lấy rows từ tbody SSR
                     const tbody = document.getElementById('patientTableBody');
-                    if (!tbody) { buildSplitView([]); return; }
+                    if (!tbody) { renderDuocView([]); return; }
 
                     const ssrRows = Array.from(tbody.querySelectorAll('tr[data-patient]'));
                     if (ssrRows.length === 0) {
-                        buildSplitView([]);
+                        renderDuocView([]);
                         return;
                     }
 
@@ -1060,8 +1036,17 @@
                     const ssrWrapper = document.getElementById('ssrTableWrapper');
                     if (ssrWrapper) ssrWrapper.remove();
 
-                    buildSplitView(initialList);
+                    renderDuocView(initialList);
                 })();
+
+                // Lắng nghe thay đổi kích thước màn hình / zoom để tự động điều chỉnh số hàng (+1, +2...)
+                let resizeDebounce = null;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeDebounce);
+                    resizeDebounce = setTimeout(() => {
+                        renderDuocView(currentActiveList, true);
+                    }, 150);
+                });
 
                 initSignalR();
 
