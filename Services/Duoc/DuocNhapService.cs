@@ -589,6 +589,10 @@ namespace HangChoKhamBenh.Web.Services
                         : (string.Empty, string.Empty, (DateTime?)null, (decimal?)null);
 
                     var assignedOcua = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "";
+                    var bhytItem = g.FirstOrDefault(x => x.Khochan == 14 || x.Khochan == 1 || x.Khochan == 2);
+                    var dvItem = g.FirstOrDefault(x => x.Khochan == 13 || x.Khochan == 3);
+                    var ocuaBhyt = bhytItem?.Taikhoan ?? "";
+                    var ocuaDv = dvItem?.Taikhoan ?? "";
                     var assignedMaba = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Maba)).Select(x => x.Maba).FirstOrDefault() ?? "";
                     var latestNgayGiao = g.Max(x => x.Ngaygiao);
 
@@ -607,6 +611,8 @@ namespace HangChoKhamBenh.Web.Services
                         Dagiao = g.Max(x => x.Dagiao),
                         Dathu = dvDathuInDb,
                         Taikhoan = assignedOcua,
+                        OcuaBhyt = ocuaBhyt,
+                        OcuaDv = ocuaDv,
                         Maba = assignedMaba,
                         first.Ngaynhap,
                         Ngaygiao = latestNgayGiao,
@@ -669,137 +675,56 @@ namespace HangChoKhamBenh.Web.Services
                 var gioiTinhStr = item.Gioitinh == 1 ? "Nam" : (item.Gioitinh == 2 ? "Nữ" : "");
                 var ngayNhapStr = item.Ngaynhap.HasValue ? item.Ngaynhap.Value.ToString("HH:mm") : "";
 
-                // Xử lý các kịch bản:
+                DuocChuaGiaoItemDto CreateItem(int khochan, bool hasBhyt, bool hasDv, bool hasBoth, bool isBhyt, bool daThu, string trangThai, decimal? tien, string tienStr, string oCua)
+                {
+                    return new()
+                    {
+                        Makb = item.Makb ?? "",
+                        Mabn = item.Mabn ?? "",
+                        HoTen = hoTen ?? "",
+                        NamSinh = namSinhStr,
+                        GioiTinh = gioiTinhStr,
+                        Khochan = khochan,
+                        HasBhyt = hasBhyt,
+                        HasDichVu = hasDv,
+                        HasBoth = hasBoth,
+                        IsBhyt = isBhyt,
+                        Dagiao = item.Dagiao,
+                        DaThu = daThu,
+                        TrangThai = trangThai,
+                        SoTien = tien,
+                        SoTienStr = tienStr,
+                        Sohd = sohdStr,
+                        Maba = mabaStr,
+                        NgayNhapStr = ngayNhapStr,
+                        OCua = oCua ?? ""
+                    };
+                }
+
+
                 if (item.HasBoth)
                 {
                     if (!isDvPaid)
                     {
-                        // 1. Toa DV chưa thu tiền: Hiển thị ở Cột 1 (Chưa thu tiền)
-                        result.Add(new DuocChuaGiaoItemDto
-                        {
-                            Makb = item.Makb ?? "",
-                            Mabn = item.Mabn ?? "",
-                            HoTen = hoTen ?? "",
-                            NamSinh = namSinhStr,
-                            GioiTinh = gioiTinhStr,
-                            Khochan = 13,
-                            HasBhyt = true,
-                            HasDichVu = true,
-                            HasBoth = true,
-                            IsBhyt = false,
-                            Dagiao = item.Dagiao,
-                            DaThu = false,
-                            TrangThai = "Chờ thu",
-                            SoTien = soTien,
-                            SoTienStr = soTienStr,
-                            Sohd = sohdStr,
-                            Maba = mabaStr,
-                            NgayNhapStr = ngayNhapStr,
-                            OCua = item.Taikhoan ?? ""
-                        });
-
-                        // 2. Toa BHYT: Hiển thị qua thẳng Cột 2 (Chờ phát thuốc / Chờ giao)
-                        result.Add(new DuocChuaGiaoItemDto
-                        {
-                            Makb = item.Makb ?? "",
-                            Mabn = item.Mabn ?? "",
-                            HoTen = hoTen ?? "",
-                            NamSinh = namSinhStr,
-                            GioiTinh = gioiTinhStr,
-                            Khochan = 14,
-                            HasBhyt = true,
-                            HasDichVu = true,
-                            HasBoth = true,
-                            IsBhyt = true,
-                            Dagiao = item.Dagiao,
-                            DaThu = true,
-                            TrangThai = "Đang soạn",
-                            SoTien = null,
-                            SoTienStr = "",
-                            Sohd = sohdStr,
-                            Maba = mabaStr,
-                            NgayNhapStr = ngayNhapStr,
-                            OCua = item.Taikhoan ?? ""
-                        });
+                        // 1. Toa DV chưa thu tiền -> Cột 1 (Chưa thu tiền): Dùng riêng OcuaDv
+                        result.Add(CreateItem(13, true, true, true, false, false, "Chờ thu", soTien, soTienStr, item.OcuaDv));
+                        // 2. Toa BHYT -> Cột 2 (Chờ phát thuốc): Dùng riêng OcuaBhyt
+                        result.Add(CreateItem(14, true, false, false, true, true, "Đang soạn", null, "", item.OcuaBhyt));
                     }
                     else
                     {
-                        // Khi Toa DV đã thanh toán: Gom lại thành 1 thẻ duy nhất ở Cột 2 (Chờ phát thuốc)
-                        result.Add(new DuocChuaGiaoItemDto
-                        {
-                            Makb = item.Makb ?? "",
-                            Mabn = item.Mabn ?? "",
-                            HoTen = hoTen ?? "",
-                            NamSinh = namSinhStr,
-                            GioiTinh = gioiTinhStr,
-                            Khochan = 0,
-                            HasBhyt = true,
-                            HasDichVu = true,
-                            HasBoth = true,
-                            IsBhyt = true,
-                            Dagiao = item.Dagiao,
-                            DaThu = true,
-                            TrangThai = "Đang soạn",
-                            SoTien = soTien,
-                            SoTienStr = soTienStr,
-                            Sohd = sohdStr,
-                            Maba = mabaStr,
-                            NgayNhapStr = ngayNhapStr,
-                            OCua = item.Taikhoan ?? ""
-                        });
+                        // Đã thu tiền DV -> Gom thành 1 thẻ BHYT + Dịch Vụ ở Cột 2 (Chờ phát thuốc): Ưu tiên OcuaBhyt rồi OcuaDv
+                        var mergedOcua = !string.IsNullOrEmpty(item.OcuaBhyt) ? item.OcuaBhyt : item.OcuaDv;
+                        result.Add(CreateItem(0, true, true, true, true, true, "Đang soạn", soTien, soTienStr, mergedOcua));
                     }
                 }
                 else if (item.HasBhyt)
                 {
-                    // Chỉ có BHYT -> Cột 2 (Chờ phát thuốc)
-                    result.Add(new DuocChuaGiaoItemDto
-                    {
-                        Makb = item.Makb ?? "",
-                        Mabn = item.Mabn ?? "",
-                        HoTen = hoTen ?? "",
-                        NamSinh = namSinhStr,
-                        GioiTinh = gioiTinhStr,
-                        Khochan = 14,
-                        HasBhyt = true,
-                        HasDichVu = false,
-                        HasBoth = false,
-                        IsBhyt = true,
-                        Dagiao = item.Dagiao,
-                        DaThu = true,
-                        TrangThai = "Đang soạn",
-                        SoTien = null,
-                        SoTienStr = "",
-                        Sohd = sohdStr,
-                        Maba = mabaStr,
-                        NgayNhapStr = ngayNhapStr,
-                        OCua = item.Taikhoan ?? ""
-                    });
+                    result.Add(CreateItem(14, true, false, false, true, true, "Đang soạn", null, "", item.OcuaBhyt));
                 }
                 else
                 {
-                    // Chỉ có Dịch Vụ -> Nếu chưa đóng tiền vào Cột 1, đóng rồi vào Cột 2
-                    result.Add(new DuocChuaGiaoItemDto
-                    {
-                        Makb = item.Makb ?? "",
-                        Mabn = item.Mabn ?? "",
-                        HoTen = hoTen ?? "",
-                        NamSinh = namSinhStr,
-                        GioiTinh = gioiTinhStr,
-                        Khochan = 13,
-                        HasBhyt = false,
-                        HasDichVu = true,
-                        HasBoth = false,
-                        IsBhyt = false,
-                        Dagiao = item.Dagiao,
-                        DaThu = isDvPaid,
-                        TrangThai = isDvPaid ? "Đang soạn" : "Chờ thu",
-                        SoTien = soTien,
-                        SoTienStr = soTienStr,
-                        Sohd = sohdStr,
-                        Maba = mabaStr,
-                        NgayNhapStr = ngayNhapStr,
-                        OCua = item.Taikhoan ?? ""
-                    });
+                    result.Add(CreateItem(13, false, true, false, false, isDvPaid, isDvPaid ? "Đang soạn" : "Chờ thu", soTien, soTienStr, item.OcuaDv));
                 }
             }
 
@@ -876,7 +801,7 @@ namespace HangChoKhamBenh.Web.Services
             var dvMabns = dvGrouped.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m));
             var daGiaoInfoMap = await LoadChungTuInfoAsync(dvMakhs, dvMabns);
 
-            return grouped.Select(item =>
+            return [.. grouped.Select(item =>
             {
                 var hoTen = $"{item.Holot} {item.Ten}".Trim();
                 if (string.IsNullOrEmpty(hoTen))
@@ -916,7 +841,7 @@ namespace HangChoKhamBenh.Web.Services
                     NgayGiaoStr = item.Ngaygiao.ToString("HH:mm"),
                     OCua = item.Taikhoan ?? ""
                 };
-            }).ToList();
+            })];
         }
 
         /// <summary>
@@ -989,7 +914,7 @@ namespace HangChoKhamBenh.Web.Services
             var allMabns = grouped.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m));
             var kmInfoMap = await LoadChungTuInfoAsync(allMakhs, allMabns);
 
-            return grouped.Select(item =>
+            return [.. grouped.Select(item =>
             {
                 var hoTen = $"{item.Holot} {item.Ten}".Trim();
                 if (string.IsNullOrEmpty(hoTen))
@@ -1036,7 +961,7 @@ namespace HangChoKhamBenh.Web.Services
                     NgayNhapStr = item.Ngaygiao.ToString("HH:mm"),
                     OCua = item.Taikhoan ?? ""
                 };
-            }).ToList();
+            })];
         }
 
         public async Task<bool> CapNhatTrangThaiAsync(DuocCapNhatTrangThaiRequest req)
@@ -1048,39 +973,28 @@ namespace HangChoKhamBenh.Web.Services
             var oCua = req.OCua?.Trim();
             var today = DateTime.Today;
 
-            int rows;
-            if (req.Khochan == 14 || req.Khochan == 1 || req.Khochan == 2)
-            {
-                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+            int rows = (req.Khochan == 14 || req.Khochan == 1 || req.Khochan == 2)
+                ? await _context.Database.ExecuteSqlInterpolatedAsync($@"
                     UPDATE current.hangchoduoc_tmd
                     SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
                     WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
                       AND (khochan = 14 OR khochan = 1 OR khochan = 2)
                       AND xoa = 0
-                      AND (ngaynhap IS NULL OR ngaynhap >= {today})
-                ");
-            }
-            else if (req.Khochan == 13 || req.Khochan == 3)
-            {
-                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                    UPDATE current.hangchoduoc_tmd
-                    SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
-                    WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
-                      AND (khochan = 13 OR khochan = 3)
-                      AND xoa = 0
-                      AND (ngaynhap IS NULL OR ngaynhap >= {today})
-                ");
-            }
-            else
-            {
-                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                    UPDATE current.hangchoduoc_tmd
-                    SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
-                    WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
-                      AND xoa = 0
-                      AND (ngaynhap IS NULL OR ngaynhap >= {today})
-                ");
-            }
+                      AND (ngaynhap IS NULL OR ngaynhap >= {today})")
+                : (req.Khochan == 13 || req.Khochan == 3)
+                    ? await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                        UPDATE current.hangchoduoc_tmd
+                        SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
+                        WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
+                          AND (khochan = 13 OR khochan = 3)
+                          AND xoa = 0
+                          AND (ngaynhap IS NULL OR ngaynhap >= {today})")
+                    : await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                        UPDATE current.hangchoduoc_tmd
+                        SET dagiao = {req.TargetDagiao}, ngaygiao = now(), taikhoan = COALESCE({oCua}, taikhoan)
+                        WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
+                          AND xoa = 0
+                          AND (ngaynhap IS NULL OR ngaynhap >= {today})");
 
             return rows > 0;
         }
@@ -1094,14 +1008,41 @@ namespace HangChoKhamBenh.Web.Services
 
             var oCua = req.OCua?.Trim() ?? "";
             var today = DateTime.Today;
+            int? khochan = req.Khochan;
+            int rows;
 
-            var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-            UPDATE current.hangchoduoc_tmd
-            SET taikhoan = {oCua}, ngaygiao = now()
-            WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
-              AND xoa = 0
-              AND (ngaynhap IS NULL OR ngaynhap >= {today})
-        ");
+            if (khochan == 13 || khochan == 3)
+            {
+                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                UPDATE current.hangchoduoc_tmd
+                SET taikhoan = {oCua}, ngaygiao = now()
+                WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
+                  AND (khochan = 13 OR khochan = 3)
+                  AND xoa = 0
+                  AND (ngaynhap IS NULL OR ngaynhap >= {today})
+                ");
+            }
+            else if (khochan == 14 || khochan == 1 || khochan == 2)
+            {
+                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                UPDATE current.hangchoduoc_tmd
+                SET taikhoan = {oCua}, ngaygiao = now()
+                WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
+                  AND (khochan = 14 OR khochan = 1 OR khochan = 2)
+                  AND xoa = 0
+                  AND (ngaynhap IS NULL OR ngaynhap >= {today})
+                ");
+            }
+            else
+            {
+                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                UPDATE current.hangchoduoc_tmd
+                SET taikhoan = {oCua}, ngaygiao = now()
+                WHERE (({makb} <> '' AND makb = {makb}) OR ({mabn} <> '' AND mabn = {mabn}))
+                  AND xoa = 0
+                  AND (ngaynhap IS NULL OR ngaynhap >= {today})
+                ");
+            }
 
             var hoTen = req.HoTen?.Trim() ?? "";
             var namSinh = req.NamSinh?.Trim() ?? "";
@@ -1153,28 +1094,20 @@ namespace HangChoKhamBenh.Web.Services
                             && h.Xoa == 0
                             && (h.Ngaynhap == null || h.Ngaynhap >= today));
 
-            int rows;
-            if (hasDv)
-            {
-                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                UPDATE current.hangchoduoc_tmd
-                SET dagiao = 3, ngaygiao = now()
-                WHERE (({cleanMakb} <> '' AND makb = {cleanMakb}) OR ({cleanMabn} <> '' AND mabn = {cleanMabn}))
-                  AND (khochan = 13 OR khochan = 3)
-                  AND xoa = 0
-                  AND (ngaynhap IS NULL OR ngaynhap >= {today})
-            ");
-            }
-            else
-            {
-                rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
-                UPDATE current.hangchoduoc_tmd
-                SET dagiao = 3, ngaygiao = now()
-                WHERE (({cleanMakb} <> '' AND makb = {cleanMakb}) OR ({cleanMabn} <> '' AND mabn = {cleanMabn}))
-                  AND xoa = 0
-                  AND (ngaynhap IS NULL OR ngaynhap >= {today})
-            ");
-            }
+            int rows = hasDv
+                ? await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                    UPDATE current.hangchoduoc_tmd
+                    SET dagiao = 3, ngaygiao = now()
+                    WHERE (({cleanMakb} <> '' AND makb = {cleanMakb}) OR ({cleanMabn} <> '' AND mabn = {cleanMabn}))
+                      AND (khochan = 13 OR khochan = 3)
+                      AND xoa = 0
+                      AND (ngaynhap IS NULL OR ngaynhap >= {today})")
+                : await _context.Database.ExecuteSqlInterpolatedAsync($@"
+                    UPDATE current.hangchoduoc_tmd
+                    SET dagiao = 3, ngaygiao = now()
+                    WHERE (({cleanMakb} <> '' AND makb = {cleanMakb}) OR ({cleanMabn} <> '' AND mabn = {cleanMabn}))
+                      AND xoa = 0
+                      AND (ngaynhap IS NULL OR ngaynhap >= {today})");
 
             return rows > 0;
         }

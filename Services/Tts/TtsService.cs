@@ -46,9 +46,9 @@ namespace HangChoKhamBenh.Web.Services
 
             var normalizedText = text.Trim();
             var voiceName = _configuration["TTS:VoiceName"] ?? _configuration["VOICE_NAME"] ?? "vi-VN-Chirp3-HD-Kore";
-            var speakingRateStr = _configuration["TTS:SpeakingRate"] ?? _configuration["SPEAKING_RATE"] ?? "0.9";
+            var speakingRateStr = _configuration["TTS:SpeakingRate"] ?? _configuration["SPEAKING_RATE"] ?? "1.10";
             double.TryParse(speakingRateStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var speakingRate);
-            if (speakingRate <= 0) speakingRate = 0.9;
+            if (speakingRate <= 0) speakingRate = 1.10;
 
             var hash = ComputeMd5Hash($"{normalizedText}_{voiceName}_{speakingRate.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
             var filePath = Path.Combine(_cacheDir, $"{hash}.mp3");

@@ -261,7 +261,7 @@ namespace HangChoKhamBenh.Web.Services
 
             var rawRows = await query.ToListAsync();
 
-            return rawRows.Select(p =>
+            return [.. rawRows.Select(p =>
             {
                 var holot = p.Holot;
                 var ten = p.Ten;
@@ -279,7 +279,7 @@ namespace HangChoKhamBenh.Web.Services
                     Time = ngaynhap.HasValue ? ngaynhap.Value.ToString("HH:mm") : string.Empty,
                     Key = makb ?? mabn ?? pName
                 };
-            }).ToList();
+            })];
         }
 
         private static List<string> ExtractRoomList(object? target)
@@ -304,7 +304,7 @@ namespace HangChoKhamBenh.Web.Services
                 if (!string.IsNullOrEmpty(alias) && alias != cName) expanded.Add(alias);
             }
 
-            return expanded.Distinct().ToList();
+            return [.. expanded.Distinct()];
         }
 
         private static string DinhDangNgaySinh(DateTime? dob)

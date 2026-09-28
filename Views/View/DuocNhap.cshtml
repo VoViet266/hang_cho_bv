@@ -389,6 +389,7 @@
                     if (val === '2') cls = 'bg-emerald-50 text-emerald-800 border-emerald-200';
                     else if (val === '3') cls = 'bg-purple-50 text-purple-800 border-purple-200';
                     else if (val === '4') cls = 'bg-amber-50 text-amber-800 border-amber-200';
+                    else if (val === '5') cls = 'bg-rose-50 text-rose-800 border-rose-200';
                     return `<span class="px-2 py-0.5 rounded-md text-[11px] font-black uppercase border ${cls}"><i class="fa-solid fa-door-open mr-0.5"></i> Ô ${escapeHtml(val)}</span>`;
                 }
 
@@ -592,8 +593,8 @@
                     if (loaiBadge) {
                         if (data.hasBhyt && data.hasDichVu) {
                             loaiBadge.innerHTML = `
-                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">BẢO HIỂM</span>
-                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">DỊCH VỤ</span>`;
+                                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">BẢO HIỂM</span>
+                                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">DỊCH VỤ</span>`;
                         } else if (data.hasDichVu) {
                             loaiBadge.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">DỊCH VỤ</span>`;
                         } else {
@@ -856,10 +857,10 @@
 
                     if (filtered.length === 0) {
                         container.innerHTML = `
-                                                    <div id="cho-thu-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
-                                                        <i class="fa-solid fa-receipt text-3xl text-slate-300"></i>
-                                                        <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Không có đơn nào chưa thu tiền'}</p>
-                                                    </div>`;
+                                                            <div id="cho-thu-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                                                <i class="fa-solid fa-receipt text-3xl text-slate-300"></i>
+                                                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Không có đơn nào chưa thu tiền'}</p>
+                                                            </div>`;
                         return;
                     }
 
@@ -875,14 +876,14 @@
                             : `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Toa Dịch vụ</span>`;
 
                         // Segmented button group gọn gàng
-                        const assignBtns = ['1', '2', '3', '4'].map(num => {
+                        const assignBtns = ['1', '2', '3', '4', '5'].map(num => {
                             const isCurrent = curOcua === num;
                             const activeCls = isCurrent
                                 ? 'bg-amber-500 text-white font-black border-amber-500 shadow-2xs ring-2 ring-amber-200'
                                 : 'bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-800 border-slate-200';
-                            return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', false, '${safeTrangThai}')"
-                                                                class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
-                                                                title="Gọi Ô ${num}">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
+                            return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', false, 'Chờ thu', ${item.khochan || 13})"
+                                                                        class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
+                                                                        title="Gọi Ô ${num} đóng tiền">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
                         }).join('');
 
                         const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
@@ -891,44 +892,44 @@
                             : 'border border-slate-200 hover:border-amber-300 bg-white hover:shadow-xs';
 
                         html += `
-                                                    <div class="patient-card-item ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
-                                                        <!-- Top: Họ tên & Tiền -->
-                                                        <div class="flex items-start justify-between gap-2">
-                                                            <div class="min-w-0">
-                                                                <div class="font-black text-slate-900 text-sm md:text-base uppercase tracking-tight truncate leading-tight">
-                                                                    ${escapeHtml(item.hoTen)}
-                                                                </div>
-                                                                <div class="text-xs text-slate-500 flex items-center gap-2 mt-1 flex-wrap">
-                                                                    ${typeTag}
-                                                                    ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
-                                                                    <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
-                                                                            title="Sao chép mã khám"
-                                                                            class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
-                                                                        <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
-                                                                        <i class="fa-regular fa-copy text-[10px]"></i>
-                                                                    </button>
-                                                                    ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">${item.ngayNhapStr}</span>` : ''}
-                                                                </div>
-                                                            </div>
+                                                            <div class="patient-card-item ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
+                                                                <!-- Top: Họ tên & Tiền -->
+                                                                <div class="flex items-start justify-between gap-2">
+                                                                    <div class="min-w-0">
+                                                                        <div class="font-black text-slate-900 text-sm md:text-base uppercase tracking-tight truncate leading-tight">
+                                                                            ${escapeHtml(item.hoTen)}
+                                                                        </div>
+                                                                        <div class="text-xs text-slate-500 flex items-center gap-2 mt-1 flex-wrap">
+                                                                            ${typeTag}
+                                                                            ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
+                                                                            <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                                                    title="Sao chép mã khám"
+                                                                                    class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
+                                                                                <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                                                <i class="fa-regular fa-copy text-[10px]"></i>
+                                                                            </button>
+                                                                            ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">${item.ngayNhapStr}</span>` : ''}
+                                                                        </div>
+                                                                    </div>
                             
-                                                            <div class="text-right shrink-0">
-                                                                <div class="text-base md:text-lg font-black text-rose-700 font-mono tracking-tight">${item.soTienStr || '—'}</div>
-                                                                <div class="mt-0.5">${getOcuaBadge(item.oCua)}</div>
-                                                            </div>
-                                                        </div>
+                                                                    <div class="text-right shrink-0">
+                                                                        <div class="text-base md:text-lg font-black text-rose-700 font-mono tracking-tight">${item.soTienStr || '—'}</div>
+                                                                        <div class="mt-0.5">${getOcuaBadge(item.oCua)}</div>
+                                                                    </div>
+                                                                </div>
 
-                                                        <!-- Bottom: Segmented Call Buttons & Action -->
-                                                        <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
-                                                            <div class="flex items-center gap-1">
-                                                                ${assignBtns}
-                                                            </div>
-                                                            <button type="button" onclick="actionKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                                                    title="Khách không mua thuốc"
-                                                                    class="px-2.5 py-1 text-xs rounded-lg border border-rose-200 bg-rose-50/60 hover:bg-rose-600 hover:text-white text-rose-700 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
-                                                                <i class="fa-solid fa-ban text-[11px]"></i> Không mua
-                                                            </button>
-                                                        </div>
-                                                    </div>`;
+                                                                <!-- Bottom: Segmented Call Buttons & Action -->
+                                                                <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
+                                                                    <div class="flex items-center gap-1">
+                                                                        ${assignBtns}
+                                                                    </div>
+                                                                    <button type="button" onclick="actionKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                            title="Khách không mua thuốc"
+                                                                            class="px-2.5 py-1 text-xs rounded-lg border border-rose-200 bg-rose-50/60 hover:bg-rose-600 hover:text-white text-rose-700 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
+                                                                        <i class="fa-solid fa-ban text-[11px]"></i> Không mua
+                                                                    </button>
+                                                                </div>
+                                                            </div>`;
                     }
 
                     container.innerHTML = html;
@@ -948,11 +949,10 @@
                         : rawKhongMuaData;
 
                     if (filtered.length === 0) {
-                        container.innerHTML = `
-                                                    <div id="khong-mua-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
-                                                        <i class="fa-solid fa-ban text-3xl text-slate-300"></i>
-                                                        <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào không mua hôm nay'}</p>
-                                                    </div>`;
+                        container.innerHTML = `<div id="khong-mua-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                                                <i class="fa-solid fa-ban text-3xl text-slate-300"></i>
+                                                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào không mua hôm nay'}</p>
+                                                            </div>`;
                         return;
                     }
 
@@ -962,28 +962,27 @@
                         const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
                         const sohdVal = item.sohd || item.maba || '';
 
-                        html += `
-                                                    <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
-                                                        <div class="min-w-0">
-                                                            <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight">
-                                                                ${escapeHtml(item.hoTen)}
-                                                            </div>
-                                                            <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
-                                                                ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
-                                                                ${item.soTienStr ? `<span class="text-slate-700 font-mono font-semibold">${item.soTienStr}</span><span>•</span>` : ''}
-                                                                <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
-                                                                        title="Sao chép mã khám"
-                                                                        class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
-                                                                    <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                        html += `<div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
+                                                                <div class="min-w-0">
+                                                                    <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight">
+                                                                        ${escapeHtml(item.hoTen)}
+                                                                    </div>
+                                                                    <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                                                                        ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
+                                                                        ${item.soTienStr ? `<span class="text-slate-700 font-mono font-semibold">${item.soTienStr}</span><span>•</span>` : ''}
+                                                                        <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                                                title="Sao chép mã khám"
+                                                                                class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
+                                                                            <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <button onclick="actionHoanTacKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                        title="Khách muốn mua lại"
+                                                                        class="px-3 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-800 border border-amber-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
+                                                                    <i class="fa-solid fa-rotate-left text-[11px]"></i> Mua lại
                                                                 </button>
-                                                            </div>
-                                                        </div>
-                                                        <button onclick="actionHoanTacKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                                                title="Khách muốn mua lại"
-                                                                class="px-3 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-800 border border-amber-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
-                                                            <i class="fa-solid fa-rotate-left text-[11px]"></i> Mua lại
-                                                        </button>
-                                                    </div>`;
+                                                            </div>`;
                     }
 
                     container.innerHTML = html;
@@ -1010,10 +1009,10 @@
 
                     if (filtered.length === 0) {
                         container.innerHTML = `
-                                                    <div id="cho-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
-                                                        <i class="fa-solid fa-clipboard-check text-3xl text-slate-300"></i>
-                                                        <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Không có đơn nào đang chờ phát'}</p>
-                                                    </div>`;
+                                                            <div id="cho-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                                                <i class="fa-solid fa-clipboard-check text-3xl text-slate-300"></i>
+                                                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Không có đơn nào đang chờ phát'}</p>
+                                                            </div>`;
                         return;
                     }
 
@@ -1022,11 +1021,7 @@
                     for (const item of filtered) {
                         let typeTag = '';
                         if (item.hasBoth) {
-                            if (item.soTienStr && item.soTienStr !== '—') {
-                                typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">BHYT + Dịch vụ</span>`;
-                            } else {
-                                typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300">BHYT (Có toa DV)</span>`;
-                            }
+                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">BHYT + Dịch vụ</span>`;
                         } else if (item.hasDichVu) {
                             typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Dịch vụ</span>`;
                         } else {
@@ -1037,18 +1032,18 @@
                         const curOcua = String(item.oCua || '').trim();
                         const hasBeenCalled = Boolean(curOcua && curOcua !== '' && curOcua !== 'null');
                         const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                        const safeTrangThai = 'Đang soạn thuốc';
+                        const safeTrangThai = 'Nhận thuốc';
                         const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
                         // Segmented button group gọn gàng
-                        const assignBtns = ['1', '2', '3', '4'].map(num => {
+                        const assignBtns = ['1', '2', '3', '4', '5'].map(num => {
                             const isCurrent = curOcua === num;
                             const activeCls = isCurrent
                                 ? 'bg-brand text-white font-black border-brand shadow-2xs ring-2 ring-blue-200'
                                 : 'bg-white text-slate-600 hover:bg-blue-50 hover:text-brand border-slate-200';
-                            return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', ${item.isBhyt}, '${safeTrangThai}')"
-                                                                class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
-                                                                title="Gọi Ô ${num}">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
+                            return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', ${item.isBhyt}, '${safeTrangThai}', ${item.khochan || 0})"
+                                                                        class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
+                                                                        title="Gọi Ô ${num} nhận thuốc">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
                         }).join('');
 
                         const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
@@ -1060,47 +1055,47 @@
 
                         const phatBtnHtml = hasBeenCalled
                             ? `<button onclick="actionPhatThuoc('${item.makb}', '${item.mabn}', '${safeHoTen}', ${item.khochan || 0})"
-                                                            title="Xác nhận đã phát thuốc"
-                                                            class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs uppercase flex items-center gap-1.5 shadow-xs transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0">
-                                                        <i class="fa-solid fa-check text-xs"></i> Đã phát
-                                                       </button>`
+                                                                    title="Xác nhận đã phát thuốc"
+                                                                    class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs uppercase flex items-center gap-1.5 shadow-xs transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0">
+                                                                <i class="fa-solid fa-check text-xs"></i> Đã phát
+                                                               </button>`
                             : '';
 
                         html += `
-                                                    <div class="patient-card-item ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
-                                                        <!-- Top: Họ tên & Tiền / Ô cửa -->
-                                                        <div class="flex items-start justify-between gap-2">
-                                                            <div class="min-w-0">
-                                                                <div class="font-black text-slate-900 text-sm md:text-base uppercase tracking-tight truncate leading-tight">
-                                                                    ${escapeHtml(item.hoTen)}
-                                                                </div>
-                                                                <div class="text-xs text-slate-500 flex items-center gap-2 mt-1 flex-wrap">
-                                                                    ${typeTag}
-                                                                    ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
-                                                                    <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
-                                                                            title="Sao chép mã khám"
-                                                                            class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
-                                                                        <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
-                                                                        <i class="fa-regular fa-copy text-[10px]"></i>
-                                                                    </button>
-                                                                    ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">${item.ngayNhapStr}</span>` : ''}
-                                                                </div>
-                                                            </div>
+                                                            <div class="patient-card-item ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
+                                                                <!-- Top: Họ tên & Tiền / Ô cửa -->
+                                                                <div class="flex items-start justify-between gap-2">
+                                                                    <div class="min-w-0">
+                                                                        <div class="font-black text-slate-900 text-sm md:text-base uppercase tracking-tight truncate leading-tight">
+                                                                            ${escapeHtml(item.hoTen)}
+                                                                        </div>
+                                                                        <div class="text-xs text-slate-500 flex items-center gap-2 mt-1 flex-wrap">
+                                                                            ${typeTag}
+                                                                            ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
+                                                                            <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                                                    title="Sao chép mã khám"
+                                                                                    class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
+                                                                                <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                                                <i class="fa-regular fa-copy text-[10px]"></i>
+                                                                            </button>
+                                                                            ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">${item.ngayNhapStr}</span>` : ''}
+                                                                        </div>
+                                                                    </div>
                             
-                                                            <div class="text-right shrink-0 flex flex-col items-end gap-1">
-                                                                ${hasMoney ? `<div class="text-xs md:text-sm lg:text-base font-black text-emerald-700 font-mono bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-300 shadow-2xs">${item.soTienStr}</div>` : ''}
-                                                                <div>${getOcuaBadge(item.oCua)}</div>
-                                                            </div>
-                                                        </div>
+                                                                    <div class="text-right shrink-0 flex flex-col items-end gap-1">
+                                                                        ${hasMoney ? `<div class="text-xs md:text-sm lg:text-base font-black text-emerald-700 font-mono bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-300 shadow-2xs">${item.soTienStr}</div>` : ''}
+                                                                        <div>${getOcuaBadge(item.oCua)}</div>
+                                                                    </div>
+                                                                </div>
 
-                                                        <!-- Bottom: Segmented Call Buttons & Action -->
-                                                        <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
-                                                            <div class="flex items-center gap-1">
-                                                                ${assignBtns}
-                                                            </div>
-                                                            ${phatBtnHtml}
-                                                        </div>
-                                                    </div>`;
+                                                                <!-- Bottom: Segmented Call Buttons & Action -->
+                                                                <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
+                                                                    <div class="flex items-center gap-1">
+                                                                        ${assignBtns}
+                                                                    </div>
+                                                                    ${phatBtnHtml}
+                                                                </div>
+                                                            </div>`;
                     }
 
                     container.innerHTML = html;
@@ -1121,10 +1116,10 @@
 
                     if (filtered.length === 0) {
                         container.innerHTML = `
-                                                    <div id="da-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
-                                                        <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-300"></i>
-                                                        <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào đã phát hôm nay'}</p>
-                                                    </div>`;
+                                                            <div id="da-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                                                <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-300"></i>
+                                                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào đã phát hôm nay'}</p>
+                                                            </div>`;
                         return;
                     }
 
@@ -1144,30 +1139,30 @@
                         const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
                         html += `
-                                                    <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
-                                                        <div class="min-w-0">
-                                                            <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight">
-                                                                ${escapeHtml(item.hoTen)}
-                                                            </div>
-                                                            <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
-                                                                ${typeTag}
-                                                                ${hasMoney ? `<span>•</span><span class="text-xs md:text-sm font-black text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.soTienStr}</span>` : ''}
-                                                                ${sohdVal ? `<span>•</span><span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span>` : ''}
-                                                                ${getOcuaBadge(item.oCua)}
-                                                                <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
-                                                                        title="Sao chép mã khám"
-                                                                        class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
-                                                                    <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                            <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
+                                                                <div class="min-w-0">
+                                                                    <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight">
+                                                                        ${escapeHtml(item.hoTen)}
+                                                                    </div>
+                                                                    <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                                                                        ${typeTag}
+                                                                        ${hasMoney ? `<span>•</span><span class="text-xs md:text-sm font-black text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.soTienStr}</span>` : ''}
+                                                                        ${sohdVal ? `<span>•</span><span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span>` : ''}
+                                                                        ${getOcuaBadge(item.oCua)}
+                                                                        <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                                                title="Sao chép mã khám"
+                                                                                class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
+                                                                            <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                                        </button>
+                                                                        ${item.ngayGiaoStr ? `<span>•</span><span class="text-slate-400">${item.ngayGiaoStr}</span>` : ''}
+                                                                    </div>
+                                                                </div>
+                                                                <button onclick="actionHoanTac('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                        title="Đưa bệnh nhân trở lại danh sách Chờ phát"
+                                                                        class="px-3 py-1.5 bg-slate-50 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
+                                                                    <i class="fa-solid fa-rotate-left text-[11px]"></i> Hoàn tác
                                                                 </button>
-                                                                ${item.ngayGiaoStr ? `<span>•</span><span class="text-slate-400">${item.ngayGiaoStr}</span>` : ''}
-                                                            </div>
-                                                        </div>
-                                                        <button onclick="actionHoanTac('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                                                title="Đưa bệnh nhân trở lại danh sách Chờ phát"
-                                                                class="px-3 py-1.5 bg-slate-50 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
-                                                            <i class="fa-solid fa-rotate-left text-[11px]"></i> Hoàn tác
-                                                        </button>
-                                                    </div>`;
+                                                            </div>`;
                     }
 
                     container.innerHTML = html;
@@ -1177,20 +1172,30 @@
                 // ========================================================
                 // SERVER ACTIONS (OPTIMISTIC + REALTIME)
                 // ========================================================
+                let lastKhongMuaJson = '';
                 async function loadDanhSachKhongMua() {
                     try {
                         const r = await fetch('/api/duoc-nhap/danh-sach-khong-mua');
-                        rawKhongMuaData = await r.json() || [];
+                        const list = await r.json() || [];
+                        const json = JSON.stringify(list);
+                        if (json === lastKhongMuaJson) return;
+                        lastKhongMuaJson = json;
+                        rawKhongMuaData = list;
                         renderKhongMuaList();
                     } catch (e) {
                         console.warn('Lỗi load danh sách không mua:', e);
                     }
                 }
 
+                let lastDaGiaoJson = '';
                 async function loadDanhSachDaGiao() {
                     try {
                         const r = await fetch('/api/duoc-nhap/danh-sach-da-giao');
-                        rawDaGiaoData = await r.json() || [];
+                        const list = await r.json() || [];
+                        const json = JSON.stringify(list);
+                        if (json === lastDaGiaoJson) return;
+                        lastDaGiaoJson = json;
+                        rawDaGiaoData = list;
                         renderDaGiaoList();
                     } catch (e) {
                         console.warn('Lỗi load danh sách đã giao:', e);
@@ -1323,13 +1328,16 @@
                     }
                 }
 
-                async function actionGoiCua(makb, mabn, hoTen, namSinh, oCua, isBhyt, trangThai) {
+                async function actionGoiCua(makb, mabn, hoTen, namSinh, oCua, isBhyt, trangThai, khochan) {
                     try {
                         triggerHighlight(makb || mabn);
 
                         const key = (makb || mabn || '').trim();
                         if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
-                            const idx = rawChuaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                            const idx = rawChuaGiaoData.findIndex(i => 
+                                ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key))
+                                && (!khochan || !i.khochan || i.khochan === khochan || khochan === 0)
+                            );
                             if (idx !== -1) {
                                 const item = rawChuaGiaoData[idx];
                                 item.oCua = oCua;
@@ -1340,12 +1348,14 @@
                             }
                         }
 
-                        showUndoToast(`Đang phát loa TV: Gọi ${hoTen} đến Ô ${oCua}`, null);
+                        const isChoDongTien = (trangThai && (String(trangThai).toLowerCase().includes('chờ thu') || String(trangThai).toLowerCase().includes('chưa thu') || String(trangThai).toLowerCase().includes('thu tiền') || String(trangThai).toLowerCase().includes('đóng tiền'))) || trangThai === 'Chờ thu';
+                        const actionLabel = isChoDongTien ? 'đóng tiền' : 'nhận thuốc';
+                        showUndoToast(`Đang phát loa TV: Gọi ${hoTen} đến Ô ${oCua} ${actionLabel}`, null);
 
                         const r = await fetch('/api/duoc-nhap/chi-dinh-o-cua', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ makb, mabn, oCua, hoTen, namSinh, isBhyt, trangThai })
+                            body: JSON.stringify({ makb, mabn, oCua, hoTen, namSinh, isBhyt, trangThai, khochan: khochan || 0 })
                         });
                         const res = await r.json();
                         if (res.success) {
@@ -1408,7 +1418,8 @@
                 // ========================================================
                 let isFetchingChuaGiao = false;
                 let pendingChuaGiaoFetch = false;
-                async function loadDanhSachChuaGiao() {
+                let lastChuaGiaoJson = '';
+                async function loadDanhSachChuaGiao(forceRender = false) {
                     if (isFetchingChuaGiao) {
                         pendingChuaGiaoFetch = true;
                         return;
@@ -1418,6 +1429,9 @@
                     try {
                         const r = await fetch('/api/duoc-nhap/danh-sach-chua-giao');
                         const list = await r.json() || [];
+                        const json = JSON.stringify(list);
+                        if (!forceRender && json === lastChuaGiaoJson) return;
+                        lastChuaGiaoJson = json;
                         rawChuaGiaoData = list;
                         renderChoThuList();
                         renderChoGiaoList();
@@ -1451,9 +1465,7 @@
                     if (currentGiaoTab === 'da-giao') loadDanhSachDaGiao();
                 }
 
-                // ========================================================
-                // BÀN PHÍM & QUÉT MÃ VẠCH
-                // ========================================================
+                
                 if (scanInput) {
                     scanInput.addEventListener('keydown', e => {
                         if (e.key === 'Enter') {
@@ -1506,10 +1518,6 @@
                     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
                     else document.exitFullscreen?.().catch(() => { });
                 }
-
-                // ========================================================
-                // SIGNALR REAL-TIME SYNC
-                // ========================================================
                 let hubConnection = null;
                 function initSignalR() {
                     if (typeof signalR === 'undefined') return;
@@ -1525,9 +1533,12 @@
                             }
                         });
 
+                        hubConnection.onreconnected(() => {
+                            hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
+                            refreshAllColumns(true);
+                        });
+
                         hubConnection.start().then(() => {
-                            hubConnection.invoke('JoinRoom', 'duoc', 'dichvu').catch(() => { });
-                            hubConnection.invoke('JoinRoom', 'duoc', 'bhyt').catch(() => { });
                             hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
                         }).catch(err => console.warn('SignalR start error:', err));
                     } catch (e) {
@@ -1538,8 +1549,6 @@
                 // Khởi tạo
                 resetAll();
                 initSignalR();
-                // Fallback polling mỗi 15s (SignalR đảm bảo cập nhật tức thì < 20ms)
-                setInterval(() => refreshAllColumns(), 15000);
         </script>
     </body>
 

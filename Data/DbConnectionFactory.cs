@@ -55,7 +55,10 @@ namespace HangChoKhamBenh.Web.Data
                     Username = username,
                     Password = password,
                     SearchPath = schema,
-                    Pooling = true
+                    Pooling = true,
+                    MinPoolSize = 5,
+                    MaxPoolSize = 50,
+                    ConnectionIdleLifetime = 300
                 };
 
                 return builder.ConnectionString;

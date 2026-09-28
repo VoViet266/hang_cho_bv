@@ -141,6 +141,10 @@ namespace HangChoKhamBenh.Web.Services
                         var latestNgayGiao = g.Max(x => x.Ngaygiao);
                         var earliestNgayNhap = g.Min(x => x.Ngaynhap);
                         var assignedOcua = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Taikhoan)).Select(x => x.Taikhoan).FirstOrDefault() ?? "";
+                        var bhytItem = g.FirstOrDefault(x => x.Khochan == 14 || x.Khochan == 1 || x.Khochan == 2);
+                        var dvItem = g.FirstOrDefault(x => x.Khochan == 13 || x.Khochan == 3);
+                        var ocuaBhyt = bhytItem?.Taikhoan ?? "";
+                        var ocuaDv = dvItem?.Taikhoan ?? "";
                         var assignedMaba = g.OrderByDescending(x => !string.IsNullOrEmpty(x.Maba)).Select(x => x.Maba).FirstOrDefault() ?? "";
                     
                         bool hasBhyt = g.Any(x => x.Khochan == 14 || x.Khochan == 1 || x.Khochan == 2);
@@ -163,6 +167,8 @@ namespace HangChoKhamBenh.Web.Services
                             Ngaynhap = earliestNgayNhap,
                             Ngaygiao = latestNgayGiao,
                             Taikhoan = assignedOcua,
+                            OcuaBhyt = ocuaBhyt,
+                            OcuaDv = ocuaDv,
                             first.Holot,
                             first.Ten,
                             first.Ngaysinh,
@@ -179,11 +185,11 @@ namespace HangChoKhamBenh.Web.Services
 
                 if (isBhyt)
                 {
-                    groupedList = groupedList.Where(x => x.HasBhyt).ToList();
+                    groupedList = [.. groupedList.Where(x => x.HasBhyt)];
                 }
                 else if (isDichVu)
                 {
-                    groupedList = groupedList.Where(x => x.HasDichVu).ToList();
+                    groupedList = [.. groupedList.Where(x => x.HasDichVu)];
                 }
 
                 // Nếu có Toa Dịch vụ: tra cứu số tiền và trạng thái đã in (dain != 0 hoặc dathu != 0) từ chungtu
@@ -205,28 +211,26 @@ namespace HangChoKhamBenh.Web.Services
                                      && ((c.Makh != null && allMakhs.Contains(c.Makh)) || (c.Mabn != null && allMabns.Contains(c.Mabn))))
                             .Select(c => new ChungTuShortDto { Sohd = c.Sohd, Makh = c.Makh, Mabn = c.Mabn, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu })
                             .ToListAsync();
-
+                        
                         foreach (var g in dvPatients)
                         {
                             var gMakb = g.Makb?.Trim() ?? "";
                             var gMabn = g.Mabn?.Trim() ?? "";
                             var key = !string.IsNullOrEmpty(gMakb) ? gMakb : gMabn;
                             if (string.IsNullOrEmpty(key)) continue;
-
                             var patientCts = matchedChungTu
                                 .Where(c => (!string.IsNullOrEmpty(gMakb) && string.Equals(c.Makh?.Trim(), gMakb, StringComparison.OrdinalIgnoreCase))
-                                         || (string.IsNullOrEmpty(gMakb) && !string.IsNullOrEmpty(gMabn) && string.Equals(c.Mabn?.Trim(), gMabn, StringComparison.OrdinalIgnoreCase)))
+                                || (string.IsNullOrEmpty(gMakb) && !string.IsNullOrEmpty(gMabn) && string.Equals(c.Mabn?.Trim(), gMabn, StringComparison.OrdinalIgnoreCase)))
                                 .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? string.Empty))
                                 .Select(cg => cg.First())
                                 .ToList();
 
                             if (patientCts.Count == 0 && !string.IsNullOrEmpty(gMabn))
                             {
-                                patientCts = matchedChungTu
+                                patientCts = [.. matchedChungTu
                                     .Where(c => string.Equals(c.Mabn?.Trim(), gMabn, StringComparison.OrdinalIgnoreCase))
                                     .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? string.Empty))
-                                    .Select(cg => cg.First())
-                                    .ToList();
+                                    .Select(cg => cg.First())];
                             }
 
                             decimal totalTien = patientCts.Sum(c => c.Thanhtien ?? 0);
@@ -241,15 +245,13 @@ namespace HangChoKhamBenh.Web.Services
                 var waitingList = new List<DuocQueueItemDto>();
                 string nextPatientName = string.Empty;
 
-                for (int i = 0; i < groupedList.Count; i++)
+                foreach (var item in groupedList)
                 {
-                    var item = groupedList[i];
                     var hoTen = $"{item.Holot} {item.Ten}".Trim();
                     if (string.IsNullOrEmpty(hoTen))
                     {
                         hoTen = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
                     }
-
                     var cleanMakb = item.Makb?.Trim() ?? "";
                     var cleanMabn = item.Mabn?.Trim() ?? "";
                     decimal? soTien = null;
@@ -275,105 +277,71 @@ namespace HangChoKhamBenh.Web.Services
                         }
                     }
 
-                    string loaiToaStr;
-                    string trangThaiStr;
-                    bool isBhytFlag;
-                    bool isDangSoanFlag;
+                    var namSinhStr = item.Ngaysinh.HasValue ? item.Ngaysinh.Value.ToString("yyyy") : "";
+                    var gioiTinhStr = item.Gioitinh == 1 ? "Nam" : (item.Gioitinh == 2 ? "Nữ" : "");
+                    var ngayNhapStr = item.Ngaynhap.HasValue ? item.Ngaynhap.Value.ToString("HH:mm") : "";
+
+                    DuocQueueItemDto CreateQueueItem(int khochan, string loaiToa, bool hasBhyt, bool hasDv, bool hasBoth, bool isBhyt, bool daThu, string trangThai, decimal? tien, string tienStr, string oCua)
+                    {
+                        return new DuocQueueItemDto
+                        {
+                            Mabn = item.Mabn ?? "",
+                            Makb = item.Makb ?? "",
+                            TenBenhNhan = hoTen ?? "",
+                            NamSinh = namSinhStr,
+                            GioiTinh = gioiTinhStr,
+                            LoaiToa = loaiToa,
+                            Khochan = khochan,
+                            HasBhyt = hasBhyt,
+                            HasDichVu = hasDv,
+                            HasBoth = hasBoth,
+                            Maba = item.Maba,
+                            NgayNhap = item.Ngaynhap,
+                            NgayNhapStr = ngayNhapStr,
+                            TrangThai = trangThai,
+                            IsBhyt = isBhyt,
+                            SoTien = tien,
+                            SoTienStr = tienStr,
+                            DaThu = daThu,
+                            Dagiao = item.Dagiao,
+                            OCua = oCua ?? ""
+                        };
+                    }
 
                     if (item.HasBoth)
                     {
-                        if (isBhyt)
+                        if (!isPaidDv)
                         {
-                            // Trên màn hình BHYT: Đơn BHYT luôn sẵn sàng soạn thuốc
-                            loaiToaStr = "Toa BHYT";
-                            trangThaiStr = "Đang soạn";
-                            isBhytFlag = true;
-                            isDangSoanFlag = true;
-                            soTien = null;
-                            soTienStr = "";
+                            // Chưa đóng tiền DV: Gom 1 dòng với giá tiền và trạng thái Chờ thu tiền
+                            var currentOcua = !string.IsNullOrEmpty(item.OcuaDv) ? item.OcuaDv : item.OcuaBhyt;
+                            waitingList.Add(CreateQueueItem(13, "Toa Dịch Vụ", true, true, true, false, false, "Chờ thu", soTien, soTienStr, currentOcua));
                         }
-                        else if (isDichVu)
+                        else
                         {
-                            // Trên màn hình Dịch Vụ: Hiển thị trạng thái đơn DV
-                            loaiToaStr = "Toa Dịch Vụ";
-                            trangThaiStr = isPaidDv ? "Đang soạn" : "Chờ thu";
-                            isBhytFlag = false;
-                            isDangSoanFlag = isPaidDv;
-                        }
-                        else // isAll
-                        {
-                            loaiToaStr = "BHYT + Dịch Vụ";
-                            if (!isPaidDv)
-                            {
-                                trangThaiStr = "Chờ thu";
-                                isBhytFlag = false;
-                                isDangSoanFlag = false;
-                            }
-                            else
-                            {
-                                trangThaiStr = "Đang soạn";
-                                isBhytFlag = true;
-                                isDangSoanFlag = true;
-                            }
+                            // Đã đóng tiền DV: Gom 1 dòng với giá tiền và trạng thái Đang soạn thuốc
+                            var currentOcua = !string.IsNullOrEmpty(item.OcuaBhyt) ? item.OcuaBhyt : item.OcuaDv;
+                            waitingList.Add(CreateQueueItem(0, "BHYT + Dịch Vụ", true, true, true, true, true, "Đang soạn", soTien, soTienStr, currentOcua));
                         }
                     }
                     else if (item.HasBhyt)
                     {
-                        loaiToaStr = "Toa BHYT";
-                        trangThaiStr = "Đang soạn";
-                        isBhytFlag = true;
-                        isDangSoanFlag = true;
+                        waitingList.Add(CreateQueueItem(14, "Toa BHYT", true, false, false, true, true, "Đang soạn", null, "", item.OcuaBhyt));
                     }
-                    else // Chỉ có Dịch vụ
+                    else
                     {
-                        loaiToaStr = "Toa Dịch Vụ";
-                        if (!isPaidDv)
-                        {
-                            trangThaiStr = "Chờ thu";
-                            isBhytFlag = false;
-                            isDangSoanFlag = false;
-                        }
-                        else
-                        {
-                            trangThaiStr = "Đang soạn";
-                            isBhytFlag = false;
-                            isDangSoanFlag = true;
-                        }
+                        waitingList.Add(CreateQueueItem(13, "Toa Dịch Vụ", false, true, false, false, isPaidDv, isPaidDv ? "Đang soạn" : "Chờ thu", soTien, soTienStr, item.OcuaDv));
                     }
+                }
 
-                    var isToiLuot = (i == 0);
-                    if (isToiLuot)
-                    {
-                        nextPatientName = hoTen ?? string.Empty;
-                    }
+                for (int i = 0; i < waitingList.Count; i++)
+                {
+                    waitingList[i].Stt = i + 1;
+                    waitingList[i].IsToiLuot = (i == 0);
+                }
 
-                    var namSinhStr = item.Ngaysinh.HasValue ? item.Ngaysinh.Value.ToString("yyyy") : "";
-
-                    waitingList.Add(new DuocQueueItemDto
-                    {
-                        Stt = i + 1,
-                        Mabn = item.Mabn!,
-                        Makb = item.Makb!,
-                        TenBenhNhan = hoTen!,
-                        NamSinh = namSinhStr,
-                        GioiTinh = item.Gioitinh == 1 ? "Nam" : (item.Gioitinh == 2 ? "Nữ" : ""),
-                        LoaiToa = loaiToaStr,
-                        Khochan = item.Khochan,
-                        HasBhyt = item.HasBhyt,
-                        HasDichVu = item.HasDichVu,
-                        HasBoth = item.HasBoth,
-                        Maba = item.Maba,
-                        NgayNhap = item.Ngaynhap,
-                        NgayNhapStr = item.Ngaynhap.HasValue ? item.Ngaynhap.Value.ToString("HH:mm") : "",
-                        TrangThai = trangThaiStr,
-                        IsToiLuot = isToiLuot,
-                        IsBhyt = isBhytFlag,
-                        SoTien = soTien,
-                        SoTienStr = soTienStr,
-                        DaThu = isDangSoanFlag,
-                        Dagiao = item.Dagiao,
-                        OCua = item.Taikhoan ?? ""
-                    });
+                if (waitingList.Count > 0)
+                {
+                    nextPatientName = waitingList[0].TenBenhNhan;
                 }
 
                 var totalToday = await LayThongKeDuocAsync(duocType);

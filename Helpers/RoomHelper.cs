@@ -178,12 +178,11 @@ namespace HangChoKhamBenh.Web.Helpers
                 rawTokens.AddRange(str.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
             }
 
-            return rawTokens
+            return [.. rawTokens
                 .Select(ResolveCdhaRoomName)
                 .Where(s => !string.IsNullOrEmpty(s))
                 .Distinct()
-                .Take(4)
-                .ToList();
+                .Take(4)];
         }
     }
 }

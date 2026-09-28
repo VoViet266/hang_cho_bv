@@ -21,6 +21,9 @@ namespace HangChoKhamBenh.Web.Services
 
         public async Task CheckAndBroadcastRoomAsync(string roomType, string roomId, bool force = false)
         {
+            var clientCount = _tracker.GetConnectionCount(roomType, roomId);
+            if (clientCount == 0) return; // Không có client nào đang xem kênh này -> Bỏ qua truy vấn DB hoàn toàn
+
             var channel = _tracker.GetRoomKey(roomType, roomId);
 
             try
@@ -43,15 +46,15 @@ namespace HangChoKhamBenh.Web.Services
 
                 if (data == null) return;
 
-                var json = JsonSerializer.Serialize(data);
-                var currentHash = ComputeMd5(json);
+                var utf8Bytes = JsonSerializer.SerializeToUtf8Bytes(data);
+                var hashBytes = MD5.HashData(utf8Bytes);
+                var currentHash = Convert.ToHexString(hashBytes);
 
                 var prevHash = _roomDataCache.GetValueOrDefault(channel);
 
                 if (force || currentHash != prevHash)
                 {
                     _roomDataCache[channel] = currentHash;
-                    var clientCount = _tracker.GetConnectionCount(roomType, roomId);
 
                     await _hubContext.Clients.Group(channel).SendAsync("room_data_updated", new
                     {
@@ -69,12 +72,6 @@ namespace HangChoKhamBenh.Web.Services
             {
                 _logger.LogError(ex, "[Broadcast] Lỗi cập nhật dữ liệu phòng {Channel}", channel);
             }
-        }
-
-        private static string ComputeMd5(string input)
-        {
-            var bytes = MD5.HashData(Encoding.UTF8.GetBytes(input));
-            return Convert.ToHexString(bytes).ToLowerInvariant();
         }
     }
 }

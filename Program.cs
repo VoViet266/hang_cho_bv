@@ -44,10 +44,10 @@ var rawDbConn = builder.Configuration.GetConnectionString("DefaultConnection")
               ?? string.Empty;
 var npgsqlConnString = NpgsqlConnectionFactory.ConvertToNpgsqlConnectionString(rawDbConn);
 
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContextPool<AppDbContext>(options =>
 {
     options.UseNpgsql(npgsqlConnString);
-});
+}, poolSize: 128);
 builder.Services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IClinicService, ClinicService>();
@@ -61,10 +61,23 @@ builder.Services.AddSingleton<IActiveRoomTracker, ActiveRoomTracker>();
 builder.Services.AddSingleton<IQueueRealtimeBroadcaster, QueueRealtimeBroadcaster>();
 builder.Services.AddHostedService<QueuePollingBackgroundService>();
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 var app = builder.Build();
 
-// Static files (phục vụ trước middleware log để tránh spam log)
-app.UseStaticFiles();
+app.UseResponseCompression();
+
+// Static files (phục vụ trước middleware log để tránh spam log, kèm Cache-Control 7 ngày)
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=604800");
+    }
+});
 
 // Request logging middleware (tương tự app.js trong Express)
 app.Use(async (context, next) =>

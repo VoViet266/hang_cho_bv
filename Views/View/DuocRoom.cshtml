@@ -170,7 +170,6 @@
                 padding-right: 2px !important;
             }
 
-            /* --- CHẾ ĐỘ 1 BẢNG (KHI CHƯA TRÀN): CHỮ SIÊU TO, ĐẬM NÉT, DỄ ĐỌC TỪ XA --- */
             .duoc-table-single th {
                 font-size: clamp(16px, 1.45vw, 25px) !important;
                 font-weight: 900 !important;
@@ -298,6 +297,7 @@
 
         <!-- Controls & Counters -->
         <div class="tv-actions flex items-center gap-2">
+
             <div
                 class="tv-stat tv-stat--waiting bg-red-50 px-3 py-1 text-center min-w-[90px] rounded border border-red-200">
                 <span class="block text-danger font-bold text-[10px] uppercase tracking-wide">Đang chờ</span>
@@ -390,22 +390,12 @@
                                         @p.NamSinh
                                     </td>
                                     <td class="py-4 px-3 text-center overflow-hidden">
-                                        @if (p.HasBoth)
+                                        @if (!string.IsNullOrEmpty(p.SoTienStr) && p.SoTienStr != "—")
                                         {
-                                            if (!string.IsNullOrEmpty(p.SoTienStr) && p.SoTienStr != "—")
-                                            {
-                                                <div class="flex flex-col items-center justify-center gap-0.5">
-                                                    <span class="inline-block px-3 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
-                                                        @p.SoTienStr
-                                                    </span>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <span class="inline-block px-3 py-1 rounded-lg border font-bold text-sm md:text-lg uppercase whitespace-nowrap bg-indigo-100 text-indigo-900 border-indigo-300 shadow-2xs">
-                                                    BHYT + DV
-                                                </span>
-                                            }
+                                            <span
+                                                class="inline-block px-3 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
+                                                @p.SoTienStr
+                                            </span>
                                         }
                                         else if (!pIsBhyt)
                                         {
@@ -560,35 +550,28 @@
                     unlockAudio();
                     updateSoundIcon();
 
-                    if (isSoundEnabled) {
-                        if (currentTopPatient && isAutoSpeakEnabled) {
-                            audioQueue.clear();
-                            speakTargetPatient(currentTopPatient);
-                        }
-                    } else {
+                    if (!isSoundEnabled) {
                         audioQueue.clear();
                     }
                 }
 
-                // Đọc trực tiếp khi nhấp vào ĐÚNG TÊN bệnh nhân
-                function speakPatientByName(name, status, ocua, namSinh) {
-                    if (!name) return;
-                    unlockAudio();
-                    if (!isSoundEnabled) { toggleSound(true); }
-                    audioQueue.clear();
-                    speakTargetPatient({ tenBenhNhan: name, trangThai: status || '', isBhyt: false, oCua: ocua || '', namSinh: namSinh || '' });
-                }
-
                 function onRowClickDuoc(el) {
-                    if (!el) return;
-                    const row = el.tagName === "TR" ? el : (el.closest("tr[data-patient]") || el.closest("tr") || el);
-                    const name = (row.getAttribute('data-patient') || row.dataset?.patient || '').trim();
-                    const status = (row.getAttribute('data-status') || row.dataset?.status || '').trim();
-                    const ocua = (row.getAttribute('data-ocua') || row.dataset?.ocua || '').trim();
-                    const namSinh = extractBirthYear(row.getAttribute('data-nam-sinh') || row.dataset?.namSinh || row.getAttribute('data-dob-year'), row);
-                    speakPatientByName(name, status, ocua, namSinh);
+                    // Click vào màn hình hiển thị chỉ mở khóa AudioContext trình duyệt, KHÔNG phát âm thanh
+                    unlockAudio();
                 }
                 window.onRowClickDuoc = onRowClickDuoc;
+
+                // Xác định nội dung hành động gọi loa: 'đóng tiền' hoặc 'nhận thuốc'
+                function getActionText(status, daThu) {
+                    if (daThu === false) return "đóng tiền";
+                    if (daThu === true) return "nhận thuốc";
+                    const s = String(status || '').trim().toLowerCase();
+                    if (!s) return "nhận thuốc";
+                    if (s === "chờ thu" || s === "chưa thu" || s === "chưa đóng tiền" || s.includes("chờ thu") || s.includes("chưa thu") || s.includes("thu tiền") || s.includes("đóng tiền") || s.includes("chưa thanh toán")) {
+                        return "đóng tiền";
+                    }
+                    return "nhận thuốc";
+                }
 
                 // Đọc giọng nói gọi tên bệnh nhân bằng TTS Tiếng Việt chuẩn
                 function speakTargetPatient(p) {
@@ -599,7 +582,8 @@
                     const targetLoc = p.oCua ? `ô số ${p.oCua}` : "quầy";
                     const dobClean = extractBirthYear(p.namSinh || p.ngaySinh || p.dobStr || p.dobYear);
                     const dobText = dobClean ? `, sinh năm ${dobClean}` : "";
-                    const speakText = `Mời bệnh nhân, ${name}${dobText}, đến ${targetLoc}`;
+                    const actionText = getActionText(p.trangThai, p.daThu);
+                    const speakText = `Mời bệnh nhân, ${name}${dobText}, đến ${targetLoc} ${actionText}`;
                     audioQueue.enqueue(speakText);
                 }
 
@@ -842,22 +826,12 @@
 
                     // Cột Loại / Tiền
                     let col4Html = '';
-                    if (p.hasBoth) {
-                        if (p.soTienStr && p.soTienStr !== '—') {
-                            col4Html = `<td class="${pyClass} px-1 text-center">
-                                            <div class="flex flex-col items-center justify-center gap-0.5">
-                                                <span class="badge-money inline-block rounded border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
-                                                    ${escapeHtml(p.soTienStr)}
-                                                </span>
-                                            </div>
-                                        </td>`;
-                        } else {
-                            col4Html = `<td class="${pyClass} px-1 text-center">
-                                            <span class="badge-money inline-block rounded border p-1 uppercase whitespace-nowrap bg-indigo-100 text-indigo-900 border-indigo-300 shadow-2xs font-bold">
-                                                BHYT + DV
-                                            </span>
-                                        </td>`;
-                        }
+                    if (p.soTienStr && p.soTienStr !== '—' && p.soTienStr !== '') {
+                        col4Html = `<td class="${pyClass} px-1 text-center">
+                                        <span class="badge-money inline-block rounded border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs font-bold">
+                                            ${escapeHtml(p.soTienStr)}
+                                        </span>
+                                    </td>`;
                     } else if (!pIsBhyt) {
                         col4Html = `<td class="${pyClass} px-1 text-center">
                                         <span class="badge-money inline-block rounded border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
@@ -935,8 +909,7 @@
 
                     hubConnection.on("room_data_updated", (payload) => {
                         if (payload && payload.roomType === "duoc") {
-                            // Render trực tiếp từ payload data nếu có, tránh query lại DB
-                            if (DUOC_TYPE !== 'all' && payload.roomId === DUOC_TYPE && payload.data) {
+                            if (payload.roomId === DUOC_TYPE && payload.data) {
                                 renderQueue(payload.data);
                             } else if (DUOC_TYPE === 'all' || payload.roomId === DUOC_TYPE) {
                                 fetchQueueData();
@@ -956,7 +929,8 @@
                         const targetLoc = payload.oCua ? `ô số ${payload.oCua}` : "quầy";
                         const dobClean = extractBirthYear(payload.namSinh || payload.dobYear || payload.dobStr);
                         const dobText = dobClean ? `, sinh năm ${dobClean}` : "";
-                        const speakText = `Mời bệnh nhân, ${payload.hoTen}${dobText}, đến ${targetLoc}`;
+                        const actionText = getActionText(payload.trangThai, payload.daThu);
+                        const speakText = `Mời bệnh nhân, ${payload.hoTen}${dobText}, đến ${targetLoc} ${actionText}`;
                         audioQueue.enqueue(speakText);
                     });
 
@@ -964,12 +938,7 @@
                         try {
                             await hubConnection.start();
                             console.log("[SignalR] Kết nối thành công Hub.");
-                            if (DUOC_TYPE === 'all') {
-                                await hubConnection.invoke("JoinRoom", "duoc", "bhyt").catch(() => { });
-                                await hubConnection.invoke("JoinRoom", "duoc", "dichvu").catch(() => { });
-                            } else {
-                                await hubConnection.invoke("JoinRoom", "duoc", DUOC_TYPE);
-                            }
+                            await hubConnection.invoke("JoinRoom", "duoc", DUOC_TYPE).catch(() => { });
                         } catch (err) {
                             console.warn("[SignalR] Kết nối thất bại, tự động thử lại sau 3 giây...", err);
                             setTimeout(startHub, 3000);
@@ -978,12 +947,8 @@
 
                     hubConnection.onreconnected(async () => {
                         console.log("[SignalR] Đã kết nối lại Hub.");
-                        if (DUOC_TYPE === 'all') {
-                            await hubConnection.invoke("JoinRoom", "duoc", "bhyt").catch(() => { });
-                            await hubConnection.invoke("JoinRoom", "duoc", "dichvu").catch(() => { });
-                        } else {
-                            await hubConnection.invoke("JoinRoom", "duoc", DUOC_TYPE);
-                        }
+                        await hubConnection.invoke("JoinRoom", "duoc", DUOC_TYPE).catch(() => { });
+                        fetchQueueData();
                     });
 
                     startHub();
@@ -1100,20 +1065,6 @@
 
                 initSignalR();
 
-                // Đọc ngay lần đầu nếu đã có danh sách khi trang load VÀ tự động đọc đang BẬT
-                if (isSoundEnabled && isAutoSpeakEnabled && currentTopPatient) {
-                    document.addEventListener('click', function _firstClick() {
-                        document.removeEventListener('click', _firstClick);
-                        if (isAutoSpeakEnabled) speakTargetPatient(currentTopPatient);
-                    }, { once: true });
-                    document.addEventListener('keydown', function _firstKey() {
-                        document.removeEventListener('keydown', _firstKey);
-                        if (isAutoSpeakEnabled) speakTargetPatient(currentTopPatient);
-                    }, { once: true });
-                }
-
-                // Fallback polling mỗi 15 giây (SignalR đảm bảo cập nhật tức thì < 20ms)
-                setInterval(fetchQueueData, 15000);
         </script>
     </body>
 

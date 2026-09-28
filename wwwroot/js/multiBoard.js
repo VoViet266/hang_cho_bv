@@ -358,47 +358,16 @@ function toggleHiddenModal(show) {
 }
 window.toggleHiddenModal = toggleHiddenModal;
 
-// Nhấp hoặc nhấn Enter trên dòng để gọi tên ngay
+// Nhấp trên màn hình hiển thị chỉ mở khóa AudioContext trình duyệt, KHÔNG phát âm thanh
 function onRowClick(el) {
-  if (!el) return;
-  const row =
-    el.tagName === "TR"
-      ? el
-      : el.closest("tr[data-patient]") || el.closest("tr") || el;
-  const patientName = (
-    row.dataset.patient ||
-    row.getAttribute("data-patient") ||
-    ""
-  ).trim();
-  const roomName = (
-    row.dataset.room ||
-    row.getAttribute("data-room") ||
-    ""
-  ).trim();
-  const dobYear = extractBirthYear(
-    row.dataset.dobYear || row.getAttribute("data-dob-year"),
-    row,
-  );
-  if (!patientName) return;
-
   if (!soundEnabled) {
     soundEnabled = true;
     localStorage.setItem("soundEnabled", "true");
     updateSoundIcon();
   }
-
-  // Gọi ngay khi người dùng chọn bệnh nhân.
-  const quadrant = row.closest(
-    ".room-quadrant, .room-container, .room-card, [data-room-id]",
-  );
-  const roomId = quadrant ? quadrant.dataset.roomId : null;
-  const roomType = quadrant ? quadrant.dataset.roomType || "room" : "room";
-  requestSpeak(patientName, roomName, dobYear);
-
-  // Phát tín hiệu Socket.IO để các máy khác cùng phòng đồng thời phát loa
-  if (typeof emitBroadcastSpeakMulti === "function") {
-    emitBroadcastSpeakMulti(roomType, roomId, patientName, roomName, dobYear);
-  }
+  const unlockAudio = new Audio("/audio/silent.mp3");
+  unlockAudio.volume = 0.01;
+  unlockAudio.play().catch(() => {});
 }
 window.onRowClick = onRowClick;
 

@@ -104,14 +104,14 @@ namespace HangChoKhamBenh.Web.Controllers
             var selectedRoomIds = new List<string>();
             if (!string.IsNullOrWhiteSpace(rawRooms))
             {
-                selectedRoomIds = rawRooms.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                selectedRoomIds = [.. rawRooms.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
             }
             else if (!string.IsNullOrWhiteSpace(id))
             {
                 selectedRoomIds.Add(id.Trim());
             }
 
-            selectedRoomIds = selectedRoomIds.Distinct().Take(4).ToList();
+            selectedRoomIds = [.. selectedRoomIds.Distinct().Take(4)];
 
             var roomsData = new List<RoomDetailDto>();
             foreach (var roomId in selectedRoomIds)
@@ -175,7 +175,7 @@ namespace HangChoKhamBenh.Web.Controllers
                 selectedRoomIds.AddRange(RoomHelper.DefaultCdhaRooms);
             }
 
-            selectedRoomIds = selectedRoomIds.Distinct().Take(4).ToList();
+            selectedRoomIds = [.. selectedRoomIds.Distinct().Take(4)];
 
             var roomsData = new List<RoomDetailDto>();
             foreach (var roomId in selectedRoomIds)
@@ -211,22 +211,22 @@ namespace HangChoKhamBenh.Web.Controllers
             if (roomType == "cdha")
             {
                 var cdhaStats = await _cdhaService.LayDanhSachCacPhongCDHAAsync();
-                allAvailableRooms = cdhaStats.Rooms.Select(rm => new AvailableRoomDto
+                allAvailableRooms = [.. cdhaStats.Rooms.Select(rm => new AvailableRoomDto
                 {
                     Id = rm.Tenphong,
                     Alias = !string.IsNullOrEmpty(rm.Alias) ? rm.Alias : RoomHelper.ResolveCdhaRoomAlias(rm.Tenphong),
                     Name = rm.Tenphong,
                     DisplayName = !string.IsNullOrEmpty(rm.DisplayName) ? rm.DisplayName : rm.Tenphong
-                }).ToList();
+                })];
             }
             else
             {
                 var dashboardStats = await _dashboardService.FetchDashboardStatsAsync();
-                allAvailableRooms = dashboardStats.Rooms.Select(rm => new AvailableRoomDto
+                allAvailableRooms = [.. dashboardStats.Rooms.Select(rm => new AvailableRoomDto
                 {
                     Id = rm.Maphong,
                     Name = !string.IsNullOrEmpty(rm.Tenphong) ? rm.Tenphong : rm.Maphong
-                }).ToList();
+                })];
             }
 
             var selectedRoomIds = new List<string>();
@@ -238,7 +238,7 @@ namespace HangChoKhamBenh.Web.Controllers
                 }
                 else
                 {
-                    selectedRoomIds = rawRooms.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                    selectedRoomIds = [.. rawRooms.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
                 }
             }
             else
@@ -249,7 +249,7 @@ namespace HangChoKhamBenh.Web.Controllers
                 }
             }
 
-            selectedRoomIds = selectedRoomIds.Distinct().Take(4).ToList();
+            selectedRoomIds = [.. selectedRoomIds.Distinct().Take(4)];
 
             var roomsData = new List<RoomDetailDto>();
             foreach (var roomId in selectedRoomIds)
