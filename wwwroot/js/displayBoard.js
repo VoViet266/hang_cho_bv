@@ -1,7 +1,18 @@
-// soundEnabled lưu trong localStorage - duy trì qua các lần mở trang
-let soundEnabled = localStorage.getItem("soundEnabled") === "true";
+// soundEnabled lưu trong localStorage - mặc định BẬT (true) để TV và máy trạm luôn sẵn sàng phát loa
+let soundEnabled = localStorage.getItem("soundEnabled") !== "false";
 
 let lastKnownRoomsData = {}; // Cache dữ liệu phòng gần nhất theo roomId
+
+function unlockBrowserAudio() {
+  try {
+    const unlockAudio = new Audio("/audio/silent.mp3");
+    unlockAudio.volume = 0.01;
+    unlockAudio.play().catch(() => {});
+  } catch (e) {}
+}
+["click", "keydown", "touchstart", "pointerdown"].forEach((evt) => {
+  document.addEventListener(evt, unlockBrowserAudio, { passive: true, once: true });
+});
 
 function formatRoomSpokenName(roomName) {
   if (!roomName || !roomName.trim()) return "";
@@ -627,6 +638,12 @@ function onRowClick(el) {
     (window.location.pathname.includes("/cdha") ? "cdha" : "room");
 
   if (patientName) {
+    if (!soundEnabled) {
+      soundEnabled = true;
+      localStorage.setItem("soundEnabled", "true");
+      updateSoundIcon();
+      unlockBrowserAudio();
+    }
     requestSpeak(patientName, roomName, dobYear);
     emitBroadcastSpeak(roomType, roomId, patientName, roomName, dobYear);
   }

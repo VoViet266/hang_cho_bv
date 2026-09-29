@@ -156,71 +156,79 @@
                 color: #1e3a8a !important;
             }
 
-            /* --- CHẾ ĐỘ 1 BẢNG (KHI ÍT BỆNH NHÂN <= 10): CHỮ VỪA VẶN, HÀI HÒA, KHÔNG BỊ PHÓNG TO QUÁ ĐÀ --- */
+            /* --- CHẾ ĐỘ 1 BẢNG (KHI <= 6-8 BỆNH NHÂN): CHỮ CỰC TO, ĐẬM NÉT, RÕ RÀNG TRÊN TV 43 INCH --- */
             .duoc-table-single th {
-                font-size: clamp(13px, 1.15vw, 17px) !important;
-                padding: 6px 3px !important;
+                font-size: clamp(18px, 1.6vw, 28px) !important;
+                padding: 10px 6px !important;
             }
 
             .duoc-table-single th:first-child {
-                padding-left: 12px !important;
+                text-align: left !important;
+                padding-left: 18px !important;
             }
 
             .duoc-table-single .patient-name-text {
-                font-size: clamp(16px, 1.45vw, 24px) !important;
+                font-size: clamp(26px, 2.7vw, 44px) !important;
+                font-weight: 900 !important;
                 color: #1e3a8a !important;
+                line-height: 1.2 !important;
             }
 
             .duoc-table-single td.cell-namsinh {
-                font-size: clamp(15px, 1.3vw, 20px) !important;
-                font-weight: 800 !important;
+                font-size: clamp(22px, 2.3vw, 36px) !important;
+                font-weight: 900 !important;
                 text-align: center !important;
-            }
-
-            .duoc-table-single .badge-money {
-                font-size: clamp(13px, 1.15vw, 17px) !important;
-                font-weight: 800 !important;
-                padding: 3px 8px !important;
-            }
-
-            .duoc-table-single .badge-status {
-                font-size: clamp(12px, 1.0vw, 15.5px) !important;
-                font-weight: 800 !important;
-                padding: 3px 6px !important;
-                white-space: nowrap !important;
-            }
-
-            /* --- CHẾ ĐỘ 2 BẢNG (KHI NHIỀU BỆNH NHÂN HOẶC PHÂN TRANG): CHỮ CÂN ĐỐI 2 BÊN --- */
-            .duoc-table-split th {
-                font-size: clamp(12px, 1.05vw, 16px) !important;
-                padding: 6px 2px !important;
-            }
-
-            .duoc-table-split th:first-child {
-                padding-left: 10px !important;
-            }
-
-            .duoc-table-split .patient-name-text {
-                font-size: clamp(14px, 1.25vw, 21px) !important;
                 color: #1e3a8a !important;
             }
 
+            .duoc-table-single .badge-money {
+                font-size: clamp(18px, 1.8vw, 28px) !important;
+                font-weight: 900 !important;
+                padding: 5px 12px !important;
+            }
+
+            .duoc-table-single .badge-status {
+                font-size: clamp(18px, 1.6vw, 26px) !important;
+                font-weight: 900 !important;
+                padding: 5px 12px !important;
+                white-space: nowrap !important;
+            }
+
+            /* --- CHẾ ĐỘ 2 CỘT: CHỮ TO RÕ RÀNG, KHOẢNG 7-9 HÀNG MỖI BÊN --- */
+            .duoc-table-split th {
+                font-size: clamp(15px, 1.3vw, 22px) !important;
+                padding: 8px 4px !important;
+            }
+
+            .duoc-table-split th:first-child {
+                text-align: left !important;
+                padding-left: 14px !important;
+            }
+
+            .duoc-table-split .patient-name-text {
+                font-size: clamp(20px, 1.85vw, 32px) !important;
+                font-weight: 900 !important;
+                color: #1e3a8a !important;
+                line-height: 1.2 !important;
+            }
+
             .duoc-table-split td.cell-namsinh {
-                font-size: clamp(13px, 1.15vw, 18px) !important;
-                font-weight: 800 !important;
+                font-size: clamp(18px, 1.6vw, 28px) !important;
+                font-weight: 900 !important;
                 text-align: center !important;
+                color: #1e3a8a !important;
             }
 
             .duoc-table-split .badge-money {
-                font-size: clamp(11px, 0.95vw, 15px) !important;
-                font-weight: 800 !important;
-                padding: 2px 5px !important;
+                font-size: clamp(15px, 1.4vw, 24px) !important;
+                font-weight: 900 !important;
+                padding: 3px 8px !important;
             }
 
             .duoc-table-split .badge-status {
-                font-size: clamp(10px, 0.85vw, 13.5px) !important;
-                font-weight: 800 !important;
-                padding: 2px 4px !important;
+                font-size: clamp(14px, 1.25vw, 20px) !important;
+                font-weight: 900 !important;
+                padding: 3px 8px !important;
                 letter-spacing: -0.01em !important;
                 white-space: nowrap !important;
             }
@@ -291,6 +299,9 @@
         </div>
     </header>
 
+    <!-- Kích hoạt quyền phát âm thanh ngầm tự động -->
+    <iframe src="/audio/silent.mp3" allow="autoplay; encrypted-media" style="position:absolute; width:0; height:0; border:0; visibility:hidden; pointer-events:none;" tabindex="-1"></iframe>
+
     <!-- MAIN: BẢNG DANH SÁCH HÀNG CHỜ PHÁT THUỐC (GỘP BHYT + DỊCH VỤ) -->
     <main id="mainContent" class="flex-grow p-1.5 overflow-hidden flex flex-col">
         <!-- Container phân trang — JS sẽ tạo các .queue-page-block bên trong -->
@@ -301,18 +312,18 @@
                 <table
                     class="w-full h-full border-collapse table-fixed select-none duoc-patient-table duoc-table-single">
                     <colgroup>
-                        <col style="width: 50%;">
+                        <col style="width: 48%;">
                         <col style="width: 14%;">
                         <col style="width: 18%;">
-                        <col style="width: 18%;">
+                        <col style="width: 20%;">
                     </colgroup>
                     <thead
                         class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-xl md:text-2xl">
                         <tr>
                             <th class="py-3 px-4 text-left">Họ và Tên</th>
-                            <th class="py-3 px-3 text-center">Năm Sinh</th>
-                            <th class="py-3 px-3 text-center">Số Tiền</th>
-                            <th class="py-3 px-3 text-center">Trạng Thái</th>
+                            <th class="py-3 px-2 text-center">Năm Sinh</th>
+                            <th class="py-3 px-2 text-center">Số Tiền</th>
+                            <th class="py-3 px-2 text-center">Trạng Thái</th>
                         </tr>
                     </thead>
                     <tbody id="patientTableBody" class="divide-y divide-slate-200">
@@ -341,7 +352,7 @@
 
                                 <tr data-key="@rowKey" data-patient="@currentPatientName" data-nam-sinh="@(p.NamSinh ?? "")" data-makb="@(p.Makb ?? "")" data-mabn="@(p.Mabn ?? "")" data-status="@(p.TrangThai ?? "")" data-ocua="@(p.OCua ?? "")"
                                     data-room-type="duoc"
-                                    class="@(isNear ? "row-toi-luot-active bg-yellow-100 border-l-[10px] border-yellow-500 shadow-md" : (pIsBhyt ? "border-l-[6px] border-blue-400 bg-blue-50/60" : "border-l-[6px] border-emerald-400 bg-emerald-50/50")) border-b border-slate-200">
+                                    class="@(isNear ? "row-toi-luot-active bg-yellow-100 border-l-[10px] border-yellow-500 shadow-md" : (p.TrangThai == "Tới lượt thu" ? "border-l-[8px] border-amber-400 bg-amber-50/70 shadow-xs" : (pIsBhyt ? "border-l-[6px] border-blue-400 bg-blue-50/60" : "border-l-[6px] border-emerald-400 bg-emerald-50/50"))) border-b border-slate-200">
                                     <td
                                         class="py-4 px-4 text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black tracking-tight" : "text-2xl md:text-4xl font-black")">
                                         <div class="patient-name-container select-none flex items-center min-w-0">
@@ -352,46 +363,60 @@
                                         </div>
                                     </td>
                                     <td
-                                        class="py-4 px-3 font-bold text-center text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black" : "text-2xl md:text-4xl font-bold")">
+                                        class="cell-namsinh py-4 px-2 font-bold text-center text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black" : "text-2xl md:text-4xl font-bold")">
                                         @p.NamSinh
                                     </td>
-                                    <td class="py-4 px-3 text-center overflow-hidden">
+                                    <td class="py-4 px-2 text-center overflow-hidden">
                                         @if (!string.IsNullOrEmpty(p.SoTienStr) && p.SoTienStr != "—")
                                         {
                                             <span
-                                                class="inline-block px-3 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
+                                                class="badge-money inline-block px-3 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
                                                 @p.SoTienStr
                                             </span>
                                         }
                                         else if (!pIsBhyt)
                                         {
                                             <span
-                                                class="inline-block px-3 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
+                                                class="badge-money inline-block px-3 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
                                                 @(!string.IsNullOrEmpty(p.SoTienStr) ? p.SoTienStr : "—")
                                             </span>
                                         }
                                         else
                                         {
                                             <span
-                                                class="inline-block px-3 py-1 rounded-lg border font-bold text-sm md:text-lg uppercase whitespace-nowrap @loaiClass">
+                                                class="badge-money inline-block px-3 py-1 rounded-lg border font-bold text-sm md:text-lg uppercase whitespace-nowrap @loaiClass">
                                                 BHYT
                                             </span>
                                         }
                                     </td>
-                                    <td class="py-4 px-3 text-center overflow-hidden">
+                                    <td class="py-4 px-2 text-center overflow-hidden">
                                         <div class="flex items-center justify-center gap-1.5 flex-nowrap min-w-0">
-                                            @if (p.TrangThai == "Chờ thu")
+                                            @if (p.TrangThai == "Tới lượt thu")
                                             {
                                                 <span
-                                                    class="inline-block bg-amber-50 text-amber-800 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-amber-300 shadow-sm @(isNear ? "animate-pulse-red" : "")">
+                                                    class="badge-status inline-block bg-amber-50 text-amber-800 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-amber-300 shadow-sm">
+                                                    Tới lượt thu
+                                                </span>
+                                            }
+                                            else if (p.TrangThai == "Chờ thu" || p.TrangThai == "Chờ thu tiền" || p.DaThu == false)
+                                            {
+                                                <span
+                                                    class="badge-status inline-block bg-slate-100 text-slate-700 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-bold uppercase whitespace-nowrap border-2 border-slate-300 shadow-sm">
                                                     Chờ thu tiền
+                                                </span>
+                                            }
+                                            else if (isNear || p.TrangThai == "Tới lượt nhận" || p.TrangThai == "Tới lượt")
+                                            {
+                                                <span
+                                                    class="badge-status inline-block bg-red-600 text-white px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-red-500 shadow-md animate-pulse-red">
+                                                    Tới lượt nhận
                                                 </span>
                                             }
                                             else
                                             {
                                                 <span
-                                                    class="inline-block bg-blue-50 text-blue-800 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-blue-300 shadow-sm @(isNear ? "animate-pulse-red" : "")">
-                                                    Đang soạn thuốc
+                                                    class="badge-status inline-block bg-slate-100 text-slate-700 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-bold uppercase whitespace-nowrap border-2 border-slate-300 shadow-sm">
+                                                    Chờ tới lượt
                                                 </span>
                                             }
                                         </div>
@@ -405,14 +430,11 @@
         </div>
     </main>
 
-    <!-- FOOTER THÔNG BÁO -->
+    <!-- FOOTER THÔNG BÁO TRONG SUỐT NHÌN THẤY PHÍA SAU NỔI TRÊN BẢNG DANH SÁCH -->
     <footer
-        class="bg-white border-2 border-slate-300 rounded-lg px-3 py-1 mx-1.5 mb-1 flex items-center gap-2 shrink-0 shadow-sm overflow-hidden">
-        <span
-            class="px-2 py-0.5 bg-red-100 text-danger border border-red-300 rounded font-bold uppercase shrink-0 text-xs">Lưu
-            ý</span>
-        <marquee class="text-slate-700 font-bold text-sm md:text-base">
-            Quý bệnh nhân vui lòng chuẩn bị sẵn Đơn thuốc, Thẻ BHYT và CCCD khi nghe gọi tên đến quầy nhận thuốc.
+        class="fixed bottom-1.5 left-2 right-2 z-40 bg-white/20  border border-slate-400/30 rounded-lg px-3 py-1 flex items-center gap-2 shadow-xs overflow-hidden pointer-events-none">
+        <marquee class="text-blue-950 font-black text-sm md:text-base drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+            Quý khách vui lòng ngồi chờ gọi tên. Kiểm tra BHYT, CCCD, Thuốc trước khi rời quầy. Xin cảm ơn!
         </marquee>
     </footer>
 
@@ -472,13 +494,9 @@
                 });
 
                 function unlockAudio() {
-                    if (audioUnlocked) return;
-                    audioUnlocked = true;
-                    try {
-                        const silent = new Audio('/audio/silent.mp3');
-                        silent.volume = 0.01;
-                        silent.play().catch(() => { });
-                    } catch (e) { }
+                    if (typeof window.aggressiveAutoUnlock === 'function') {
+                        window.aggressiveAutoUnlock();
+                    }
                 }
 
                 function updateSoundIcon() {
@@ -520,7 +538,7 @@
                     if (daThu === true) return "nhận thuốc";
                     const s = String(status || '').trim().toLowerCase();
                     if (!s) return "nhận thuốc";
-                    if (s === "chờ thu" || s === "chưa thu" || s === "chưa đóng tiền" || s.includes("chờ thu") || s.includes("chưa thu") || s.includes("thu tiền") || s.includes("đóng tiền") || s.includes("chưa thanh toán")) {
+                    if (s === "tới lượt thu" || s === "chờ thu" || s === "chưa thu" || s === "chưa đóng tiền" || s.includes("lượt thu") || s.includes("chờ thu") || s.includes("chưa thu") || s.includes("thu tiền") || s.includes("đóng tiền") || s.includes("chưa thanh toán")) {
                         return "đóng tiền";
                     }
                     return "nhận thuốc";
@@ -536,7 +554,7 @@
                     const dobClean = extractBirthYear(p.namSinh || p.ngaySinh || p.dobStr || p.dobYear);
                     const dobText = dobClean ? `, sinh năm ${dobClean}` : "";
                     const actionText = getActionText(p.trangThai, p.daThu);
-                    const speakText = `Mời bệnh nhân, ${name}${dobText}, đến ${targetLoc} ${actionText}`;
+                    const speakText = `Mời bệnh nhân, ${name}${dobText}. Đến ${targetLoc}, ${actionText}.`;
                     audioQueue.enqueue(speakText);
                 }
 
@@ -556,7 +574,6 @@
                 // Biến toàn cục lưu danh sách bệnh nhân đang hiển thị
                 let currentActiveList = [];
 
-                // ═══════════════ HIỆU ỨNG FLIP CHUYỂN HÀNG MƯỢT MÀ (GLIDE TO TOP / REORDER) ═══════════════
                 function applyFlipAnimation(container, oldPositions) {
                     if (!container || !oldPositions || oldPositions.size === 0) {
                         const allRows = container.querySelectorAll('tbody tr[data-key]');
@@ -618,27 +635,28 @@
                 let currentPageIndex = 0;
                 let paginationTimer = null;
 
-                function calculateRowsPerColumn() {
+                function calculateRowsPerColumn(isSplit = false) {
                     const container = document.getElementById('paginationContainer');
-                    const totalHeight = container ? container.clientHeight : (window.innerHeight - 145);
-                    const theadHeight = 44;
-                    const availableBodyHeight = Math.max(200, totalHeight - theadHeight);
+                    const totalHeight = (container && container.clientHeight > 100) ? container.clientHeight : (window.innerHeight - 80);
+                    const theadHeight = 48;
+                    const availableBodyHeight = Math.max(150, totalHeight - theadHeight);
                     
-                    // Chiều cao tiêu chuẩn 1 hàng: ~68px (rõ nét trên TV)
-                    // Tối thiểu 10 hàng / 1 ô. Nếu màn hình to hoặc zoom nhỏ -> tự động +1, +2... hàng
-                    const TARGET_ROW_HEIGHT = 68;
-                    let rows = Math.floor(availableBodyHeight / TARGET_ROW_HEIGHT);
-                    if (rows < 10) rows = 10;
-                    if (rows > 30) rows = 30;
+                    // Chiều cao tiêu chuẩn 1 hàng (giảm số hàng để chữ to rõ, cực kỳ dễ đọc trên TV 43 inch):
+                    // - 1 Bảng đơn: ~78px (khoảng 6-8 hàng)
+                    // - Chia 2 cột: ~68px (khoảng 7-9 hàng mỗi bên)
+                    const targetHeight = isSplit ? 68 : 78;
+                    let rows = Math.floor(availableBodyHeight / targetHeight);
+                    if (rows < 4) rows = 4;
+                    if (rows > 18) rows = 18;
                     return rows;
                 }
 
                 function getRowHeightPx(rowsCount) {
                     const container = document.getElementById('paginationContainer');
-                    const totalHeight = container ? container.clientHeight : (window.innerHeight - 145);
-                    const theadHeight = 44;
-                    const availableBodyHeight = Math.max(200, totalHeight - theadHeight);
-                    return Math.floor(availableBodyHeight / rowsCount);
+                    const totalHeight = (container && container.clientHeight > 100) ? container.clientHeight : (window.innerHeight - 80);
+                    const theadHeight = 48;
+                    const availableBodyHeight = Math.max(150, totalHeight - theadHeight);
+                    return Math.floor(availableBodyHeight / Math.max(1, rowsCount));
                 }
 
                 function updatePageIndicator(current, total) {
@@ -680,13 +698,15 @@
                         return;
                     }
 
-                    // 2. Tính số hàng mỗi ô động theo chiều cao màn hình (tối thiểu 10 hàng / ô)
-                    const rowsPerCol = calculateRowsPerColumn();
-                    const pageCapacity = rowsPerCol * 2;
+                    // 2. Tính sức chứa thực tế theo chiều cao màn hình
+                    const singleRowsCapacity = calculateRowsPerColumn(false);
+                    const isSplit = list.length > singleRowsCapacity;
+                    const rowsPerCol = calculateRowsPerColumn(isSplit);
+                    const pageCapacity = isSplit ? (rowsPerCol * 2) : rowsPerCol;
                     const rowHeightPx = getRowHeightPx(rowsPerCol);
 
                     // 3. Tính số trang
-                    const totalPages = Math.ceil(list.length / pageCapacity);
+                    const totalPages = Math.max(1, Math.ceil(list.length / pageCapacity));
                     if (!preservePage || currentPageIndex >= totalPages) {
                         currentPageIndex = 0;
                     }
@@ -697,14 +717,14 @@
                     const startIdx = currentPageIndex * pageCapacity;
                     const pageItems = list.slice(startIdx, startIdx + pageCapacity);
 
-                    // Nếu số bệnh nhân <= rowsPerCol: Hiện 1 BẢNG DUY NHẤT TOÀN MÀN HÌNH (gộp lại thành 1)
-                    if (list.length <= rowsPerCol) {
+                    if (!isSplit) {
+                        // Hiện 1 BẢNG DUY NHẤT TOÀN MÀN HÌNH
                         container.innerHTML = `
                             <div class="room-container flex-grow bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm overflow-hidden h-full w-full">
                                 ${buildTableHtml(pageItems, false, rowHeightPx)}
                             </div>`;
                     } else {
-                        // Khi > rowsPerCol bệnh nhân: SPLIT THÀNH 2 CỘT (Cột 1: rowsPerCol BN đầu, Cột 2: các BN tiếp theo)
+                        // SPLIT THÀNH 2 CỘT: Điền đầy Cột 1 trước, người dư ra sẽ sang Cột 2
                         const col1Data = pageItems.slice(0, rowsPerCol);
                         const col2Data = pageItems.slice(rowsPerCol, pageCapacity);
 
@@ -727,11 +747,12 @@
                     if (totalPages > 1) {
                         if (!paginationTimer) {
                             paginationTimer = setInterval(() => {
-                                const currentRowsPerCol = calculateRowsPerColumn();
-                                const currentCapacity = currentRowsPerCol * 2;
-                                const currentTotalPages = Math.ceil(currentActiveList.length / currentCapacity);
-                                if (currentTotalPages > 1) {
-                                    currentPageIndex = (currentPageIndex + 1) % currentTotalPages;
+                                const curIsSplit = currentActiveList.length > calculateRowsPerColumn(false);
+                                const curRowsPerCol = calculateRowsPerColumn(curIsSplit);
+                                const curCapacity = curIsSplit ? (curRowsPerCol * 2) : curRowsPerCol;
+                                const curTotalPages = Math.max(1, Math.ceil(currentActiveList.length / curCapacity));
+                                if (curTotalPages > 1) {
+                                    currentPageIndex = (currentPageIndex + 1) % curTotalPages;
                                     renderDuocView(currentActiveList, true);
                                 } else {
                                     clearInterval(paginationTimer);
@@ -746,13 +767,18 @@
                 }
 
                 function buildTableHtml(rows, isSplit, rowHeightPx) {
-                    const pyClass = isSplit ? 'py-1' : 'py-2';
+                    const pyClass = isSplit ? 'py-1.5 md:py-2' : 'py-2.5 md:py-3.5';
                     const modeClass = isSplit ? 'duoc-table-split' : 'duoc-table-single';
 
-                    const colWidths = `<col style="width: 42%;">
-                                       <col style="width: 10%;">
-                                       <col style="width: 20%;">
-                                       <col style="width: 28%;">`;
+                    const colWidths = isSplit
+                        ? `<col style="width: 45%;">
+                           <col style="width: 13%;">
+                           <col style="width: 20%;">
+                           <col style="width: 22%;">`
+                        : `<col style="width: 46%;">
+                           <col style="width: 14%;">
+                           <col style="width: 18%;">
+                           <col style="width: 22%;">`;
 
                     const rowList = rows || [];
                     let tbodyContent = '';
@@ -762,12 +788,12 @@
                     }
 
                     return `
-                        <div class="flex-grow overflow-hidden w-full bg-white" style="height: 100%; display: block;">
-                            <table class="patient-table duoc-patient-table ${modeClass} w-full text-left border-collapse" style="table-layout: fixed; height: auto !important; margin-bottom: auto;">
+                        <div class="flex-grow overflow-hidden w-full bg-white flex flex-col h-full">
+                            <table class="patient-table duoc-patient-table ${modeClass} w-full text-left border-collapse" style="table-layout: fixed;">
                                 <colgroup>
                                     ${colWidths}
                                 </colgroup>
-                                <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-black" style="height: 44px;">
+                                <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-black shrink-0" style="height: 48px;">
                                     <tr>
                                         <th class="py-2.5 px-3 text-left font-black">Họ và Tên</th>
                                         <th class="py-2.5 px-1 text-center font-black">Năm Sinh</th>
@@ -783,28 +809,31 @@
                 }
 
                 function buildRowHtml(p, isSplit, pyClass, rowHeightPx) {
-                    const isNear = p.isToiLuot;
-                    const pIsBhyt = p.isBhyt;
                     const rawName = (p.tenBenhNhan || '').trim();
                     const escapedName = escapeHtml(rawName);
                     const escapedStatus = escapeHtml(p.trangThai || '');
                     const namSinh = escapeHtml(p.namSinh || '—');
                     const makb = escapeHtml(p.makb || '');
                     const mabn = escapeHtml(p.mabn || '');
+                    const pIsBhyt = p.isBhyt;
+                    const isToiLuot = (p.trangThai === "Tới lượt nhận" || p.trangThai === "Tới lượt" || (p.isToiLuot === true && p.daThu !== false));
+                    const isToiLuotThu = (p.trangThai === "Tới lượt thu");
+                    const isChoThu = (p.trangThai === "Chờ thu" || p.trangThai === "Chờ thu tiền" || (p.daThu === false && !isToiLuotThu));
 
                     // Khóa duy nhất cho bệnh nhân để theo dõi FLIP animation
                     const rowKey = (makb ? ('makb_' + makb) : (mabn ? ('mabn_' + mabn) : ('name_' + escapedName))).trim();
 
                     let rowClass;
-                    if (isNear) {
+                    if (isToiLuot) {
                         rowClass = 'row-toi-luot-active bg-yellow-100 border-l-[8px] md:border-l-[12px] border-yellow-500 shadow-md border-b border-slate-200';
+                    } else if (isToiLuotThu) {
+                        rowClass = 'border-l-[6px] md:border-l-[8px] border-amber-400 bg-amber-50/70 shadow-xs border-b border-slate-200';
                     } else if (pIsBhyt) {
                         rowClass = 'border-l-[4px] md:border-l-[6px] border-blue-400 bg-blue-50/60 border-b border-slate-200';
                     } else {
                         rowClass = 'border-l-[4px] md:border-l-[6px] border-emerald-400 bg-emerald-50/50 border-b border-slate-200';
                     }
 
-                    // Cột Tiền / BHYT
                     let col4Html = '';
                     if (p.soTienStr && p.soTienStr !== '—' && p.soTienStr !== '') {
                         col4Html = `<td class="${pyClass} px-1 text-center">
@@ -832,13 +861,16 @@
                                     </td>`;
                     }
 
-                    // Cột Trạng Thái
+                    // Cột Trạng Thái: 4 trạng thái chuẩn (Tới lượt thu, Chờ thu tiền, Tới lượt nhận, Chờ tới lượt)
                     let col5Badge = '';
-                    const isChoThu = (p.trangThai === "Chờ thu" || escapedStatus === "Chờ thu");
-                    if (isChoThu) {
-                        col5Badge = `<span class="badge-status inline-block bg-amber-50 text-amber-800 border-2 border-amber-300 font-extrabold uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Chờ thu tiền</span>`;
+                    if (isToiLuotThu) {
+                        col5Badge = `<span class="badge-status inline-block bg-amber-50 text-amber-800 border-2 border-amber-300 font-extrabold uppercase whitespace-nowrap rounded-lg shadow-2xs">Tới lượt thu</span>`;
+                    } else if (isChoThu) {
+                        col5Badge = `<span class="badge-status inline-block bg-slate-100 text-slate-700 border-2 border-slate-300 font-bold uppercase whitespace-nowrap rounded-lg shadow-2xs">Chờ thu tiền</span>`;
+                    } else if (isToiLuot) {
+                        col5Badge = `<span class="badge-status inline-block bg-red-600 text-white border-2 border-red-500 font-black uppercase whitespace-nowrap rounded-lg shadow-md animate-pulse-red">Tới lượt nhận</span>`;
                     } else {
-                        col5Badge = `<span class="badge-status inline-block bg-blue-50 text-blue-800 border-2 border-blue-300 font-extrabold uppercase whitespace-nowrap rounded-lg shadow-2xs ${isNear ? 'animate-pulse-red' : ''}">Đang soạn thuốc</span>`;
+                        col5Badge = `<span class="badge-status inline-block bg-slate-100 text-slate-700 border-2 border-slate-300 font-bold uppercase whitespace-nowrap rounded-lg shadow-2xs">Chờ tới lượt</span>`;
                     }
 
                     const heightStyle = rowHeightPx ? `style="height: ${rowHeightPx}px;"` : '';
@@ -848,9 +880,9 @@
                                 ${heightStyle}
                                 class="${rowClass}">
                             
-                                <td class="${pyClass} px-2.5 text-blue-900">
+                                <td class="${pyClass} px-3 text-blue-900 overflow-hidden">
                                     <div class="patient-name-container select-none flex items-center min-w-0">
-                                        <span class="patient-name-text uppercase whitespace-normal break-words leading-tight max-w-full ${isNear ? 'text-red-700 font-black' : 'text-blue-900 font-black'}">
+                                        <span class="patient-name-text uppercase whitespace-normal break-words leading-tight max-w-full font-black text-blue-900">
                                             ${escapedName.toUpperCase()}
                                         </span>
                                     </div>
@@ -906,7 +938,7 @@
                         const dobClean = extractBirthYear(payload.namSinh || payload.dobYear || payload.dobStr);
                         const dobText = dobClean ? `, sinh năm ${dobClean}` : "";
                         const actionText = getActionText(payload.trangThai, payload.daThu);
-                        const speakText = `Mời bệnh nhân, ${payload.hoTen}${dobText}, đến ${targetLoc} ${actionText}`;
+                        const speakText = `Mời bệnh nhân, ${payload.hoTen}${dobText}. Đến ${targetLoc}, ${actionText}.`;
                         audioQueue.enqueue(speakText);
                     });
 
@@ -950,10 +982,10 @@
 
                     const list = data.waitingList || [];
 
-                    // Đánh lại STT liên tục
+                    // Đánh lại STT liên tục & giữ trạng thái logic chuẩn
                     list.forEach((p, idx) => {
                         p.stt = idx + 1;
-                        p.isToiLuot = (idx === 0);
+                        p.isToiLuot = (p.isToiLuot === true || p.trangThai === "Tới lượt nhận" || p.trangThai === "Tới lượt");
                     });
 
                     // Cập nhật thống kê
@@ -965,7 +997,7 @@
                     lastQueueJson = queueJson;
 
                     // Xác định bệnh nhân ưu tiên cần đọc
-                    const targetPatient = list.find(p => p.isToiLuot) || list[0] || null;
+                    const targetPatient = list.find(p => p.trangThai === "Tới lượt thu" || p.trangThai === "Tới lượt nhận" || p.trangThai === "Tới lượt" || p.isToiLuot) || list[0] || null;
                     if (targetPatient) {
                         currentTopPatient = targetPatient;
                         const currentKey = `${targetPatient.makb || targetPatient.mabn || ''}_${targetPatient.trangThai || ''}`;

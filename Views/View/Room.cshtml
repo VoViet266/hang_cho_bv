@@ -109,8 +109,8 @@
             <!-- Nút bật âm thanh -->
             <button id="soundToggleBtn" onclick="toggleSound()"
                     class="remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                    tabindex="0" aria-label="Bật hoặc tắt âm thanh" title="Bật/Tắt âm thanh (Phím A hoặc S)">
-                <i id="soundIcon" class="fas fa-volume-mute text-slate-400"></i>
+                    tabindex="0" aria-label="Bật hoặc tắt âm thanh" title="Loa: ĐANG BẬT (Phím A / S hoặc click để tắt/bật)">
+                <i id="soundIcon" class="fas fa-volume-up text-green-600 text-sm"></i>
             </button>
 
             <!-- Nút quay lại -->
@@ -121,6 +121,9 @@
             </a>
         </div>
     </header>
+
+    <!-- Kích hoạt quyền phát âm thanh ngầm tự động -->
+    <iframe src="/audio/silent.mp3" allow="autoplay; encrypted-media" style="position:absolute; width:0; height:0; border:0; visibility:hidden; pointer-events:none;" tabindex="-1"></iframe>
 
     <!-- MAIN BODY -->
     <main class="flex-grow p-1.5 overflow-hidden flex flex-col">

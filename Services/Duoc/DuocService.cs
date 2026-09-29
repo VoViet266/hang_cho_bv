@@ -312,31 +312,58 @@ namespace HangChoKhamBenh.Web.Services
                     {
                         if (!isPaidDv)
                         {
-                            // Chưa đóng tiền DV: Gom 1 dòng với giá tiền và trạng thái Chờ thu tiền
+                            // Chưa đóng tiền DV: nếu đã gọi -> Tới lượt thu, chưa gọi -> Chờ thu tiền
                             var currentOcua = !string.IsNullOrEmpty(item.OcuaDv) ? item.OcuaDv : item.OcuaBhyt;
-                            waitingList.Add(CreateQueueItem(13, "Toa Dịch Vụ", true, true, true, false, false, "Chờ thu", soTien, soTienStr, currentOcua));
+                            bool daGoi = !string.IsNullOrEmpty(currentOcua);
+                            waitingList.Add(CreateQueueItem(13, "Toa Dịch Vụ", true, true, true, false, false, daGoi ? "Tới lượt thu" : "Chờ thu tiền", soTien, soTienStr, currentOcua));
                         }
                         else
                         {
-                            // Đã đóng tiền DV: Gom 1 dòng với giá tiền và trạng thái Đang soạn thuốc
+                            // Đã đóng tiền DV: Gom 1 dòng với giá tiền và trạng thái Chờ tới lượt
                             var currentOcua = !string.IsNullOrEmpty(item.OcuaBhyt) ? item.OcuaBhyt : item.OcuaDv;
-                            waitingList.Add(CreateQueueItem(0, "BHYT + Dịch Vụ", true, true, true, true, true, "Đang soạn", soTien, soTienStr, currentOcua));
+                            waitingList.Add(CreateQueueItem(0, "BHYT + Dịch Vụ", true, true, true, true, true, "Chờ tới lượt", soTien, soTienStr, currentOcua));
                         }
                     }
                     else if (item.HasBhyt)
                     {
-                        waitingList.Add(CreateQueueItem(14, "Toa BHYT", true, false, false, true, true, "Đang soạn", null, "", item.OcuaBhyt));
+                        waitingList.Add(CreateQueueItem(14, "Toa BHYT", true, false, false, true, true, "Chờ tới lượt", null, "", item.OcuaBhyt));
                     }
                     else
                     {
-                        waitingList.Add(CreateQueueItem(13, "Toa Dịch Vụ", false, true, false, false, isPaidDv, isPaidDv ? "Đang soạn" : "Chờ thu", soTien, soTienStr, item.OcuaDv));
+                        bool daGoi = !string.IsNullOrEmpty(item.OcuaDv) || !string.IsNullOrEmpty(item.Taikhoan);
+                        string trangThai = isPaidDv ? "Chờ tới lượt" : (daGoi ? "Tới lượt thu" : "Chờ thu tiền");
+                        waitingList.Add(CreateQueueItem(13, "Toa Dịch Vụ", false, true, false, false, isPaidDv, trangThai, soTien, soTienStr, item.OcuaDv));
                     }
                 }
 
+                // Thiết lập trạng thái chuẩn:
+                // - Chưa thu: nếu đã gọi ô cửa -> 'Tới lượt thu', nếu chưa gọi -> 'Chờ thu tiền'
+                // - Đã thu / BHYT: ca đầu tiên -> 'Tới lượt', các ca sau -> 'Chờ tới lượt'
+                bool foundToiLuot = false;
                 for (int i = 0; i < waitingList.Count; i++)
                 {
                     waitingList[i].Stt = i + 1;
-                    waitingList[i].IsToiLuot = (i == 0);
+                    if (waitingList[i].DaThu == false)
+                    {
+                        bool daGoi = !string.IsNullOrEmpty(waitingList[i].OCua);
+                        waitingList[i].IsToiLuot = false;
+                        waitingList[i].TrangThai = daGoi ? "Tới lượt thu" : "Chờ thu tiền";
+                    }
+                    else
+                    {
+                        // Ca đầu tiên đã thanh toán / BHYT trong danh sách sẽ là "Tới lượt nhận"
+                        if (!foundToiLuot)
+                        {
+                            waitingList[i].IsToiLuot = true;
+                            waitingList[i].TrangThai = "Tới lượt nhận";
+                            foundToiLuot = true;
+                        }
+                        else
+                        {
+                            waitingList[i].IsToiLuot = false;
+                            waitingList[i].TrangThai = "Chờ tới lượt";
+                        }
+                    }
                 }
 
                 if (waitingList.Count > 0)

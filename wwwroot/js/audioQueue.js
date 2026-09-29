@@ -2,7 +2,7 @@
   const DEFAULT_DEDUP_WINDOW_MS = 4500;
   const DEFAULT_MAX_QUEUE_SIZE = 10;
   const DEFAULT_WATCHDOG_TIMEOUT_MS = 15000;
-  const DEFAULT_PLAYBACK_RATE = 1.10;
+  const DEFAULT_PLAYBACK_RATE = 1.1;
   const DEFAULT_VOLUME = 1.0;
   const DEFAULT_GAIN_MULTIPLIER = 1.5;
 
@@ -11,7 +11,7 @@
   function getAudioContext() {
     try {
       if (!sharedAudioCtx) {
-        const AudioCtx = global.AudioContext || global.AudioContext || window.AudioContext || window.webkitAudioContext;
+        const AudioCtx = global.AudioContext || global.webkitAudioContext;
         if (AudioCtx) {
           sharedAudioCtx = new AudioCtx();
         }
@@ -23,16 +23,56 @@
     return sharedAudioCtx;
   }
 
-  // Tự động kích hoạt AudioContext khi có tương tác người dùng
-  if (typeof document !== "undefined") {
-    const unlockCtx = () => {
+  // Tự động kích hoạt toàn diện (Tự khởi động AudioContext & Media Pipeline mà không bắt buộc click)
+  function aggressiveAutoUnlock() {
+    try {
       const ctx = getAudioContext();
-      if (ctx && ctx.state === "suspended") {
-        ctx.resume().catch(() => {});
+      if (ctx) {
+        if (ctx.state === "suspended") {
+          ctx.resume().catch(() => {});
+        }
+        // Phát một buffer rỗng siêu ngắn để đánh thức pipeline âm thanh Web Audio
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
       }
-    };
-    ["click", "keydown", "touchstart", "pointerdown"].forEach((evt) => {
-      document.addEventListener(evt, unlockCtx, { passive: true });
+    } catch (e) {}
+
+    try {
+      const silentAudio = new Audio("/audio/silent.mp3");
+      silentAudio.volume = 0.001;
+      silentAudio.play().catch(() => {});
+    } catch (e) {}
+  }
+
+  // Khởi chạy kích hoạt tự động ngay lập tức
+  aggressiveAutoUnlock();
+
+  if (typeof document !== "undefined") {
+    // Kích hoạt khi trang tải xong
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+      aggressiveAutoUnlock();
+    } else {
+      document.addEventListener("DOMContentLoaded", aggressiveAutoUnlock, { once: true });
+      window.addEventListener("load", aggressiveAutoUnlock, { once: true });
+    }
+
+    // Định kỳ thử kích hoạt trong 10 giây đầu khi vừa mở màn hình TV
+    let unlockRetries = 0;
+    const unlockInterval = setInterval(() => {
+      unlockRetries++;
+      aggressiveAutoUnlock();
+      const ctx = getAudioContext();
+      if ((ctx && ctx.state === "running") || unlockRetries > 15) {
+        clearInterval(unlockInterval);
+      }
+    }, 600);
+
+    // Bắt mọi sự kiện người dùng (chuột, chạm, phím, di chuột, chuyển tab)
+    ["click", "keydown", "touchstart", "pointerdown", "mousedown", "mousemove", "focus", "visibilitychange", "wheel"].forEach((evt) => {
+      document.addEventListener(evt, aggressiveAutoUnlock, { passive: true });
     });
   }
 
@@ -58,6 +98,7 @@
       this.queue = [];
       this.isPlaying = false;
       this.currentAudio = null;
+      this.currentBufferSource = null;
       this.currentText = "";
       this.lastEnqueuedText = "";
       this.lastEnqueuedAt = 0;
@@ -86,6 +127,9 @@
     enqueue(speakText) {
       if (!this.isEnabled() || !speakText || !speakText.trim()) return false;
 
+      // Mỗi khi nhận lệnh enqueue, cố gắng kích hoạt lại pipeline âm thanh
+      aggressiveAutoUnlock();
+
       const text = speakText.trim();
       const now = Date.now();
       const isCurrent = this.isPlaying && this.currentText === text;
@@ -96,7 +140,6 @@
 
       if (isCurrent || isQueued || isRecentlyEnqueued) return false;
 
-      // Giới hạn độ dài hàng đợi: nếu quá tải thì loại bỏ phần tử cũ nhất
       if (this.queue.length >= this.maxQueueSize) {
         this.queue.shift();
       }
@@ -112,6 +155,7 @@
       if (this.queue.length === 0) {
         this.isPlaying = false;
         this.currentAudio = null;
+        this.currentBufferSource = null;
         this.currentText = "";
         return;
       }
@@ -123,7 +167,6 @@
       let advanced = false;
       let fallbackStarted = false;
 
-      // Watchdog bảo vệ: nếu audio bị stall (treo) quá thời gian quy định thì tự chuyển tiếp
       if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
       this.watchdogTimer = setTimeout(() => {
         if (!advanced && generation === this.generation) {
@@ -144,8 +187,7 @@
       };
 
       const fallbackToBrowserSpeech = () => {
-        if (fallbackStarted || advanced || generation !== this.generation)
-          return;
+        if (fallbackStarted || advanced || generation !== this.generation) return;
         fallbackStarted = true;
 
         if (!("speechSynthesis" in global)) {
@@ -166,16 +208,50 @@
         }
       };
 
+      const fallbackToWebAudioBuffer = async () => {
+        try {
+          const ctx = getAudioContext();
+          if (ctx) {
+            if (ctx.state === "suspended") {
+              await ctx.resume().catch(() => {});
+            }
+            const res = await fetch(`/api/tts?text=${encodeURIComponent(textToSpeak)}`);
+            if (!res.ok) throw new Error("TTS fetch failed");
+            const arrayBuf = await res.arrayBuffer();
+            const audioBuffer = await ctx.decodeAudioData(arrayBuf);
+            
+            const source = ctx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.playbackRate.value = this.playbackRate;
+
+            let finalNode = source;
+            if (this.gainMultiplier > 1.0) {
+              const gainNode = ctx.createGain();
+              gainNode.gain.value = this.gainMultiplier;
+              source.connect(gainNode);
+              finalNode = gainNode;
+            }
+            finalNode.connect(ctx.destination);
+
+            this.currentBufferSource = source;
+            source.onended = advance;
+            source.start(0);
+            return;
+          }
+        } catch (e) {
+          console.warn("[AudioQueue] Web Audio fallback lỗi, chuyển sang SpeechSynthesis:", e);
+        }
+        fallbackToBrowserSpeech();
+      };
+
+      // Thử phát bằng thẻ Audio
       try {
-        const audio = new Audio(
-          `/api/tts?text=${encodeURIComponent(textToSpeak)}`,
-        );
+        const audio = new Audio(`/api/tts?text=${encodeURIComponent(textToSpeak)}`);
         this.currentAudio = audio;
         audio.volume = Math.min(1.0, Math.max(0, this.volume));
         audio.playbackRate = this.playbackRate;
         audio.defaultPlaybackRate = this.playbackRate;
 
-        // Đảm bảo tốc độ phát được áp dụng ngay khi metadata được tải
         const enforceRate = () => {
           try {
             audio.playbackRate = this.playbackRate;
@@ -185,25 +261,30 @@
         audio.addEventListener("play", enforceRate);
 
         audio.onended = advance;
-        audio.onerror = fallbackToBrowserSpeech;
+        audio.onerror = () => {
+          fallbackToWebAudioBuffer();
+        };
 
-        // Kích âm lượng qua Web Audio API Gain Node nếu được hỗ trợ
         const ctx = getAudioContext();
-        if (ctx && this.gainMultiplier > 1.0) {
+        if (ctx && ctx.state === "running" && this.gainMultiplier > 1.0) {
           try {
             const source = ctx.createMediaElementSource(audio);
             const gainNode = ctx.createGain();
             gainNode.gain.value = this.gainMultiplier;
             source.connect(gainNode);
             gainNode.connect(ctx.destination);
-          } catch (e) {
-            // Dự phòng phát bình thường nếu không thể gán MediaElementSource
-          }
+          } catch (e) {}
         }
 
-        audio.play().catch(fallbackToBrowserSpeech);
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn("[AudioQueue] audio.play() bị chặn hoặc lỗi, tự động thử Web Audio buffer...", err);
+            fallbackToWebAudioBuffer();
+          });
+        }
       } catch (error) {
-        fallbackToBrowserSpeech();
+        fallbackToWebAudioBuffer();
       }
     }
 
@@ -219,7 +300,13 @@
           this.currentAudio.pause();
         } catch (error) {}
       }
+      if (this.currentBufferSource) {
+        try {
+          this.currentBufferSource.stop();
+        } catch (error) {}
+      }
       this.currentAudio = null;
+      this.currentBufferSource = null;
       this.isPlaying = false;
       this.currentText = "";
       this.lastEnqueuedText = "";
@@ -229,4 +316,5 @@
   }
 
   global.AudioQueueManager = AudioQueueManager;
+  global.aggressiveAutoUnlock = aggressiveAutoUnlock;
 })(window);

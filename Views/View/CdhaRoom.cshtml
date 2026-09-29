@@ -108,8 +108,9 @@
             <!-- Nút bật âm thanh -->
             <button id="soundToggleBtn" onclick="toggleSound()"
                     class="remote-item icon-button bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                    tabindex="0" aria-label="Bật hoặc tắt âm thanh" title="Bật/Tắt âm thanh (Phím A hoặc S)">
-                <i id="soundIcon" class="fas fa-volume-mute text-slate-400"></i>
+                    tabindex="0" aria-label="Bật hoặc tắt âm thanh"
+                    title="Loa: ĐANG BẬT (Phím A / S hoặc click để tắt/bật)">
+                <i id="soundIcon" class="fas fa-volume-up text-green-600 text-sm"></i>
             </button>
 
             <!-- Nút quay lại -->
@@ -120,6 +121,9 @@
             </a>
         </div>
     </header>
+
+    <!-- Kích hoạt quyền phát âm thanh ngầm tự động -->
+    <iframe src="/audio/silent.mp3" allow="autoplay; encrypted-media" style="position:absolute; width:0; height:0; border:0; visibility:hidden; pointer-events:none;" tabindex="-1"></iframe>
 
     <!-- MAIN BODY -->
     <main class="flex-grow p-1.5 overflow-hidden flex flex-col">
@@ -200,16 +204,18 @@
                                     <td class="py-4 px-3 text-blue-900 overflow-hidden @(isNear ? "text-3xl md:text-5xl font-black tracking-tight" : "text-2xl md:text-4xl font-black")">
                                         <div class="patient-name-container min-w-0 flex items-center">
                                             <span class="patient-name-text truncate max-w-full block">@((!string.IsNullOrEmpty(currentPatientName)
-                                                                                    ? currentPatientName : "Chưa cập nhật").ToUpper())</span>
+                                                                                                                                    ? currentPatientName : "Chưa cập nhật").ToUpper())</span>
                         </div>
                     </td>
-                    <td class="py-4 px-3 font-bold text-center text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black" : "text-2xl md:text-4xl font-bold")">
+                    <td
+                        class="py-4 px-3 font-bold text-center text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black" : "text-2xl md:text-4xl font-bold")">
                         @dobYear
                     </td>
                     <td class="py-4 px-3 text-center text-blue-900 overflow-hidden">
                         @if (!string.IsNullOrEmpty(patient.PriorityLabel))
                         {
-                            <span class="inline-block bg-yellow-100 text-yellow-800 px-2.5 py-1 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-sm md:text-base truncate max-w-full">
+                            <span
+                                class="inline-block bg-yellow-100 text-yellow-800 px-2.5 py-1 rounded-lg border border-yellow-300 font-extrabold uppercase shadow-sm text-sm md:text-base truncate max-w-full">
                                 Ưu tiên: @patient.PriorityLabel
                             </span>
                         }
@@ -218,13 +224,15 @@
                         <div class="flex items-center justify-center gap-1.5 flex-nowrap min-w-0">
                             @if (isNear)
                             {
-                                <span class="inline-block bg-red-600 text-white px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl lg:text-2xl font-black uppercase whitespace-nowrap shadow-md animate-pulse-red">
+                                <span
+                                    class="inline-block bg-red-600 text-white px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl lg:text-2xl font-black uppercase whitespace-nowrap shadow-md animate-pulse-red">
                                     Tới Lượt
                                 </span>
                             }
                             else
                             {
-                                <span class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 rounded-lg text-sm md:text-lg font-bold border-2 border-slate-200 shadow-sm whitespace-nowrap">
+                                <span
+                                    class="inline-block bg-slate-100 text-slate-600 px-3 md:px-4 py-1.5 rounded-lg text-sm md:text-lg font-bold border-2 border-slate-200 shadow-sm whitespace-nowrap">
                                     Chờ lượt
                                 </span>
                             }
@@ -271,7 +279,8 @@
                  data-room-type="cdha" data-room-id="@roomId" data-room-name="@roomTitle">
 
                 <!-- Header ô phòng -->
-                <div class="tv-quadrant-header bg-white px-3 py-1 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
+                <div
+                    class="tv-quadrant-header bg-white px-3 py-1 flex justify-between items-center shrink-0 border-b-2 border-slate-300 gap-2">
                     <h2 class="tv-split-room-title">
                         @await Html.PartialAsync("_RoomTitle", roomTitle)
                     </h2>
@@ -295,7 +304,8 @@
                             <col style="width: 12%;">
                             <col style="width: 22%;">
                         </colgroup>
-                        <thead class="sticky top-0 bg-slate-200 text-blue-900 font-extrabold border-b-2 border-slate-300 shadow-sm z-10 text-sm md:text-xl uppercase">
+                        <thead
+                            class="sticky top-0 bg-slate-200 text-blue-900 font-extrabold border-b-2 border-slate-300 shadow-sm z-10 text-sm md:text-xl uppercase">
                             <tr>
                                 <th class="py-1.5 px-2 text-center whitespace-nowrap">STT</th>
                                 <th class="py-1.5 px-2">Họ và Tên</th>
@@ -307,7 +317,8 @@
                             @if (waitingList.Count == 0)
                             {
                                 <tr>
-                                    <td colspan="4" class="text-center py-8 text-slate-400 font-bold text-base md:text-2xl italic">
+                                    <td colspan="4"
+                                        class="text-center py-8 text-slate-400 font-bold text-base md:text-2xl italic">
                                         Không có bệnh nhân chờ.
                                     </td>
                                 </tr>
@@ -444,7 +455,7 @@
                                value="@(!string.IsNullOrEmpty(r.Alias) ? r.Alias : r.Id)" @(isChecked ? "checked" : "")
                                class="w-4 h-4 rounded text-brand focus:ring-brand cursor-pointer pointer-events-none">
                         <span class="text-xs md:text-sm font-bold text-slate-800 truncate">@(r.DisplayName ??
-                                                        r.Name)</span>
+                                                                                    r.Name)</span>
                         </label>
                     }
                 </div>

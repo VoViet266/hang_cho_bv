@@ -274,7 +274,14 @@
       return;
     }
 
-    if (key === "a" || code === 65 || key === "s" || code === 83) {
+    // Tự động mở khóa âm thanh trên TV khi có bất kỳ thao tác phím nào từ Remote
+    try {
+      const silent = new Audio("/audio/silent.mp3");
+      silent.volume = 0.01;
+      silent.play().catch(() => {});
+    } catch (e) {}
+
+    if (key === "a" || code === 65 || key === "s" || code === 83 || key === "yellow" || code === 405 || code === 185) {
       e.preventDefault();
       e.stopPropagation();
       if (typeof toggleSound === "function") {
