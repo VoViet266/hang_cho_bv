@@ -14,9 +14,9 @@ namespace HangChoKhamBenh.Web.Services
         // ===== Constants =====
         private static readonly string[] KhoDv   = ["13"];
         private static readonly string[] KhoBhyt = ["14"];
-        private static readonly int[] HcBhyt = [14, 1, 2];
-        private static readonly int[] HcDv   = [13, 3];
-        private static readonly int[] HcAll  = [14, 1, 2, 13, 3];
+        private static readonly int[] HcBhyt = [14];
+        private static readonly int[] HcDv   = [13];
+        private static readonly int[] HcAll  = [14, 13];
 
         // ===== Inner types =====
         private record CtRow(string? Makh, string? Mabn, string? Sohd, string? Khochan, decimal? Thanhtien);
@@ -58,9 +58,9 @@ namespace HangChoKhamBenh.Web.Services
         // Tạo filter SQL WHERE khớp makb/mabn cho ngày hôm nay
         private static string KhoFilter(int? khochan) => khochan switch
         {
-            14 or 1 or 2 => "AND (khochan = 14 OR khochan = 1 OR khochan = 2)",
-            13 or 3      => "AND (khochan = 13 OR khochan = 3)",
-            _            => ""
+            14 => "AND khochan = 14",
+            13 => "AND khochan = 13",
+            _  => ""
         };
 
         public async Task<DuocNhapBarcodeResultDto> ScanAsync(string? makh, string? makb = null)
@@ -297,7 +297,7 @@ namespace HangChoKhamBenh.Web.Services
             var today = DateTime.Today;
             var ctList = await _context.ChungTu.AsNoTracking()
                 .Where(c => (c.Xoa == null || c.Xoa == 0)
-                         && (c.Khochan == "13" || c.Khochan == "3")
+                         && KhoDv.Contains(c.Khochan ?? "")
                          && c.Ngaylap >= today && c.Ngaylap < today.AddDays(1)
                          && ((c.Makh != null && makhs.Contains(c.Makh))
                           || (c.Mabn != null && mabns.Contains(c.Mabn))))
