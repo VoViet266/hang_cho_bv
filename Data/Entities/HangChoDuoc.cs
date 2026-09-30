@@ -15,7 +15,7 @@ namespace HangChoKhamBenh.Web.Data.Entities
         public DateTime? Ngaynhap { get; set; }
 
         [Column("ngaygiao")]
-        public DateTime Ngaygiao { get; set; }
+        public DateTime? Ngaygiao { get; set; }
 
         [Column("taikhoan")]
         public string? Taikhoan { get; set; }

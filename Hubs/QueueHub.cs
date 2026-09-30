@@ -48,7 +48,14 @@ namespace HangChoKhamBenh.Web.Hubs
         {
             if (exception != null)
             {
-                _logger.LogWarning(exception, "[SignalR] Disconnected with error: ConnId={ConnectionId}", Context.ConnectionId);
+                if (exception is OperationCanceledException or TaskCanceledException)
+                {
+                    _logger.LogInformation("[SignalR] Client ngắt kết nối (đóng tab/chuyển trang): ConnId={ConnectionId}", Context.ConnectionId);
+                }
+                else
+                {
+                    _logger.LogWarning(exception, "[SignalR] Disconnected with error: ConnId={ConnectionId}", Context.ConnectionId);
+                }
             }
             else
             {

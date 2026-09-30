@@ -35,8 +35,15 @@ builder.Host.UseSerilog();
 
 // Add services
 builder.Services.AddControllersWithViews();
-builder.Services.AddSignalR();
-builder.Services.AddHttpClient("TTS");
+builder.Services.AddHttpClient();
+
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+});
 
 // Data & Business Services
 var rawDbConn = builder.Configuration.GetConnectionString("DefaultConnection") 

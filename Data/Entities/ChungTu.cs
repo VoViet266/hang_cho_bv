@@ -14,8 +14,6 @@ namespace HangChoKhamBenh.Web.Data.Entities
         [Column("makh")]
         public string? Makh { get; set; }
 
-        [Column("maba")]
-        public string? Maba { get; set; }
 
         [Column("khochan")]
         public string? Khochan { get; set; }

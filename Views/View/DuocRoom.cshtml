@@ -641,9 +641,7 @@
                     const theadHeight = 48;
                     const availableBodyHeight = Math.max(150, totalHeight - theadHeight);
                     
-                    // Chiều cao tiêu chuẩn 1 hàng (giảm số hàng để chữ to rõ, cực kỳ dễ đọc trên TV 43 inch):
-                    // - 1 Bảng đơn: ~78px (khoảng 6-8 hàng)
-                    // - Chia 2 cột: ~68px (khoảng 7-9 hàng mỗi bên)
+                 
                     const targetHeight = isSplit ? 68 : 78;
                     let rows = Math.floor(availableBodyHeight / targetHeight);
                     if (rows < 4) rows = 4;
@@ -899,7 +897,6 @@
                             </tr>`;
                 }
 
-                // ═══════════════ SIGNALR REALTIME & POLLING FALLBACK ═══════════════
                 let hubConnection = null;
                 let isFetchingQueue = false;
                 let lastQueueJson = '';
