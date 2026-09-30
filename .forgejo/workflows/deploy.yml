@@ -4,18 +4,7 @@ on:
   push:
     branches:
       - main
-      - master # Nếu dự án chỉ dùng 1 nhánh production thì xoá nhánh còn lại
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-
-# Không cho 2 lần deploy chạy song song (tránh tranh chấp container/port)
-concurrency:
-  group: deploy-hang-cho-kham
-  cancel-in-progress: false
-
-permissions:
-  contents: read
+      - master
 
 env:
   CONTAINER_NAME: hang_cho_kham
@@ -26,218 +15,147 @@ jobs:
   build:
     name: Build & Push to Internal Registry
     runs-on: build
-    timeout-minutes: 20
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # Bật bước này nếu dự án có unit test (ví dụ .NET):
-      # - name: Run tests
-      #   run: dotnet test --configuration Release
-
       - name: Login internal registry
-        env:
-          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
-          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
         run: |
-          printf '%s' "$REGISTRY_TOKEN" | docker login 10.10.20.49:3000 \
-            --username "$REGISTRY_USERNAME" --password-stdin
+          echo "${{ secrets.REGISTRY_TOKEN }}" | docker login 10.10.20.49:3000 --username "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
 
       - name: Build and Push Docker Image
         run: |
-          IMAGE_LATEST="${IMAGE_NAME}:latest"
-          IMAGE_SHA="${IMAGE_NAME}:${{ github.sha }}"
+          IMAGE_LATEST="${{ env.IMAGE_NAME }}:latest"
+          IMAGE_SHA="${{ env.IMAGE_NAME }}:${{ github.sha }}"
 
           docker build \
-            --pull \
-            --label "org.opencontainers.image.revision=${{ github.sha }}" \
             --tag "$IMAGE_LATEST" \
             --tag "$IMAGE_SHA" \
             .
 
-          docker push "$IMAGE_SHA"
           docker push "$IMAGE_LATEST"
-
-      - name: Logout registry
-        if: always()
-        run: docker logout 10.10.20.49:3000 || true
+          docker push "$IMAGE_SHA"
 
   deploy:
     name: Deploy via SSH Key
     needs: build
     runs-on: deploy
-    timeout-minutes: 15
     steps:
-      - name: Deploy over SSH
+      - name: Setup SSH agent and Deploy
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
           SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
           REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          GOOGLE_TTS_API_KEY: ${{secrets.GOOGLE_TTS_API_KEY}}
           VOICE_NAME: ${{ secrets.VOICE_NAME }}
           SPEAKING_RATE: ${{ secrets.SPEAKING_RATE }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          LOGS_VOLUME: ${{ secrets.LOGS_VOLUME || '' }}
-          BIND_ADDR: ${{ secrets.BIND_ADDR || '0.0.0.0' }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          IMAGE_TAG: ${{ github.sha }} # Deploy đúng bản vừa build, không dùng :latest
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
           PORT: ${{ env.PORT }}
+          LOGS_VOLUME: ${{ secrets.LOGS_VOLUME || '' }}
         run: |
-          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
 
-          KEY_FILE="$(mktemp)"
-          KNOWN_HOSTS_FILE="$(mktemp)"
-          REMOTE_SCRIPT="$(mktemp)"
-          trap 'rm -f "$KEY_FILE" "$KNOWN_HOSTS_FILE" "$REMOTE_SCRIPT"' EXIT
+          cat > ~/.ssh/deploy_key <<'EOF'
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+          chmod 600 ~/.ssh/deploy_key
 
-          # --- Chuẩn bị SSH key (không nhúng secret vào text của script) ---
-          printf '%s\n' "$SSH_PRIVATE_KEY" > "$KEY_FILE"
-          chmod 600 "$KEY_FILE"
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/deploy_key
 
-          # Ưu tiên host key đã ghim trong secret (chống MITM).
-          # Lấy giá trị bằng: ssh-keyscan -p <port> <host>
-          if [ -n "${SSH_KNOWN_HOSTS:-}" ]; then
-            printf '%s\n' "$SSH_KNOWN_HOSTS" > "$KNOWN_HOSTS_FILE"
-          else
-            echo "::warning::Chưa cấu hình secret SSH_KNOWN_HOSTS, đang dùng ssh-keyscan (kém an toàn)."
-            ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" > "$KNOWN_HOSTS_FILE"
-          fi
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
-          SSH_OPTS=(
-            -i "$KEY_FILE"
-            -p "$SSH_PORT"
-            -o BatchMode=yes
-            -o IdentitiesOnly=yes
-            -o StrictHostKeyChecking=yes
-            -o UserKnownHostsFile="$KNOWN_HOSTS_FILE"
-            -o ConnectTimeout=15
-            -o ServerAliveInterval=15
-          )
+          SSH_CMD_ENV="REGISTRY_TOKEN=$(printf '%q' "$REGISTRY_TOKEN") REGISTRY_USERNAME=$(printf '%q' "$REGISTRY_USERNAME") DATABASE_URL=$(printf '%q' "$DATABASE_URL") IMAGE_NAME=$(printf '%q' "$IMAGE_NAME") CONTAINER_NAME=$(printf '%q' "$CONTAINER_NAME") PORT=$(printf '%q' "$PORT") LOGS_VOLUME=$(printf '%q' "$LOGS_VOLUME") GOOGLE_TTS_API_KEY=$(printf '%q' "$GOOGLE_TTS_API_KEY") VOICE_NAME=$(printf '%q' "$VOICE_NAME") SPEAKING_RATE=$(printf '%q' "$SPEAKING_RATE")"
 
-          # --- Script chạy trên server đích ---
-          cat > "$REMOTE_SCRIPT" <<'REMOTE_EOF'
-          set -euo pipefail
+          ssh -o BatchMode=yes -p "$SSH_PORT" "$SSH_USERNAME@$SSH_HOST" $SSH_CMD_ENV /bin/bash -s <<'EOF'
+            set -e
 
-          : "${REGISTRY_TOKEN:?Thiếu REGISTRY_TOKEN}"
-          : "${DATABASE_URL:?Thiếu DATABASE_URL}"
+            if [ -z "$LOGS_VOLUME" ]; then
+              LOGS_VOLUME="$HOME/logs"
+            fi
+            AUDIO_CACHE_VOLUME="$HOME/hang_cho_kham_audio_cache"
+            echo "Sử dụng LOGS_VOLUME=$LOGS_VOLUME, AUDIO_CACHE_VOLUME=$AUDIO_CACHE_VOLUME"
 
-          APP_DIR="$HOME/$CONTAINER_NAME"
-          LOGS_VOLUME="${LOGS_VOLUME:-$APP_DIR/logs}"
-          AUDIO_CACHE_VOLUME="$APP_DIR/audio_cache"
-          ENV_FILE="$APP_DIR/.env"
-          REGISTRY_HOST="${IMAGE_NAME%%/*}"
-          NEW_IMAGE="$IMAGE_NAME:$IMAGE_TAG"
+            echo "Đăng nhập Internal Registry..."
+            if [ -z "$REGISTRY_TOKEN" ]; then
+              echo "Lỗi: Không tìm thấy REGISTRY_TOKEN trong Secrets!"
+              exit 1
+            fi
+            printf '%s' "$REGISTRY_TOKEN" | docker login 10.10.20.49:3000 -u "$REGISTRY_USERNAME" --password-stdin
 
-          # Credential docker chỉ tồn tại trong lần deploy này
-          export DOCKER_CONFIG="$(mktemp -d)"
-          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+            PREVIOUS_IMAGE_ID=$(docker inspect --format='{{.Image}}' "$CONTAINER_NAME" 2>/dev/null || echo "")
 
-          echo "LOGS_VOLUME=$LOGS_VOLUME | AUDIO_CACHE_VOLUME=$AUDIO_CACHE_VOLUME"
+            echo "Pulling image mới nhất..."
+            docker pull "$IMAGE_NAME:latest"
 
-          echo "Đăng nhập Internal Registry..."
-          printf '%s' "$REGISTRY_TOKEN" | docker login "$REGISTRY_HOST" -u "$REGISTRY_USERNAME" --password-stdin
+            echo "Dừng container cũ..."
+            docker rm -f "$CONTAINER_NAME" || true
 
-          # Image của container đang chạy, dùng để rollback
-          PREVIOUS_IMAGE_ID="$(docker inspect --format='{{.Image}}' "$CONTAINER_NAME" 2>/dev/null || true)"
+            mkdir -p "$LOGS_VOLUME" "$AUDIO_CACHE_VOLUME"
+            chmod 755 "$LOGS_VOLUME" "$AUDIO_CACHE_VOLUME" || true
 
-          echo "Pull image $NEW_IMAGE ..."
-          docker pull "$NEW_IMAGE"
+            start_container() {
+              local IMAGE=$1
+              docker run -d \
+                --name "$CONTAINER_NAME" \
+                --network hospital_net \
+                -p "$PORT:$PORT" \
+                -e PORT="$PORT" \
+                -e ASPNETCORE_URLS="http://0.0.0.0:$PORT" \
+                -e ASPNETCORE_ENVIRONMENT="Production" \
+                -e TZ="Asia/Ho_Chi_Minh" \
+                -e DATABASE_URL="$DATABASE_URL" \
+                -e GOOGLE_TTS_API_KEY="$GOOGLE_TTS_API_KEY" \
+                -e VOICE_NAME="$VOICE_NAME" \
+                -e SPEAKING_RATE="$SPEAKING_RATE" \
+                -v /etc/localtime:/etc/localtime:ro \
+                -v "$LOGS_VOLUME":/app/logs \
+                -v "$AUDIO_CACHE_VOLUME":/app/wwwroot/audio/cache \
+                --restart unless-stopped \
+                "$IMAGE"
+            }
 
-          mkdir -p "$APP_DIR" "$LOGS_VOLUME" "$AUDIO_CACHE_VOLUME"
-          # Nếu app chạy non-root trong container, cần chown thư mục theo UID của container
-          chmod 755 "$LOGS_VOLUME" "$AUDIO_CACHE_VOLUME" || true
+            echo "Khởi động container với image mới..."
+            start_container "$IMAGE_NAME:latest"
 
-          # Secret ghi vào file 600 thay vì truyền qua -e (tránh lộ ở ps / docker run args)
-          (
-            umask 077
-            {
-              printf 'PORT=%s\n' "$PORT"
-              printf 'ASPNETCORE_URLS=http://0.0.0.0:%s\n' "$PORT"
-              printf 'ASPNETCORE_ENVIRONMENT=Production\n'
-              printf 'TZ=Asia/Ho_Chi_Minh\n'
-              printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
-              printf 'GOOGLE_TTS_API_KEY=%s\n' "${GOOGLE_TTS_API_KEY:-}"
-              printf 'VOICE_NAME=%s\n' "${VOICE_NAME:-}"
-              printf 'SPEAKING_RATE=%s\n' "${SPEAKING_RATE:-}"
-            } > "$ENV_FILE"
-          )
-
-          start_container() {
-            docker run -d \
-              --name "$CONTAINER_NAME" \
-              --network hospital_net \
-              -p "$BIND_ADDR:$PORT:$PORT" \
-              --env-file "$ENV_FILE" \
-              -v /etc/localtime:/etc/localtime:ro \
-              -v "$LOGS_VOLUME":/app/logs \
-              -v "$AUDIO_CACHE_VOLUME":/app/wwwroot/audio/cache \
-              --restart unless-stopped \
-              --log-opt max-size=10m --log-opt max-file=5 \
-              --security-opt no-new-privileges:true \
-              "$1"
-              # Tuỳ chọn thêm khi đã test: --memory 512m --cpus 1 --cap-drop ALL
-          }
-
-          is_healthy() {
-            curl -fsS -o /dev/null --max-time 5 "http://localhost:$PORT/health" 2>/dev/null \
-              || curl -fsS -o /dev/null --max-time 5 "http://localhost:$PORT/" 2>/dev/null
-          }
-
-          wait_healthy() {
-            local retries=$1 i
-            for i in $(seq 1 "$retries"); do
-              if is_healthy; then return 0; fi
-              echo "Healthcheck $i/$retries chưa đạt, thử lại sau 5s..."
+            echo "Chờ service khởi động..."
+            retries=6
+            count=0
+            until curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1 || curl -s -f http://localhost:"$PORT"/health > /dev/null 2>&1 || [ "$count" -ge "$retries" ]; do
+              count=$((count + 1))
+              echo "Healthcheck attempt $count/$retries failed; retry in 5s..."
               sleep 5
             done
-            return 1
-          }
 
-          echo "Thay container cũ bằng image mới..."
-          docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
-          start_container "$NEW_IMAGE"
-
-          echo "Chờ service khởi động (tối đa ~60s)..."
-          if wait_healthy 12; then
-            echo "Health check thành công! Đã deploy $NEW_IMAGE"
-            docker image prune -f >/dev/null 2>&1 || true
-            exit 0
-          fi
-
-          echo "Health check thất bại! Log gần nhất:"
-          docker logs "$CONTAINER_NAME" --tail=100 || true
-
-          docker image ls "$IMAGE_NAME" --format '{{.Repository}}:{{.Tag}}' \
-          | grep -v ':latest$' | grep -v ':<none>$' \
-          | tail -n +4 \
-          | xargs -r docker rmi >/dev/null 2>&1 || true
-
-          if [ -n "$PREVIOUS_IMAGE_ID" ]; then
-            echo "Khôi phục từ image cũ ($PREVIOUS_IMAGE_ID)..."
-            start_container "$PREVIOUS_IMAGE_ID"
-            if wait_healthy 6; then
-              echo "Rollback thành công (hệ thống đang chạy bản cũ)."
+            if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1 || curl -s -f http://localhost:"$PORT"/health > /dev/null 2>&1; then
+              echo "Health check thành công!"
             else
-              echo "ROLLBACK THẤT BẠI - CẦN KIỂM TRA THỦ CÔNG NGAY!"
+              echo "Health check thất bại! Dump logs:"
+              docker logs "$CONTAINER_NAME" --tail=100
+
+              echo "Bắt đầu rollback..."
+              docker rm -f "$CONTAINER_NAME" || true
+
+              if [ -n "$PREVIOUS_IMAGE_ID" ]; then
+                echo "Khôi phục container từ image cũ ($PREVIOUS_IMAGE_ID)..."
+                start_container "$PREVIOUS_IMAGE_ID"
+                sleep 5
+                if curl -s -f -I http://localhost:"$PORT" > /dev/null 2>&1 || curl -s -f http://localhost:"$PORT"/health > /dev/null 2>&1; then
+                  echo "Rollback thành công!"
+                else
+                  echo "Rollback thất bại! Cần kiểm tra thủ công."
+                fi
+              else
+                echo "Không tìm thấy phiên bản cũ để rollback."
+              fi
+
+              exit 1
             fi
-          else
-            echo "Không có phiên bản cũ để rollback."
-          fi
-
-          exit 1
-          REMOTE_EOF
-
-          # Truyền biến qua stdin (không nằm trên command line của ssh / ps)
-          {
-            for v in REGISTRY_TOKEN REGISTRY_USERNAME DATABASE_URL GOOGLE_TTS_API_KEY \
-                     VOICE_NAME SPEAKING_RATE LOGS_VOLUME BIND_ADDR IMAGE_NAME IMAGE_TAG \
-                     CONTAINER_NAME PORT; do
-              printf 'export %s=%q\n' "$v" "${!v-}"
-            done
-            cat "$REMOTE_SCRIPT"
-          } | ssh "${SSH_OPTS[@]}" "$SSH_USERNAME@$SSH_HOST" /bin/bash -s
+          EOF
