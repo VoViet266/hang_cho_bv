@@ -24,6 +24,7 @@ namespace HangChoKhamBenh.Web.Services
 
             var query = _context.HangChoDuocTmd.AsNoTracking()
                 .Where(h => h.Xoa == 0
+                         && h.An == 0
                          && h.Ngaynhap >= today && h.Ngaynhap < tomorrow);
 
             if (isAll)
@@ -63,8 +64,9 @@ namespace HangChoKhamBenh.Web.Services
             {
                 var rawHangCho = await _context.HangChoDuocTmd.AsNoTracking()
                     .Where(h => h.Xoa == 0
+                             && h.An == 0
                              && (h.Ngaynhap == null || h.Ngaynhap >= cutoffTime)
-                             && h.Dagiao == 0
+                             && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
                              && (h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2 || h.Khochan == 13 || h.Khochan == 3))
                     .OrderBy(h => h.Ngaynhap)
                     .ThenBy(h => h.Makb)
@@ -310,60 +312,40 @@ namespace HangChoKhamBenh.Web.Services
 
                     if (item.HasBoth)
                     {
+                        var currentOcua = !string.IsNullOrEmpty(item.OcuaDv) ? item.OcuaDv : item.OcuaBhyt;
                         if (!isPaidDv)
                         {
-                            // Chưa đóng tiền DV: nếu đã gọi -> Tới lượt thu, chưa gọi -> Chờ thu tiền
-                            var currentOcua = !string.IsNullOrEmpty(item.OcuaDv) ? item.OcuaDv : item.OcuaBhyt;
-                            bool daGoi = !string.IsNullOrEmpty(currentOcua);
-                            waitingList.Add(CreateQueueItem(13, "Toa Dịch Vụ", true, true, true, false, false, daGoi ? "Tới lượt thu" : "Chờ thu tiền", soTien, soTienStr, currentOcua));
+                            // Chưa đóng tiền DV -> Giai đoạn 1: Chờ thu tiền
+                            waitingList.Add(CreateQueueItem(DuocKhoConstant.DichVu, DuocLoaiToaText.BhytVaDichVu, true, true, true, false, false, DuocTrangThaiText.ChoThuTien, soTien, soTienStr, currentOcua));
                         }
                         else
                         {
-                            // Đã đóng tiền DV: Gom 1 dòng với giá tiền và trạng thái Chờ tới lượt
-                            var currentOcua = !string.IsNullOrEmpty(item.OcuaBhyt) ? item.OcuaBhyt : item.OcuaDv;
-                            waitingList.Add(CreateQueueItem(0, "BHYT + Dịch Vụ", true, true, true, true, true, "Chờ tới lượt", soTien, soTienStr, currentOcua));
+                            // Đã đóng tiền DV -> Giai đoạn 2: Đang soạn thuốc
+                            waitingList.Add(CreateQueueItem(DuocKhoConstant.CaHai, DuocLoaiToaText.BhytVaDichVu, true, true, true, true, true, DuocTrangThaiText.DangSoanThuoc, soTien, soTienStr, currentOcua));
                         }
                     }
                     else if (item.HasBhyt)
                     {
-                        waitingList.Add(CreateQueueItem(14, "Toa BHYT", true, false, false, true, true, "Chờ tới lượt", null, "", item.OcuaBhyt));
+                        // BHYT thuần: CHỈ KHI GỌI Ô MỚI HIỆN RA CHỜ (trạng thái: Đang soạn thuốc)
+                        var oCua = !string.IsNullOrWhiteSpace(item.OcuaBhyt) ? item.OcuaBhyt : item.Taikhoan;
+                        if (!string.IsNullOrWhiteSpace(oCua))
+                        {
+                            waitingList.Add(CreateQueueItem(DuocKhoConstant.Bhyt, DuocLoaiToaText.Bhyt, true, false, false, true, true, DuocTrangThaiText.DangSoanThuoc, null, "", oCua));
+                        }
                     }
                     else
                     {
-                        bool daGoi = !string.IsNullOrEmpty(item.OcuaDv) || !string.IsNullOrEmpty(item.Taikhoan);
-                        string trangThai = isPaidDv ? "Chờ tới lượt" : (daGoi ? "Tới lượt thu" : "Chờ thu tiền");
-                        waitingList.Add(CreateQueueItem(13, "Toa Dịch Vụ", false, true, false, false, isPaidDv, trangThai, soTien, soTienStr, item.OcuaDv));
+                        // Dịch vụ thuần: Luôn hiện, có 2 giai đoạn: Chờ thu tiền và Đang soạn thuốc
+                        string trangThai = isPaidDv ? DuocTrangThaiText.DangSoanThuoc : DuocTrangThaiText.ChoThuTien;
+                        waitingList.Add(CreateQueueItem(DuocKhoConstant.DichVu, DuocLoaiToaText.DichVu, false, true, false, false, isPaidDv, trangThai, soTien, soTienStr, item.OcuaDv));
                     }
                 }
 
-                // Thiết lập trạng thái chuẩn:
-                // - Chưa thu: nếu đã gọi ô cửa -> 'Tới lượt thu', nếu chưa gọi -> 'Chờ thu tiền'
-                // - Đã thu / BHYT: ca đầu tiên -> 'Tới lượt', các ca sau -> 'Chờ tới lượt'
-                bool foundToiLuot = false;
+                // Đánh lại STT liên tục, bỏ near (IsToiLuot = false)
                 for (int i = 0; i < waitingList.Count; i++)
                 {
                     waitingList[i].Stt = i + 1;
-                    if (waitingList[i].DaThu == false)
-                    {
-                        bool daGoi = !string.IsNullOrEmpty(waitingList[i].OCua);
-                        waitingList[i].IsToiLuot = false;
-                        waitingList[i].TrangThai = daGoi ? "Tới lượt thu" : "Chờ thu tiền";
-                    }
-                    else
-                    {
-                        // Ca đầu tiên đã thanh toán / BHYT trong danh sách sẽ là "Tới lượt nhận"
-                        if (!foundToiLuot)
-                        {
-                            waitingList[i].IsToiLuot = true;
-                            waitingList[i].TrangThai = "Tới lượt nhận";
-                            foundToiLuot = true;
-                        }
-                        else
-                        {
-                            waitingList[i].IsToiLuot = false;
-                            waitingList[i].TrangThai = "Chờ tới lượt";
-                        }
-                    }
+                    waitingList[i].IsToiLuot = false;
                 }
 
                 if (waitingList.Count > 0)
@@ -392,7 +374,7 @@ namespace HangChoKhamBenh.Web.Services
                     Title = title,
                     TotalWaiting = 0,
                     TotalToday = 0,
-                    WaitingList = new(),
+                    WaitingList = [],
                     NextPatientName = string.Empty
                 };
             }

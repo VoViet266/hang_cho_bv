@@ -20,7 +20,7 @@ namespace HangChoKhamBenh.Web.Models
         public DashboardOverviewDto Overview { get; set; } = new();
 
         [JsonPropertyName("rooms")]
-        public List<ClinicRoomOverviewDto> Rooms { get; set; } = new();
+        public List<ClinicRoomOverviewDto> Rooms { get; set; } = [];
     }
 }
 

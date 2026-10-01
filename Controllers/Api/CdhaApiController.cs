@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using HangChoKhamBenh.Web.Helpers;
 using HangChoKhamBenh.Web.Models;
 using HangChoKhamBenh.Web.Services;
 
@@ -156,6 +155,32 @@ namespace HangChoKhamBenh.Web.Controllers.Api
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[CDHA] Lỗi khi lấy danh sách bệnh nhân đã ẩn");
+                return StatusCode(500, new { success = false, message = "Lỗi máy chủ: " + ex.Message });
+            }
+        }
+
+        [HttpGet("room")]
+        [HttpGet("queue")]
+        public async Task<IActionResult> GetCdhaRoomData([FromQuery] string? roomId, [FromQuery] string? roomName, [FromQuery] string? tenphong)
+        {
+            var target = roomId ?? roomName ?? tenphong;
+            if (string.IsNullOrWhiteSpace(target))
+            {
+                return BadRequest(new { success = false, message = "Thiếu tên phòng hoặc mã phòng CDHA" });
+            }
+
+            try
+            {
+                var data = await _cdhaService.LayDanhSachBenhNhanChoCDHAAsync(target);
+                return Ok(new
+                {
+                    success = true,
+                    data
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[CDHA] Lỗi khi tải dữ liệu hàng chờ phòng {Target}", target);
                 return StatusCode(500, new { success = false, message = "Lỗi máy chủ: " + ex.Message });
             }
         }

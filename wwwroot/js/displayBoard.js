@@ -61,9 +61,35 @@ function extractBirthYear(val, rowEl = null) {
 }
 window.extractBirthYear = extractBirthYear;
 
+function highlightSpeakingRow(patientName, isSpeaking) {
+  if (!patientName) return;
+  const cleanName = patientName.trim().toLowerCase();
+  const rows = document.querySelectorAll("tr[data-patient]");
+  rows.forEach((r) => {
+    const rowName = (r.dataset.patient || r.getAttribute("data-patient") || "").trim().toLowerCase();
+    if (rowName === cleanName) {
+      if (isSpeaking) {
+        r.classList.add("speaking-row-active", "bg-blue-100", "ring-4", "ring-blue-500");
+      } else {
+        r.classList.remove("speaking-row-active", "bg-blue-100", "ring-4", "ring-blue-500");
+      }
+    }
+  });
+}
+
 const audioQueue = new window.AudioQueueManager({
   isEnabled: () => soundEnabled,
   gapMs: 350,
+  onStart: (item) => {
+    if (item && item.meta && item.meta.patientName) {
+      highlightSpeakingRow(item.meta.patientName, true);
+    }
+  },
+  onEnd: (item) => {
+    if (item && item.meta && item.meta.patientName) {
+      highlightSpeakingRow(item.meta.patientName, false);
+    }
+  },
 });
 
 // ==========================================
@@ -122,7 +148,11 @@ function requestSpeak(patientName, roomName, dobYear) {
   const dobClean = extractBirthYear(dobYear);
   const dobText = dobClean ? `, sinh năm ${dobClean}` : "";
   const speakText = `Mời bệnh nhân, ${patientName.trim()}${dobText}, vào ${spokenRoom}`;
-  audioQueue.enqueue(speakText);
+  audioQueue.enqueue(speakText, {
+    patientName: patientName.trim(),
+    roomName: roomName || "",
+    dobYear: dobClean || "",
+  });
 }
 window.requestSpeak = requestSpeak;
 
@@ -644,6 +674,9 @@ function onRowClick(el) {
       updateSoundIcon();
       unlockBrowserAudio();
     }
+
+  
+
     requestSpeak(patientName, roomName, dobYear);
     emitBroadcastSpeak(roomType, roomId, patientName, roomName, dobYear);
   }
@@ -1102,7 +1135,52 @@ function initSocket() {
     }
   }
 
+  let boardFallbackTimer = null;
+
+  function fetchRoomDataFallback() {
+    roomContainers.forEach(async (container) => {
+      const roomType = container.dataset.roomType || "room";
+      const roomId = container.dataset.roomId;
+      if (!roomId) return;
+
+      try {
+        let url = "";
+        if (roomType === "cdha") {
+          url = `/api/cdha/queue?roomId=${encodeURIComponent(roomId)}`;
+        }
+        if (url) {
+          const res = await fetch(url);
+          if (res.ok) {
+            const json = await res.json();
+            if (json && json.data) {
+              updateConnectionStatus(true, new Date());
+              updateRoomDOM(roomId, json.data);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`[Fallback Polling] Lỗi tải dữ liệu phòng ${roomId}:`, err);
+      }
+    });
+  }
+
+  function startBoardFallbackPolling() {
+    if (boardFallbackTimer) return;
+    console.log("[DisplayBoard] Kích hoạt Fallback Polling 5s do mất kết nối SignalR...");
+    fetchRoomDataFallback();
+    boardFallbackTimer = setInterval(fetchRoomDataFallback, 5000);
+  }
+
+  function stopBoardFallbackPolling() {
+    if (boardFallbackTimer) {
+      clearInterval(boardFallbackTimer);
+      boardFallbackTimer = null;
+      console.log("[DisplayBoard] Dừng Fallback Polling (SignalR đã kết nối lại).");
+    }
+  }
+
   boardSocket.on("connect", () => {
+    stopBoardFallbackPolling();
     updateConnectionStatus(true, new Date());
     roomContainers.forEach((container) => {
       const roomType = container.dataset.roomType;
@@ -1113,14 +1191,17 @@ function initSocket() {
 
   boardSocket.on("disconnect", () => {
     updateConnectionStatus(false);
+    startBoardFallbackPolling();
   });
 
   boardSocket.on("connect_error", () => {
     updateConnectionStatus(false);
+    startBoardFallbackPolling();
   });
 
   boardSocket.on("room_data_updated", (payload) => {
     if (!payload || !payload.roomId) return;
+    stopBoardFallbackPolling();
     updateConnectionStatus(true, new Date());
     updateRoomDOM(payload.roomId, payload.data);
   });

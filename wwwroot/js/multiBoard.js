@@ -17,9 +17,35 @@ function escapeHtml(str) {
 }
 window.escapeHtml = escapeHtml;
 
+function highlightSpeakingRow(patientName, isSpeaking) {
+  if (!patientName) return;
+  const cleanName = patientName.trim().toLowerCase();
+  const rows = document.querySelectorAll("tr[data-patient]");
+  rows.forEach((r) => {
+    const rowName = (r.dataset.patient || r.getAttribute("data-patient") || "").trim().toLowerCase();
+    if (rowName === cleanName) {
+      if (isSpeaking) {
+        r.classList.add("speaking-row-active", "bg-blue-100", "ring-4", "ring-blue-500");
+      } else {
+        r.classList.remove("speaking-row-active", "bg-blue-100", "ring-4", "ring-blue-500");
+      }
+    }
+  });
+}
+
 const audioQueue = new window.AudioQueueManager({
   isEnabled: () => soundEnabled,
-  gapMs: 300,
+  gapMs: 350,
+  onStart: (item) => {
+    if (item && item.meta && item.meta.patientName) {
+      highlightSpeakingRow(item.meta.patientName, true);
+    }
+  },
+  onEnd: (item) => {
+    if (item && item.meta && item.meta.patientName) {
+      highlightSpeakingRow(item.meta.patientName, false);
+    }
+  },
 });
 
 // ==========================================
@@ -124,7 +150,11 @@ function requestSpeak(patientName, roomName, dobYear) {
   const dobClean = extractBirthYear(dobYear);
   const dobText = dobClean ? `, sinh năm ${dobClean}` : "";
   const speakText = `Mời bệnh nhân, ${patientName.trim()}${dobText}, vào ${spokenRoom}`;
-  audioQueue.enqueue(speakText);
+  audioQueue.enqueue(speakText, {
+    patientName: patientName.trim(),
+    roomName: roomName || "",
+    dobYear: dobClean || "",
+  });
 }
 window.requestSpeak = requestSpeak;
 

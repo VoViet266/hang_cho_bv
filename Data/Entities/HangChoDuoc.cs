@@ -26,6 +26,9 @@ namespace HangChoKhamBenh.Web.Data.Entities
         [Column("xoa")]
         public decimal Xoa { get; set; } = 0;
 
+        [Column("an")]
+        public int An { get; set; } = 0;
+
         [Column("ngaykcb")]
         public DateTime? Ngaykcb { get; set; }
 

@@ -91,7 +91,7 @@ namespace HangChoKhamBenh.Web.Controllers.Api
 
                 if (!string.IsNullOrEmpty(oCua))
                 {
-                    var cleanTrangThai = string.IsNullOrWhiteSpace(req.TrangThai) ? "Đang soạn" : req.TrangThai.Trim();
+                    var cleanTrangThai = string.IsNullOrWhiteSpace(req.TrangThai) ? "Đang soạn thuốc" : req.TrangThai.Trim();
                     _ = Task.Run(async () =>
                     {
                         try
@@ -171,6 +171,49 @@ namespace HangChoKhamBenh.Web.Controllers.Api
         public async Task<IActionResult> LayDanhSachKhongMua()
         {
             var result = await _duocNhapService.LayDanhSachKhongMuaAsync();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Ẩn bệnh nhân khỏi hàng chờ dược (an = 1)
+        /// </summary>
+        [HttpPost("an")]
+        public async Task<IActionResult> An([FromBody] DuocCapNhatTrangThaiRequest req)
+        {
+            var success = await _duocNhapService.AnAsync(req.Makb ?? "", req.Mabn ?? "");
+            if (success)
+            {
+                _logger.LogInformation("Ẩn bệnh nhân makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
+                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
+                return Ok(new { success = true, message = "Đã ẩn bệnh nhân khỏi hàng chờ!" });
+            }
+            return Ok(new { success = false, message = "Không tìm thấy dữ liệu để cập nhật." });
+        }
+
+        /// <summary>
+        /// Bỏ ẩn / Khôi phục bệnh nhân vào hàng chờ dược (an = 0)
+        /// </summary>
+        [HttpPost("bo-an")]
+        public async Task<IActionResult> BoAn([FromBody] DuocCapNhatTrangThaiRequest req)
+        {
+            var success = await _duocNhapService.BoAnAsync(req.Makb ?? "", req.Mabn ?? "");
+            if (success)
+            {
+                _logger.LogInformation("Bỏ ẩn bệnh nhân makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
+                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
+                return Ok(new { success = true, message = "Đã khôi phục bệnh nhân vào hàng chờ!" });
+            }
+            return Ok(new { success = false, message = "Không tìm thấy dữ liệu để cập nhật." });
+        }
+
+        /// <summary>
+        /// Lấy danh sách bệnh nhân đã ẩn hôm nay
+        /// </summary>
+        [HttpGet("da-an")]
+        [HttpGet("danh-sach-an")]
+        public async Task<IActionResult> LayDanhSachDaAn()
+        {
+            var result = await _duocNhapService.LayDanhSachDaAnAsync();
             return Ok(result);
         }
 
