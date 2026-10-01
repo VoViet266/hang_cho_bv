@@ -101,10 +101,10 @@ namespace HangChoKhamBenh.Web.Models
         public int TotalWaiting { get; set; }
 
         [JsonPropertyName("waitingList")]
-        public List<PatientWaitingDto> WaitingList { get; set; } = new();
+        public List<PatientWaitingDto> WaitingList { get; set; } = [];
 
         [JsonPropertyName("hiddenList")]
-        public List<HiddenPatientDto> HiddenList { get; set; } = new();
+        public List<HiddenPatientDto> HiddenList { get; set; } = [];
     }
 
     public class HidePatientRequest

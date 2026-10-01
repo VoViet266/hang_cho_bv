@@ -54,8 +54,8 @@ namespace HangChoKhamBenh.Web.Services
                                 (kb.Ngaykcb ?? dk.Ngaydk)
                         select new
                         {
-                            Makb = dk.Makb,
-                            Mabn = dk.Mabn,
+                            dk.Makb,
+                            dk.Mabn,
                             Ngaydk = kb.Ngaykcb ?? dk.Ngaydk,
                             Holot = bn != null ? bn.Holot : string.Empty,
                             Ten = bn != null ? bn.Ten : string.Empty,

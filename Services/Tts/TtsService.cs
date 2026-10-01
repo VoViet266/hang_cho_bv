@@ -121,13 +121,14 @@ namespace HangChoKhamBenh.Web.Services
             var googleApiKey = _configuration["TTS:ApiKey"] ?? _configuration["GOOGLE_TTS_API_KEY"];
 
             var client = _httpClientFactory.CreateClient("TTS");
-            client.Timeout = TimeSpan.FromSeconds(20);
+            client.Timeout = TimeSpan.FromSeconds(6);
 
-            // 2. Thử Official Google Cloud TTS
+            // 2. Thử Official Google Cloud TTS (nếu có cấu hình API Key)
             if (!string.IsNullOrEmpty(googleApiKey))
             {
                 try
                 {
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                     var url = $"https://texttospeech.googleapis.com/v1/text:synthesize?key={googleApiKey}";
                     var payload = new
                     {
@@ -137,11 +138,11 @@ namespace HangChoKhamBenh.Web.Services
                     };
 
                     var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-                    var response = await client.PostAsync(url, content);
+                    var response = await client.PostAsync(url, content, cts.Token);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var responseJson = await response.Content.ReadAsStringAsync();
+                        var responseJson = await response.Content.ReadAsStringAsync(cts.Token);
                         using var doc = JsonDocument.Parse(responseJson);
                         if (doc.RootElement.TryGetProperty("audioContent", out var audioContentProp))
                         {
@@ -168,30 +169,45 @@ namespace HangChoKhamBenh.Web.Services
             // 3. Fallback sang Google Translate TTS (miễn phí)
             if (audioBytes == null || audioBytes.Length == 0)
             {
-                try
+                var endpoints = new[]
                 {
-                    var googleUrl = $"https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q={Uri.EscapeDataString(normalizedText)}";
-                    using var req = new HttpRequestMessage(HttpMethod.Get, googleUrl);
-                    req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+                    $"https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q={Uri.EscapeDataString(normalizedText)}",
+                    $"https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=gtx&q={Uri.EscapeDataString(normalizedText)}"
+                };
 
-                    var response = await client.SendAsync(req);
-                    if (!response.IsSuccessStatusCode)
+                foreach (var googleUrl in endpoints)
+                {
+                    try
                     {
-                        throw new Exception($"Google Translate TTS trả về mã lỗi: {response.StatusCode}");
-                    }
+                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                        using var req = new HttpRequestMessage(HttpMethod.Get, googleUrl);
+                        req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
 
-                    audioBytes = await response.Content.ReadAsByteArrayAsync();
-                    source = "Google-Translate (Free)";
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "[TTS] Google Translate fallback cũng thất bại");
-                    throw;
+                        var response = await client.SendAsync(req, cts.Token);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            audioBytes = await response.Content.ReadAsByteArrayAsync(cts.Token);
+                            if (audioBytes != null && audioBytes.Length > 0)
+                            {
+                                source = "Google-Translate (Free)";
+                                break;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "[TTS] Thử endpoint Translate thất bại ({Url})", googleUrl);
+                    }
                 }
             }
 
+            if (audioBytes == null || audioBytes.Length == 0)
+            {
+                throw new Exception("Không thể tạo giọng đọc TTS qua bất kỳ cổng dịch vụ nào.");
+            }
+
             // 4. Ghi file nguyên tử (Atomic write)
-            if (audioBytes != null && audioBytes.Length > 0)
+            if (audioBytes.Length > 0)
             {
                 var tempPath = $"{filePath}.tmp.{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
                 try
@@ -212,7 +228,7 @@ namespace HangChoKhamBenh.Web.Services
 
             return new TtsResult
             {
-                AudioBytes = audioBytes ?? Array.Empty<byte>(),
+                AudioBytes = audioBytes,
                 Hash = hash,
                 FromCache = false,
                 Source = source,

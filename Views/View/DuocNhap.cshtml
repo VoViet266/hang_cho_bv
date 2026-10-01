@@ -1732,7 +1732,12 @@
                     try {
                         hubConnection = new signalR.HubConnectionBuilder()
                             .withUrl('/queueHub')
-                            .withAutomaticReconnect([0, 2000, 5000, 10000])
+                            .withAutomaticReconnect({
+                                nextRetryDelayInMilliseconds: (retryContext) => {
+                                    const delays = [0, 1000, 2000, 3000, 5000];
+                                    return delays[retryContext.previousAttempts] || 5000;
+                                }
+                            })
                             .build();
 
                         hubConnection.on('room_data_updated', payload => {
@@ -1746,9 +1751,31 @@
                             refreshAllColumns(true);
                         });
 
-                        hubConnection.start().then(() => {
-                            hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
-                        }).catch(err => console.warn('SignalR start error:', err));
+                        hubConnection.onclose(() => {
+                            console.warn('[SignalR DuocNhap] Hub connection closed. Đang kết nối lại...');
+                            setTimeout(startHub, 3000);
+                        });
+
+                        async function startHub() {
+                            if (hubConnection.state === signalR.HubConnectionState.Connected) return;
+                            try {
+                                await hubConnection.start();
+                                await hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
+                                refreshAllColumns(true);
+                            } catch (err) {
+                                console.warn('[SignalR DuocNhap] Kết nối thất bại, thử lại sau 3s...', err);
+                                setTimeout(startHub, 3000);
+                            }
+                        }
+
+                        if (typeof window !== 'undefined') {
+                            window.addEventListener('online', () => {
+                                console.log('[DuocNhap] Thiết bị online trở lại, đang kết nối lại SignalR...');
+                                startHub();
+                            });
+                        }
+
+                        startHub();
                     } catch (e) {
                         console.warn('Lỗi init SignalR:', e);
                     }

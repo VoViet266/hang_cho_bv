@@ -1135,7 +1135,52 @@ function initSocket() {
     }
   }
 
+  let boardFallbackTimer = null;
+
+  function fetchRoomDataFallback() {
+    roomContainers.forEach(async (container) => {
+      const roomType = container.dataset.roomType || "room";
+      const roomId = container.dataset.roomId;
+      if (!roomId) return;
+
+      try {
+        let url = "";
+        if (roomType === "cdha") {
+          url = `/api/cdha/queue?roomId=${encodeURIComponent(roomId)}`;
+        }
+        if (url) {
+          const res = await fetch(url);
+          if (res.ok) {
+            const json = await res.json();
+            if (json && json.data) {
+              updateConnectionStatus(true, new Date());
+              updateRoomDOM(roomId, json.data);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`[Fallback Polling] Lỗi tải dữ liệu phòng ${roomId}:`, err);
+      }
+    });
+  }
+
+  function startBoardFallbackPolling() {
+    if (boardFallbackTimer) return;
+    console.log("[DisplayBoard] Kích hoạt Fallback Polling 5s do mất kết nối SignalR...");
+    fetchRoomDataFallback();
+    boardFallbackTimer = setInterval(fetchRoomDataFallback, 5000);
+  }
+
+  function stopBoardFallbackPolling() {
+    if (boardFallbackTimer) {
+      clearInterval(boardFallbackTimer);
+      boardFallbackTimer = null;
+      console.log("[DisplayBoard] Dừng Fallback Polling (SignalR đã kết nối lại).");
+    }
+  }
+
   boardSocket.on("connect", () => {
+    stopBoardFallbackPolling();
     updateConnectionStatus(true, new Date());
     roomContainers.forEach((container) => {
       const roomType = container.dataset.roomType;
@@ -1146,14 +1191,17 @@ function initSocket() {
 
   boardSocket.on("disconnect", () => {
     updateConnectionStatus(false);
+    startBoardFallbackPolling();
   });
 
   boardSocket.on("connect_error", () => {
     updateConnectionStatus(false);
+    startBoardFallbackPolling();
   });
 
   boardSocket.on("room_data_updated", (payload) => {
     if (!payload || !payload.roomId) return;
+    stopBoardFallbackPolling();
     updateConnectionStatus(true, new Date());
     updateRoomDOM(payload.roomId, payload.data);
   });

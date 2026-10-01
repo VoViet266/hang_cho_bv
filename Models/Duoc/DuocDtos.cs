@@ -2,6 +2,56 @@ using System.Text.Json.Serialization;
 
 namespace HangChoKhamBenh.Web.Models
 {
+    /// <summary>
+    /// Mã trạng thái giao thuốc (lưu trong cột dagiao dưới database)
+    /// </summary>
+    public enum DuocTrangThaiGiao : int
+    {
+        ChoPhat = 0,   // Chờ nhận / Chờ phát thuốc / Chưa thu
+        DaPhat = 1,    // Đã phát / Đã giao thuốc
+        KhongMua = 3   // Khách không mua / Hủy
+    }
+
+    /// <summary>
+    /// Mã trạng thái thu tiền (lưu trong cột dathu dưới database)
+    /// </summary>
+    public enum DuocTrangThaiThu : int
+    {
+        ChuaThu = 0,   // Chưa đóng tiền
+        DaThu = 1      // Đã đóng tiền / Đang soạn thuốc
+    }
+
+    /// <summary>
+    /// Chuỗi văn bản trạng thái hiển thị chuẩn trên giao diện
+    /// </summary>
+    public static class DuocTrangThaiText
+    {
+        public const string ChoThuTien = "Chờ thu tiền";
+        public const string DangSoanThuoc = "Đang soạn thuốc";
+        public const string KhongMua = "Không mua";
+        public const string DaAn = "Đã ẩn";
+    }
+
+    /// <summary>
+    /// Loại toa thuốc chuẩn
+    /// </summary>
+    public static class DuocLoaiToaText
+    {
+        public const string Bhyt = "Toa BHYT";
+        public const string DichVu = "Toa Dịch Vụ";
+        public const string BhytVaDichVu = "BHYT + Dịch Vụ";
+    }
+
+    /// <summary>
+    /// Mã kho dược
+    /// </summary>
+    public static class DuocKhoConstant
+    {
+        public const int CaHai = 0;
+        public const int DichVu = 13;
+        public const int Bhyt = 14;
+    }
+
     public class DuocQueueItemDto
     {
         [JsonPropertyName("stt")]
@@ -86,7 +136,7 @@ namespace HangChoKhamBenh.Web.Models
         public int TotalToday { get; set; }
 
         [JsonPropertyName("waitingList")]
-        public List<DuocQueueItemDto> WaitingList { get; set; } = new();
+        public List<DuocQueueItemDto> WaitingList { get; set; } = [];
 
         [JsonPropertyName("nextPatientName")]
         public string NextPatientName { get; set; } = string.Empty;

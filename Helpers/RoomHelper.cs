@@ -15,8 +15,8 @@ namespace HangChoKhamBenh.Web.Helpers
 
     public static class RoomHelper
     {
-        public static readonly List<CdhaRoomDefinition> CdhaRooms = new()
-        {
+        public static readonly List<CdhaRoomDefinition> CdhaRooms =
+        [
             new CdhaRoomDefinition
             {
                 Id = "1",
@@ -65,7 +65,7 @@ namespace HangChoKhamBenh.Web.Helpers
                 DisplayName = "Phòng 6 (Phòng Siêu âm 6)",
                 Aliases = ["6", "sa6", "phong 6", "phòng 6", "phòng siêu âm 6", "phong sieu am 6"]
             }
-        };
+        ];
 
         public static readonly string[] DefaultCdhaRooms =
         [
@@ -155,7 +155,7 @@ namespace HangChoKhamBenh.Web.Helpers
 
         public static List<string> ParseCdhaRoomParams(string? param)
         {
-            if (string.IsNullOrWhiteSpace(param)) return new List<string>();
+            if (string.IsNullOrWhiteSpace(param)) return [];
 
             var rawTokens = new List<string>();
             var str = param.Trim();
