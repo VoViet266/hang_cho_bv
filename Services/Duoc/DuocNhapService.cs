@@ -12,11 +12,11 @@ namespace HangChoKhamBenh.Web.Services
         private readonly ILogger<DuocNhapService> _logger = logger;
 
         // ===== Constants =====
-        private static readonly string[] KhoDv   = ["13"];
+        private static readonly string[] KhoDv = ["13"];
         private static readonly string[] KhoBhyt = ["14"];
         private static readonly int[] HcBhyt = [14];
-        private static readonly int[] HcDv   = [13];
-        private static readonly int[] HcAll  = [14, 13];
+        private static readonly int[] HcDv = [13];
+        private static readonly int[] HcAll = [14, 13];
 
         // ===== Inner types =====
         private record CtRow(string? Makh, string? Mabn, string? Sohd, string? Khochan, decimal? Thanhtien);
@@ -29,9 +29,9 @@ namespace HangChoKhamBenh.Web.Services
             string Taikhoan, string OcuaBhyt, string OcuaDv, string Maba,
             DateTime? Ngaynhap, DateTime? Ngaygiao, string HoTen, DateTime? Ngaysinh, decimal? Gioitinh)
         {
-            public bool HasBoth    => HasBhyt && HasDv;
-            public int  Khochan    => HasBoth ? 0 : HasDv ? 13 : 14;
-            public string NamSinh  => Ngaysinh?.ToString("yyyy") ?? "";
+            public bool HasBoth => HasBhyt && HasDv;
+            public int Khochan => HasBoth ? 0 : HasDv ? 13 : 14;
+            public string NamSinh => Ngaysinh?.ToString("yyyy") ?? "";
             public string GioiTinhStr => Gioitinh == 1 ? "Nam" : Gioitinh == 2 ? "Nữ" : "";
         }
 
@@ -101,7 +101,7 @@ namespace HangChoKhamBenh.Web.Services
 
                     if (bn != null)
                     {
-                        hoTen    = $"{bn.Holot} {bn.Ten}".Trim();
+                        hoTen = $"{bn.Holot} {bn.Ten}".Trim();
                         ngaySinh = bn.Ngaysinh?.ToString("dd/MM/yyyy") ?? "";
                         gioiTinh = bn.Gioitinh switch { 1 => "Nam", 2 => "Nữ", _ => "" };
                     }
@@ -116,18 +116,18 @@ namespace HangChoKhamBenh.Web.Services
                 if (string.IsNullOrEmpty(hoTen)) hoTen = actualMakh!;
                 ngayKcb ??= DateTime.Now;
 
-                var dvItems   = ctList.Where(c => KhoDv.Contains(c.Khochan?.Trim())).ToList();
+                var dvItems = ctList.Where(c => KhoDv.Contains(c.Khochan?.Trim())).ToList();
                 var bhytItems = ctList.Where(c => KhoBhyt.Contains(c.Khochan?.Trim())).ToList();
                 ///để phân biệt xem có đơn BHYT không
                 var hasBhyt = bhytItems.Count > 0;
                 ///để phân biệt xem có đơn DV không
-                var hasDv   = dvItems.Count > 0;
+                var hasDv = dvItems.Count > 0;
 
                 static string First(IEnumerable<CtRow> items, Func<CtRow, string?> sel)
                     => items.Select(sel).FirstOrDefault(s => !string.IsNullOrEmpty(s)) ?? "";
 
                 var sohdBhyt = First(bhytItems, c => c.Sohd);
-                var sohdDv   = First(dvItems,   c => c.Sohd);
+                var sohdDv = First(dvItems, c => c.Sohd);
                 var tongTien = dvItems
                     .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? ""))
                     .Sum(g => g.First().Thanhtien ?? 0);
@@ -136,12 +136,18 @@ namespace HangChoKhamBenh.Web.Services
                 {
                     Success = true,
                     Loai = hasBhyt && hasDv ? 0 : hasDv ? 13 : 14,
-                    HasBhyt = hasBhyt, HasDichVu = hasDv,
-                    Makh = actualMakh, Makb = actualMakh, Mabn = mabn,
-                    HoTen = hoTen, NgaySinh = ngaySinh, GioiTinh = gioiTinh,
+                    HasBhyt = hasBhyt,
+                    HasDichVu = hasDv,
+                    Makh = actualMakh,
+                    Makb = actualMakh,
+                    Mabn = mabn,
+                    HoTen = hoTen,
+                    NgaySinh = ngaySinh,
+                    GioiTinh = gioiTinh,
                     NgayKcb = ngayKcb,
                     Sohd = sohdBhyt != "" ? sohdBhyt : sohdDv,
-                    SohdBhyt = sohdBhyt, SohdDv = sohdDv,
+                    SohdBhyt = sohdBhyt,
+                    SohdDv = sohdDv,
                     Thanhtien = tongTien
                 };
             }
@@ -166,6 +172,10 @@ namespace HangChoKhamBenh.Web.Services
                 .Select(h => new { h.Dagiao })
                 .FirstOrDefaultAsync();
 
+            var now = DateTime.Now;
+            var oCuaStr = req.OCua?.Trim();
+            var mabaStr = req.Maba?.Trim();
+
             if (existing == null)
             {
                 await _context.HangChoDuocTmd.AddAsync(new HangChoDuocTmd
@@ -188,9 +198,9 @@ namespace HangChoKhamBenh.Web.Services
             }
 
             bool kichHoat = existing.Dagiao == (decimal)DuocTrangThaiGiao.DaPhat || existing.Dagiao == (decimal)DuocTrangThaiGiao.KhongMua;
-            var now = DateTime.Now;
+       
             var targetDagiao = (decimal)(kichHoat ? DuocTrangThaiGiao.DaPhat : DuocTrangThaiGiao.ChoPhat);
-            var oCuaStr = req.OCua?.Trim();
+            
 
             var updateQuery = _context.HangChoDuocTmd
                 .Where(h => (h.Makb == makb || h.Mabn == mabn) && khoMatch.Contains(h.Khochan));
@@ -220,9 +230,9 @@ namespace HangChoKhamBenh.Web.Services
             try
             {
                 var ngayKcb = req.NgayKcb ?? DateTime.Now;
-                var today   = DateTime.Today;
+                var today = DateTime.Today;
                 bool addBhyt = req.HasBhyt == true;
-                bool addDv   = req.HasDichVu == true;
+                bool addDv = req.HasDichVu == true;
 
                 if (addBhyt)
                 {
@@ -245,7 +255,9 @@ namespace HangChoKhamBenh.Web.Services
 
                 return new DuocNhapThemResponse
                 {
-                    Success = true, Action = "them", Dagiao = 0,
+                    Success = true,
+                    Action = "them",
+                    Dagiao = 0,
                     Khochan = addBhyt && addDv ? 0 : addDv ? 13 : 14,
                     OCua = req.OCua,
                     Message = "Đã tiếp nhận vào hàng chờ."
@@ -339,7 +351,7 @@ namespace HangChoKhamBenh.Web.Services
                     bnDict.TryGetValue(first.Mabn ?? "", out var bn);
                     var name = $"{bn?.Holot} {bn?.Ten}".Trim();
                     var bhyt = g.Where(x => HcBhyt.Contains(x.Khochan)).ToList();
-                    var dv   = g.Where(x => HcDv.Contains(x.Khochan)).ToList();
+                    var dv = g.Where(x => HcDv.Contains(x.Khochan)).ToList();
 
                     return new PatientGroup(
                         Makb: first.Makb, Mabn: first.Mabn,
@@ -348,7 +360,7 @@ namespace HangChoKhamBenh.Web.Services
                         DvDathu: dv.Any(x => x.Dathu == true),
                         Taikhoan: FirstNonEmpty(g.Select(x => x.Taikhoan)),
                         OcuaBhyt: bhyt.FirstOrDefault()?.Taikhoan ?? "",
-                        OcuaDv:   dv.FirstOrDefault()?.Taikhoan ?? "",
+                        OcuaDv: dv.FirstOrDefault()?.Taikhoan ?? "",
                         Maba: FirstNonEmpty(g.Select(x => x.Maba)),
                         Ngaynhap: first.Ngaynhap,
                         Ngaygiao: g.Max(x => x.Ngaygiao),
@@ -374,35 +386,46 @@ namespace HangChoKhamBenh.Web.Services
                 .ToList();
 
             var infoMap = await LoadChungTuInfoAsync(groups.Where(g => g.HasDv));
-            var result  = new List<DuocChuaGiaoItemDto>();
+            var result = new List<DuocChuaGiaoItemDto>();
 
             foreach (var g in groups)
             {
                 var info = g.HasDv ? FindInfo(infoMap, g) : null;
-                var sohd      = info?.Sohd ?? "";
-                var soTien    = info?.TotalTien;
+                var sohd = info?.Sohd ?? "";
+                var soTien = info?.TotalTien;
                 var soTienStr = g.HasDv ? Money(info?.TotalTien ?? 0, "—") : "";
-                var dvPaid    = info?.DaThu ?? g.DvDathu;
+                var dvPaid = info?.DaThu ?? g.DvDathu;
 
                 DuocChuaGiaoItemDto Item(int kho, bool hasBhyt, bool hasDv, bool daThu, decimal? tien, string tienStr, string oCua)
                     => new()
                     {
-                        Makb = g.Makb ?? "", Mabn = g.Mabn ?? "",
-                        HoTen = g.HoTen, NamSinh = g.NamSinh, GioiTinh = g.GioiTinhStr,
-                        Khochan = kho, HasBhyt = hasBhyt, HasDichVu = hasDv,
-                        HasBoth = hasBhyt && hasDv, IsBhyt = kho != DuocKhoConstant.DichVu,
-                        Dagiao = g.Dagiao, DaThu = daThu,
+                        Makb = g.Makb ?? "",
+                        Mabn = g.Mabn ?? "",
+                        HoTen = g.HoTen,
+                        NamSinh = g.NamSinh,
+                        GioiTinh = g.GioiTinhStr,
+                        Khochan = kho,
+                        HasBhyt = hasBhyt,
+                        HasDichVu = hasDv,
+                        HasBoth = hasBhyt && hasDv,
+                        IsBhyt = kho != DuocKhoConstant.DichVu,
+                        Dagiao = g.Dagiao,
+                        DaThu = daThu,
                         TrangThai = daThu ? DuocTrangThaiText.DangSoanThuoc : DuocTrangThaiText.ChoThuTien,
-                        SoTien = tien, SoTienStr = tienStr, Sohd = sohd,
-                        Maba = g.Maba, NgayNhapStr = g.Ngaynhap?.ToString("HH:mm") ?? "", OCua = oCua
+                        SoTien = tien,
+                        SoTienStr = tienStr,
+                        Sohd = sohd,
+                        Maba = g.Maba,
+                        NgayNhapStr = g.Ngaynhap?.ToString("HH:mm") ?? "",
+                        OCua = oCua
                     };
 
                 if (g.HasBoth)
                 {
                     if (!dvPaid)
                     {
-                        result.Add(Item(DuocKhoConstant.DichVu, true, true,  false, soTien, soTienStr, g.OcuaDv));
-                        result.Add(Item(DuocKhoConstant.Bhyt, true, false, true,  null,   "",         g.OcuaBhyt));
+                        result.Add(Item(DuocKhoConstant.DichVu, true, true, false, soTien, soTienStr, g.OcuaDv));
+                        result.Add(Item(DuocKhoConstant.Bhyt, true, false, true, null, "", g.OcuaBhyt));
                     }
                     else
                     {
@@ -426,7 +449,7 @@ namespace HangChoKhamBenh.Web.Services
                          && h.Dagiao >= (decimal)DuocTrangThaiGiao.DaPhat && HcAll.Contains(h.Khochan))
                 .OrderByDescending(h => h.Ngaygiao).Take(80));
 
-            var groups  = (await BuildGroupsAsync(rows)).OrderByDescending(x => x.Ngaygiao).ToList();
+            var groups = (await BuildGroupsAsync(rows)).OrderByDescending(x => x.Ngaygiao).ToList();
             var infoMap = await LoadChungTuInfoAsync(groups.Where(g => g.HasDv));
 
             return groups.Select(g =>
@@ -434,13 +457,22 @@ namespace HangChoKhamBenh.Web.Services
                 var info = FindInfo(infoMap, g);
                 return new DuocDaGiaoItemDto
                 {
-                    Makb = g.Makb ?? "", Mabn = g.Mabn ?? "",
-                    HoTen = g.HoTen, NamSinh = g.NamSinh, GioiTinh = g.GioiTinhStr,
-                    Khochan = g.Khochan, HasBhyt = g.HasBhyt, HasDichVu = g.HasDv,
-                    HasBoth = g.HasBoth, IsBhyt = g.Khochan == 14, Dagiao = g.Dagiao,
+                    Makb = g.Makb ?? "",
+                    Mabn = g.Mabn ?? "",
+                    HoTen = g.HoTen,
+                    NamSinh = g.NamSinh,
+                    GioiTinh = g.GioiTinhStr,
+                    Khochan = g.Khochan,
+                    HasBhyt = g.HasBhyt,
+                    HasDichVu = g.HasDv,
+                    HasBoth = g.HasBoth,
+                    IsBhyt = g.Khochan == 14,
+                    Dagiao = g.Dagiao,
                     SoTienStr = info != null ? Money(info.TotalTien, "") : "",
-                    Sohd = info?.Sohd ?? "", Maba = "",
-                    NgayGiaoStr = g.Ngaygiao?.ToString("HH:mm") ?? "", OCua = g.Taikhoan
+                    Sohd = info?.Sohd ?? "",
+                    Maba = "",
+                    NgayGiaoStr = g.Ngaygiao?.ToString("HH:mm") ?? "",
+                    OCua = g.Taikhoan
                 };
             }).ToList();
         }
@@ -453,7 +485,7 @@ namespace HangChoKhamBenh.Web.Services
                 .Where(h => (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today) && h.Dagiao == (decimal)DuocTrangThaiGiao.KhongMua)
                 .OrderByDescending(h => h.Ngaygiao).Take(80));
 
-            var groups  = (await BuildGroupsAsync(rows)).OrderByDescending(x => x.Ngaygiao).ToList();
+            var groups = (await BuildGroupsAsync(rows)).OrderByDescending(x => x.Ngaygiao).ToList();
             var infoMap = await LoadChungTuInfoAsync(groups);
 
             return [.. groups.Select(g =>
@@ -484,7 +516,7 @@ namespace HangChoKhamBenh.Web.Services
                     .Where(h => h.Xoa == 0 && h.An == 1 && (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today || h.Ngaykcb >= today))
                     .OrderByDescending(h => h.Ngaygiao ?? h.Ngaynhap).Take(100));
 
-                var groups  = (await BuildGroupsAsync(rows)).OrderByDescending(x => x.Ngaygiao ?? x.Ngaynhap).ToList();
+                var groups = (await BuildGroupsAsync(rows)).OrderByDescending(x => x.Ngaygiao ?? x.Ngaynhap).ToList();
                 var infoMap = await LoadChungTuInfoAsync(groups);
 
                 return [.. groups.Select(g =>
@@ -559,8 +591,8 @@ namespace HangChoKhamBenh.Web.Services
             var mabn = req.Mabn?.Trim() ?? "";
             if (string.IsNullOrEmpty(makb) && string.IsNullOrEmpty(mabn)) return (false, "", "", "");
 
-            var oCua   = req.OCua?.Trim() ?? "";
-            var today  = DateTime.Today;
+            var oCua = req.OCua?.Trim() ?? "";
+            var today = DateTime.Today;
 
             var query = _context.HangChoDuocTmd
                 .Where(h => h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today));
@@ -588,7 +620,7 @@ namespace HangChoKhamBenh.Web.Services
                 .SetProperty(h => h.Ngaygiao, DateTime.Now)
             );
 
-            var hoTen   = req.HoTen?.Trim() ?? "";
+            var hoTen = req.HoTen?.Trim() ?? "";
             var namSinh = req.NamSinh?.Trim() ?? "";
 
             if ((string.IsNullOrEmpty(hoTen) || string.IsNullOrEmpty(namSinh)) && !string.IsNullOrEmpty(mabn))
