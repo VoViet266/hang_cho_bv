@@ -25,8 +25,7 @@ namespace HangChoKhamBenh.Web.Services
             var query = _context.HangChoDuocTmd.AsNoTracking()
                 .Where(h => h.Xoa == 0
                          && h.An == 0
-                         && h.Ngaynhap >= today && h.Ngaynhap < tomorrow
-                         && h.Taikhoan != null && h.Taikhoan != "");
+                         && h.Ngaynhap >= today && h.Ngaynhap < tomorrow);
 
             if (isAll)
             {
@@ -68,8 +67,7 @@ namespace HangChoKhamBenh.Web.Services
                              && h.An == 0
                              && (h.Ngaynhap == null || h.Ngaynhap >= cutoffTime)
                              && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
-                             && (h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2 || h.Khochan == 13 || h.Khochan == 3)
-                             && h.Taikhoan != null && h.Taikhoan != "")
+                             && (h.Khochan == 14 || h.Khochan == 1 || h.Khochan == 2 || h.Khochan == 13 || h.Khochan == 3))
                     .OrderBy(h => h.Ngaynhap)
                     .ThenBy(h => h.Makb)
                     .ThenBy(h => h.Mabn)
@@ -314,24 +312,22 @@ namespace HangChoKhamBenh.Web.Services
 
                     if (item.HasBoth)
                     {
+                        // Có Dịch Vụ -> Mặc định hiện lên
                         var currentOcua = !string.IsNullOrEmpty(item.OcuaDv) ? item.OcuaDv : (!string.IsNullOrEmpty(item.OcuaBhyt) ? item.OcuaBhyt : item.Taikhoan);
-                        if (!string.IsNullOrWhiteSpace(currentOcua))
+                        if (!isPaidDv)
                         {
-                            if (!isPaidDv)
-                            {
-                                // Chưa đóng tiền DV -> Giai đoạn 1: Chờ thu tiền
-                                waitingList.Add(CreateQueueItem(DuocKhoConstant.DichVu, DuocLoaiToaText.BhytVaDichVu, true, true, true, false, false, DuocTrangThaiText.ChoThuTien, soTien, soTienStr, currentOcua));
-                            }
-                            else
-                            {
-                                // Đã đóng tiền DV -> Giai đoạn 2: Nhận thuốc
-                                waitingList.Add(CreateQueueItem(DuocKhoConstant.CaHai, DuocLoaiToaText.BhytVaDichVu, true, true, true, true, true, DuocTrangThaiText.DangSoanThuoc, soTien, soTienStr, currentOcua));
-                            }
+                            // Chưa đóng tiền DV -> Giai đoạn 1: Chờ thu tiền
+                            waitingList.Add(CreateQueueItem(DuocKhoConstant.DichVu, DuocLoaiToaText.BhytVaDichVu, true, true, true, false, false, DuocTrangThaiText.ChoThuTien, soTien, soTienStr, currentOcua));
+                        }
+                        else
+                        {
+                            // Đã đóng tiền DV -> Giai đoạn 2: Nhận thuốc
+                            waitingList.Add(CreateQueueItem(DuocKhoConstant.CaHai, DuocLoaiToaText.BhytVaDichVu, true, true, true, true, true, DuocTrangThaiText.DangSoanThuoc, soTien, soTienStr, currentOcua));
                         }
                     }
                     else if (item.HasBhyt)
                     {
-                        // BHYT thuần: CHỈ KHI GỌI Ô MỚI HIỆN RA CHỜ
+                        // BHYT thuần: BHYT mới ẩn, CHỈ KHI GỌI Ô MỚI HIỆN RA CHỜ
                         var oCua = !string.IsNullOrWhiteSpace(item.OcuaBhyt) ? item.OcuaBhyt : item.Taikhoan;
                         if (!string.IsNullOrWhiteSpace(oCua))
                         {
@@ -340,13 +336,10 @@ namespace HangChoKhamBenh.Web.Services
                     }
                     else
                     {
-                        // Dịch vụ thuần: CHỈ KHI GỌI Ô MỚI HIỆN RA CHỜ
+                        // Dịch vụ thuần: Có dịch vụ thì mặc định hiện lên, có 2 giai đoạn: Chờ thu tiền và Đang soạn thuốc
                         var oCua = !string.IsNullOrWhiteSpace(item.OcuaDv) ? item.OcuaDv : item.Taikhoan;
-                        if (!string.IsNullOrWhiteSpace(oCua))
-                        {
-                            string trangThai = isPaidDv ? DuocTrangThaiText.DangSoanThuoc : DuocTrangThaiText.ChoThuTien;
-                            waitingList.Add(CreateQueueItem(DuocKhoConstant.DichVu, DuocLoaiToaText.DichVu, false, true, false, false, isPaidDv, trangThai, soTien, soTienStr, oCua));
-                        }
+                        string trangThai = isPaidDv ? DuocTrangThaiText.DangSoanThuoc : DuocTrangThaiText.ChoThuTien;
+                        waitingList.Add(CreateQueueItem(DuocKhoConstant.DichVu, DuocLoaiToaText.DichVu, false, true, false, false, isPaidDv, trangThai, soTien, soTienStr, oCua));
                     }
                 }
 
