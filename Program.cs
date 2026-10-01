@@ -1,7 +1,9 @@
 using System.Diagnostics;
+using HangChoKhamBenh.Web;
 using HangChoKhamBenh.Web.Data;
 using HangChoKhamBenh.Web.Hubs;
 using HangChoKhamBenh.Web.Services;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -74,6 +76,8 @@ builder.Services.AddResponseCompression(options =>
 });
 
 var app = builder.Build();
+
+
 
 app.UseResponseCompression();
 
@@ -148,6 +152,6 @@ if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))
     app.Urls.Add($"http://0.0.0.0:{port}");
 }
 
-Log.Information("HangChoKhamBenh .NET Server running on port {Port}", port);
+Log.Information("Server running on port {Port}", port);
 
 app.Run();

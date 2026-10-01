@@ -158,7 +158,7 @@
 
             /* --- CHẾ ĐỘ 1 BẢNG (KHI <= 6-8 BỆNH NHÂN): CHỮ CỰC TO, ĐẬM NÉT, RÕ RÀNG TRÊN TV 43 INCH --- */
             .duoc-table-single th {
-                font-size: clamp(18px, 1.6vw, 28px) !important;
+                font-size: clamp(20px, 1.8vw, 30px) !important;
                 padding: 10px 6px !important;
             }
 
@@ -168,67 +168,67 @@
             }
 
             .duoc-table-single .patient-name-text {
-                font-size: clamp(26px, 2.7vw, 44px) !important;
+                font-size: clamp(32px, 3.2vw, 54px) !important;
                 font-weight: 900 !important;
                 color: #1e3a8a !important;
-                line-height: 1.2 !important;
+                line-height: 1.15 !important;
             }
 
             .duoc-table-single td.cell-namsinh {
-                font-size: clamp(22px, 2.3vw, 36px) !important;
+                font-size: clamp(26px, 2.6vw, 42px) !important;
                 font-weight: 900 !important;
                 text-align: center !important;
                 color: #1e3a8a !important;
             }
 
             .duoc-table-single .badge-money {
-                font-size: clamp(18px, 1.8vw, 28px) !important;
+                font-size: clamp(22px, 2.2vw, 34px) !important;
                 font-weight: 900 !important;
-                padding: 5px 12px !important;
+                padding: 6px 14px !important;
             }
 
             .duoc-table-single .badge-status {
-                font-size: clamp(18px, 1.6vw, 26px) !important;
+                font-size: clamp(20px, 2.0vw, 30px) !important;
                 font-weight: 900 !important;
-                padding: 5px 12px !important;
+                padding: 6px 14px !important;
                 white-space: nowrap !important;
             }
 
             /* --- CHẾ ĐỘ 2 CỘT: CHỮ TO RÕ RÀNG, KHOẢNG 7-9 HÀNG MỖI BÊN --- */
             .duoc-table-split th {
-                font-size: clamp(15px, 1.3vw, 22px) !important;
-                padding: 8px 4px !important;
+                font-size: clamp(14px, 1.2vw, 20px) !important;
+                padding: 8px 3px !important;
             }
 
             .duoc-table-split th:first-child {
                 text-align: left !important;
-                padding-left: 14px !important;
+                padding-left: 10px !important;
             }
 
             .duoc-table-split .patient-name-text {
-                font-size: clamp(20px, 1.85vw, 32px) !important;
+                font-size: clamp(22px, 2.1vw, 36px) !important;
                 font-weight: 900 !important;
                 color: #1e3a8a !important;
-                line-height: 1.2 !important;
+                line-height: 1.15 !important;
             }
 
             .duoc-table-split td.cell-namsinh {
-                font-size: clamp(18px, 1.6vw, 28px) !important;
+                font-size: clamp(18px, 1.7vw, 28px) !important;
                 font-weight: 900 !important;
                 text-align: center !important;
                 color: #1e3a8a !important;
             }
 
             .duoc-table-split .badge-money {
-                font-size: clamp(15px, 1.4vw, 24px) !important;
+                font-size: clamp(15px, 1.35vw, 22px) !important;
                 font-weight: 900 !important;
-                padding: 3px 8px !important;
+                padding: 4px 8px !important;
             }
 
             .duoc-table-split .badge-status {
-                font-size: clamp(14px, 1.25vw, 20px) !important;
+                font-size: clamp(13px, 1.15vw, 19px) !important;
                 font-weight: 900 !important;
-                padding: 3px 8px !important;
+                padding: 4px 8px !important;
                 letter-spacing: -0.01em !important;
                 white-space: nowrap !important;
             }
@@ -299,31 +299,26 @@
         </div>
     </header>
 
-    <!-- Kích hoạt quyền phát âm thanh ngầm tự động -->
     <iframe src="/audio/silent.mp3" allow="autoplay; encrypted-media" style="position:absolute; width:0; height:0; border:0; visibility:hidden; pointer-events:none;" tabindex="-1"></iframe>
 
-    <!-- MAIN: BẢNG DANH SÁCH HÀNG CHỜ PHÁT THUỐC (GỘP BHYT + DỊCH VỤ) -->
-    <main id="mainContent" class="flex-grow p-1.5 overflow-hidden flex flex-col">
-        <!-- Container phân trang — JS sẽ tạo các .queue-page-block bên trong -->
+    <main id="mainContent" class="flex-grow overflow-hidden flex flex-col">
         <div id="paginationContainer" class="flex-grow overflow-hidden flex flex-col">
-            <!-- SSR fallback: hiển thị bảng tĩnh (JS sẽ replace sau khi đo chiều cao) -->
-            <div id="ssrTableWrapper"
-                 class="room-container flex-grow overflow-hidden flex flex-col bg-white border-2 border-slate-300 rounded-lg shadow-sm">
+            <div id="ssrTableWrapper" class="room-container flex-grow overflow-hidden flex flex-col bg-white ">
                 <table
                     class="w-full h-full border-collapse table-fixed select-none duoc-patient-table duoc-table-single">
                     <colgroup>
-                        <col style="width: 48%;">
-                        <col style="width: 14%;">
-                        <col style="width: 18%;">
-                        <col style="width: 20%;">
+                        <col style="width: 40%;">
+                        <col style="width: 15%;">
+                        <col style="width: 17%;">
+                        <col style="width: 28%;">
                     </colgroup>
                     <thead
                         class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-xl md:text-2xl">
                         <tr>
-                            <th class="py-3 px-4 text-left">Họ và Tên</th>
-                            <th class="py-3 px-2 text-center">Năm Sinh</th>
-                            <th class="py-3 px-2 text-center">Số Tiền</th>
-                            <th class="py-3 px-2 text-center">Trạng Thái</th>
+                            <th class="py-2 px-3 text-left">Họ và Tên</th>
+                            <th class="py-2 px-2 text-center">Năm Sinh</th>
+                            <th class="py-2 px-2 text-center">Số Tiền</th>
+                            <th class="py-2 px-2 text-center">Trạng Thái</th>
                         </tr>
                     </thead>
                     <tbody id="patientTableBody" class="divide-y divide-slate-200">
@@ -340,7 +335,6 @@
                             for (int index = 0; index < queueList.Count; index++)
                             {
                                 var p = queueList[index];
-                                var isNear = p.IsToiLuot;
                                 var currentPatientName = (p.TenBenhNhan ?? "").Trim();
                                 var pIsBhyt = p.IsBhyt;
                                 var loaiClass = pIsBhyt
@@ -349,12 +343,16 @@
                                         ? "bg-purple-100 text-purple-800 border-purple-300"
                                         : "bg-emerald-100 text-emerald-800 border-emerald-300");
                                 var rowKey = (!string.IsNullOrEmpty(p.Makb) ? $"makb_{p.Makb}" : (!string.IsNullOrEmpty(p.Mabn) ? $"mabn_{p.Mabn}" : $"name_{currentPatientName}")).Trim();
+                                var isChoThu = (p.TrangThai == "Chờ thu" || p.TrangThai == "Chờ thu tiền" || p.DaThu == false);
+                                var rowClass = isChoThu
+                                    ? "border-l-[8px] border-amber-400 bg-amber-50/70 shadow-xs"
+                                    : "border-l-[8px] border-blue-500 bg-blue-50/60 shadow-xs";
 
                                 <tr data-key="@rowKey" data-patient="@currentPatientName" data-nam-sinh="@(p.NamSinh ?? "")" data-makb="@(p.Makb ?? "")" data-mabn="@(p.Mabn ?? "")" data-status="@(p.TrangThai ?? "")" data-ocua="@(p.OCua ?? "")"
                                     data-room-type="duoc"
-                                    class="@(isNear ? "row-toi-luot-active bg-yellow-100 border-l-[10px] border-yellow-500 shadow-md" : (p.TrangThai == "Tới lượt thu" ? "border-l-[8px] border-amber-400 bg-amber-50/70 shadow-xs" : (pIsBhyt ? "border-l-[6px] border-blue-400 bg-blue-50/60" : "border-l-[6px] border-emerald-400 bg-emerald-50/50"))) border-b border-slate-200">
+                                    class="@rowClass border-b border-slate-200">
                                     <td
-                                        class="py-4 px-4 text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black tracking-tight" : "text-2xl md:text-4xl font-black")">
+                                        class="py-3 px-2 text-blue-900 text-2xl md:text-4xl font-black">
                                         <div class="patient-name-container select-none flex items-center min-w-0">
                                             <span
                                                 class="patient-name-text whitespace-normal break-words leading-tight max-w-full block">
@@ -363,21 +361,21 @@
                                         </div>
                                     </td>
                                     <td
-                                        class="cell-namsinh py-4 px-2 font-bold text-center text-blue-900 @(isNear ? "text-3xl md:text-5xl font-black" : "text-2xl md:text-4xl font-bold")">
+                                        class="cell-namsinh py-2 px-1 font-bold text-center text-blue-900 text-2xl md:text-4xl font-bold">
                                         @p.NamSinh
                                     </td>
-                                    <td class="py-4 px-2 text-center overflow-hidden">
+                                    <td class="py-3 px-1 text-center overflow-hidden">
                                         @if (!string.IsNullOrEmpty(p.SoTienStr) && p.SoTienStr != "—")
                                         {
                                             <span
-                                                class="badge-money inline-block px-3 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
+                                                class="badge-money inline-block px-2 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
                                                 @p.SoTienStr
                                             </span>
                                         }
                                         else if (!pIsBhyt)
                                         {
                                             <span
-                                                class="badge-money inline-block px-3 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
+                                                class="badge-money inline-block px-2 py-1 rounded-lg border font-black font-mono text-base md:text-xl lg:text-2xl whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs">
                                                 @(!string.IsNullOrEmpty(p.SoTienStr) ? p.SoTienStr : "—")
                                             </span>
                                         }
@@ -391,32 +389,18 @@
                                     </td>
                                     <td class="py-4 px-2 text-center overflow-hidden">
                                         <div class="flex items-center justify-center gap-1.5 flex-nowrap min-w-0">
-                                            @if (p.TrangThai == "Tới lượt thu")
+                                            @if (isChoThu)
                                             {
                                                 <span
-                                                    class="badge-status inline-block bg-amber-50 text-amber-800 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-amber-300 shadow-sm">
-                                                    Tới lượt thu
-                                                </span>
-                                            }
-                                            else if (p.TrangThai == "Chờ thu" || p.TrangThai == "Chờ thu tiền" || p.DaThu == false)
-                                            {
-                                                <span
-                                                    class="badge-status inline-block bg-slate-100 text-slate-700 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-bold uppercase whitespace-nowrap border-2 border-slate-300 shadow-sm">
+                                                    class="badge-status inline-block bg-amber-100 text-amber-900 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-amber-300 shadow-sm">
                                                     Chờ thu tiền
-                                                </span>
-                                            }
-                                            else if (isNear || p.TrangThai == "Tới lượt nhận" || p.TrangThai == "Tới lượt")
-                                            {
-                                                <span
-                                                    class="badge-status inline-block bg-red-600 text-white px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-red-500 shadow-md animate-pulse-red">
-                                                    Tới lượt nhận
                                                 </span>
                                             }
                                             else
                                             {
                                                 <span
-                                                    class="badge-status inline-block bg-slate-100 text-slate-700 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-bold uppercase whitespace-nowrap border-2 border-slate-300 shadow-sm">
-                                                    Chờ tới lượt
+                                                    class="badge-status inline-block bg-blue-100 text-blue-900 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-blue-300 shadow-sm">
+                                                    Đang soạn thuốc
                                                 </span>
                                             }
                                         </div>
@@ -432,8 +416,8 @@
 
     <!-- FOOTER THÔNG BÁO TRONG SUỐT NHÌN THẤY PHÍA SAU NỔI TRÊN BẢNG DANH SÁCH -->
     <footer
-        class="fixed bottom-1.5 left-2 right-2 z-40 bg-white/20  border border-slate-400/30 rounded-lg px-3 py-1 flex items-center gap-2 shadow-xs overflow-hidden pointer-events-none">
-        <marquee class="text-blue-950 font-black text-sm md:text-base drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+        class="fixed bottom-1.5 left-2 right-2 z-40 transparent  flex items-center gap-1 shadow-xs overflow-hidden pointer-events-none">
+        <marquee class="text-red-600 font-black text-sm md:text-base drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
             Quý khách vui lòng ngồi chờ gọi tên. Kiểm tra BHYT, CCCD, Thuốc trước khi rời quầy. Xin cảm ơn!
         </marquee>
     </footer>
@@ -534,13 +518,7 @@
 
                 // Xác định nội dung hành động gọi loa: 'đóng tiền' hoặc 'nhận thuốc'
                 function getActionText(status, daThu) {
-                    if (daThu === false) return "đóng tiền";
-                    if (daThu === true) return "nhận thuốc";
-                    const s = String(status || '').trim().toLowerCase();
-                    if (!s) return "nhận thuốc";
-                    if (s === "tới lượt thu" || s === "chờ thu" || s === "chưa thu" || s === "chưa đóng tiền" || s.includes("lượt thu") || s.includes("chờ thu") || s.includes("chưa thu") || s.includes("thu tiền") || s.includes("đóng tiền") || s.includes("chưa thanh toán")) {
-                        return "đóng tiền";
-                    }
+                    if (status === "Chờ thu tiền" || status === "Chờ thu" || daThu === false) return "đóng tiền";
                     return "nhận thuốc";
                 }
 
@@ -641,10 +619,9 @@
                     const theadHeight = 48;
                     const availableBodyHeight = Math.max(150, totalHeight - theadHeight);
                     
-                 
-                    const targetHeight = isSplit ? 68 : 78;
+                    const targetHeight = isSplit ? 60 : 70;
                     let rows = Math.floor(availableBodyHeight / targetHeight);
-                    if (rows < 4) rows = 4;
+                    if (rows < 5) rows = 5;
                     if (rows > 18) rows = 18;
                     return rows;
                 }
@@ -696,8 +673,8 @@
                         return;
                     }
 
-                    // 2. Tính sức chứa thực tế theo chiều cao màn hình
-                    const singleRowsCapacity = calculateRowsPerColumn(false);
+                    // 2. Tính sức chứa thực tế theo chiều cao màn hình: ưu tiên 1 bảng nếu <= 7 bệnh nhân
+                    const singleRowsCapacity = Math.max(7, calculateRowsPerColumn(false));
                     const isSplit = list.length > singleRowsCapacity;
                     const rowsPerCol = calculateRowsPerColumn(isSplit);
                     const pageCapacity = isSplit ? (rowsPerCol * 2) : rowsPerCol;
@@ -745,7 +722,7 @@
                     if (totalPages > 1) {
                         if (!paginationTimer) {
                             paginationTimer = setInterval(() => {
-                                const curIsSplit = currentActiveList.length > calculateRowsPerColumn(false);
+                                const curIsSplit = currentActiveList.length > Math.max(7, calculateRowsPerColumn(false));
                                 const curRowsPerCol = calculateRowsPerColumn(curIsSplit);
                                 const curCapacity = curIsSplit ? (curRowsPerCol * 2) : curRowsPerCol;
                                 const curTotalPages = Math.max(1, Math.ceil(currentActiveList.length / curCapacity));
@@ -769,14 +746,14 @@
                     const modeClass = isSplit ? 'duoc-table-split' : 'duoc-table-single';
 
                     const colWidths = isSplit
-                        ? `<col style="width: 45%;">
-                           <col style="width: 13%;">
-                           <col style="width: 20%;">
-                           <col style="width: 22%;">`
-                        : `<col style="width: 46%;">
-                           <col style="width: 14%;">
-                           <col style="width: 18%;">
-                           <col style="width: 22%;">`;
+                        ? `<col style="width: 38%;">
+                           <col style="width: 15%;">
+                           <col style="width: 17%;">
+                           <col style="width: 30%;">`
+                        : `<col style="width: 40%;">
+                           <col style="width: 15%;">
+                           <col style="width: 17%;">
+                           <col style="width: 28%;">`;
 
                     const rowList = rows || [];
                     let tbodyContent = '';
@@ -814,23 +791,14 @@
                     const makb = escapeHtml(p.makb || '');
                     const mabn = escapeHtml(p.mabn || '');
                     const pIsBhyt = p.isBhyt;
-                    const isToiLuot = (p.trangThai === "Tới lượt nhận" || p.trangThai === "Tới lượt" || (p.isToiLuot === true && p.daThu !== false));
-                    const isToiLuotThu = (p.trangThai === "Tới lượt thu");
-                    const isChoThu = (p.trangThai === "Chờ thu" || p.trangThai === "Chờ thu tiền" || (p.daThu === false && !isToiLuotThu));
 
                     // Khóa duy nhất cho bệnh nhân để theo dõi FLIP animation
                     const rowKey = (makb ? ('makb_' + makb) : (mabn ? ('mabn_' + mabn) : ('name_' + escapedName))).trim();
 
-                    let rowClass;
-                    if (isToiLuot) {
-                        rowClass = 'row-toi-luot-active bg-yellow-100 border-l-[8px] md:border-l-[12px] border-yellow-500 shadow-md border-b border-slate-200';
-                    } else if (isToiLuotThu) {
-                        rowClass = 'border-l-[6px] md:border-l-[8px] border-amber-400 bg-amber-50/70 shadow-xs border-b border-slate-200';
-                    } else if (pIsBhyt) {
-                        rowClass = 'border-l-[4px] md:border-l-[6px] border-blue-400 bg-blue-50/60 border-b border-slate-200';
-                    } else {
-                        rowClass = 'border-l-[4px] md:border-l-[6px] border-emerald-400 bg-emerald-50/50 border-b border-slate-200';
-                    }
+                    const isChoThu = (p.trangThai === "Chờ thu" || p.trangThai === "Chờ thu tiền" || p.daThu === false);
+                    const rowClass = isChoThu
+                        ? 'border-l-[6px] md:border-l-[8px] border-amber-400 bg-amber-50/70 shadow-xs border-b border-slate-200'
+                        : 'border-l-[6px] md:border-l-[8px] border-blue-500 bg-blue-50/60 shadow-xs border-b border-slate-200';
 
                     let col4Html = '';
                     if (p.soTienStr && p.soTienStr !== '—' && p.soTienStr !== '') {
@@ -859,17 +827,10 @@
                                     </td>`;
                     }
 
-                    // Cột Trạng Thái: 4 trạng thái chuẩn (Tới lượt thu, Chờ thu tiền, Tới lượt nhận, Chờ tới lượt)
-                    let col5Badge = '';
-                    if (isToiLuotThu) {
-                        col5Badge = `<span class="badge-status inline-block bg-amber-50 text-amber-800 border-2 border-amber-300 font-extrabold uppercase whitespace-nowrap rounded-lg shadow-2xs">Tới lượt thu</span>`;
-                    } else if (isChoThu) {
-                        col5Badge = `<span class="badge-status inline-block bg-slate-100 text-slate-700 border-2 border-slate-300 font-bold uppercase whitespace-nowrap rounded-lg shadow-2xs">Chờ thu tiền</span>`;
-                    } else if (isToiLuot) {
-                        col5Badge = `<span class="badge-status inline-block bg-red-600 text-white border-2 border-red-500 font-black uppercase whitespace-nowrap rounded-lg shadow-md animate-pulse-red">Tới lượt nhận</span>`;
-                    } else {
-                        col5Badge = `<span class="badge-status inline-block bg-slate-100 text-slate-700 border-2 border-slate-300 font-bold uppercase whitespace-nowrap rounded-lg shadow-2xs">Chờ tới lượt</span>`;
-                    }
+                    // Cột Trạng Thái: Đúng 2 trạng thái chuẩn: "Chờ thu tiền" hoặc "Đang soạn thuốc"
+                    const col5Badge = isChoThu
+                        ? `<span class="badge-status inline-block bg-amber-100 text-amber-900 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs">Chờ thu tiền</span>`
+                        : `<span class="badge-status inline-block bg-blue-100 text-blue-900 border-2 border-blue-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs">Đang soạn thuốc</span>`;
 
                     const heightStyle = rowHeightPx ? `style="height: ${rowHeightPx}px;"` : '';
 
@@ -929,14 +890,18 @@
                         isSoundEnabled = true;
                         localStorage.setItem("duocSoundEnabled", "true");
                         updateSoundIcon();
-                        audioQueue.clear();
 
                         const targetLoc = payload.oCua ? `ô số ${payload.oCua}` : "quầy";
                         const dobClean = extractBirthYear(payload.namSinh || payload.dobYear || payload.dobStr);
                         const dobText = dobClean ? `, sinh năm ${dobClean}` : "";
                         const actionText = getActionText(payload.trangThai, payload.daThu);
                         const speakText = `Mời bệnh nhân, ${payload.hoTen}${dobText}. Đến ${targetLoc}, ${actionText}.`;
-                        audioQueue.enqueue(speakText);
+                        audioQueue.enqueue(speakText, {
+                            hoTen: payload.hoTen,
+                            oCua: payload.oCua,
+                            makb: payload.makb,
+                            mabn: payload.mabn
+                        });
                     });
 
                     async function startHub() {
@@ -979,10 +944,10 @@
 
                     const list = data.waitingList || [];
 
-                    // Đánh lại STT liên tục & giữ trạng thái logic chuẩn
+                    // Đánh lại STT liên tục & bỏ near
                     list.forEach((p, idx) => {
                         p.stt = idx + 1;
-                        p.isToiLuot = (p.isToiLuot === true || p.trangThai === "Tới lượt nhận" || p.trangThai === "Tới lượt");
+                        p.isToiLuot = false;
                     });
 
                     // Cập nhật thống kê
@@ -994,7 +959,7 @@
                     lastQueueJson = queueJson;
 
                     // Xác định bệnh nhân ưu tiên cần đọc
-                    const targetPatient = list.find(p => p.trangThai === "Tới lượt thu" || p.trangThai === "Tới lượt nhận" || p.trangThai === "Tới lượt" || p.isToiLuot) || list[0] || null;
+                    const targetPatient = list[0] || null;
                     if (targetPatient) {
                         currentTopPatient = targetPatient;
                         const currentKey = `${targetPatient.makb || targetPatient.mabn || ''}_${targetPatient.trangThai || ''}`;

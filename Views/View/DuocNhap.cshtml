@@ -190,9 +190,7 @@
         <!-- ======================================================== -->
         <main class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-3 min-h-0">
 
-            <!-- ======================================================== -->
-            <!-- CỘT 1: CHƯA THU TIỀN & LỊCH SỬ KHÔNG MUA -->
-            <!-- ======================================================== -->
+            
             <section class="bg-white border border-slate-200 rounded-lg flex flex-col min-h-0 shadow-xs overflow-hidden">
                 <!-- Header Tab Cột 1 -->
                 <div
@@ -259,22 +257,29 @@
             <!-- ======================================================== -->
             <section class="bg-white border border-slate-200 rounded-lg flex flex-col min-h-0 shadow-xs overflow-hidden">
                 <!-- Header Tab Cột 2 -->
-                <div
-                    class="flex items-center justify-between border-b border-slate-200 px-3.5 py-2 shrink-0 bg-slate-50/70 gap-2">
-                    <div class="flex items-center gap-1.5">
+                <div class="flex items-center justify-between border-b border-slate-200 px-3.5 py-2 shrink-0 bg-slate-50/70 gap-2">
+                    <div class="flex items-center gap-1.5 flex-wrap">
                         <button type="button" id="tab-btn-cho-giao" onclick="switchGiaoTab('cho-giao')"
                                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand text-white shadow-2xs cursor-pointer">
                             <i class="fa-solid fa-box-open text-xs"></i>
-                            <span>Chờ Phát Thuốc</span>
+                            <span>Chờ Phát</span>
                             <span class="px-1.5 py-0.2 bg-white/90 text-brand rounded-md text-[11px] font-black"
                                   id="cho-giao-count">0</span>
                         </button>
                         <button type="button" id="tab-btn-da-giao" onclick="switchGiaoTab('da-giao')"
                                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer">
                             <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-                            <span>Lịch Sử Đã Phát</span>
+                            <span>Đã Phát</span>
                             <span class="px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded-md text-[11px] font-black"
                                   id="da-giao-count">0</span>
+                        </button>
+                        <button type="button" id="tab-btn-da-an" onclick="switchGiaoTab('da-an')"
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer"
+                                title="Danh sách các đơn đã tạm ẩn">
+                            <i class="fa-solid fa-eye-slash text-xs"></i>
+                            <span>Đã Ẩn</span>
+                            <span class="px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded-md text-[11px] font-black"
+                                  id="da-an-count">0</span>
                         </button>
                     </div>
                     <button onclick="refreshGiaoTab()" title="Làm mới cột này"
@@ -290,8 +295,8 @@
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </span>
                         <input type="text" id="search-giao-input" oninput="filterGiaoList()"
-                               class="w-full pl-7 pr-7 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-brand rounded-lg text-xs font-semibold text-slate-800 focus:outline-none transition"
-                               placeholder="Lọc theo tên, mã KB, số đơn...">
+                                class="w-full pl-7 pr-7 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-brand rounded-lg text-xs font-semibold text-slate-800 focus:outline-none transition"
+                                placeholder="Lọc theo tên, mã KB, số đơn...">
                         <button type="button" onclick="clearGiaoSearch()" id="clear-giao-search-btn"
                                 class="hidden absolute right-2.5 text-slate-400 hover:text-slate-600 text-xs">
                             <i class="fa-solid fa-xmark"></i>
@@ -314,6 +319,15 @@
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-300"></i>
                         <p class="text-xs font-semibold text-slate-400">Chưa có đơn nào đã phát hôm nay</p>
+                    </div>
+                </div>
+
+                <!-- Danh sách Đã Ẩn -->
+                <div class="hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="da-an-list">
+                    <div id="da-an-empty"
+                         class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                        <i class="fa-solid fa-eye-slash text-3xl text-slate-300"></i>
+                        <p class="text-xs font-semibold text-slate-400">Chưa có đơn nào bị ẩn hôm nay</p>
                     </div>
                 </div>
             </section>
@@ -353,6 +367,7 @@
                 let rawChuaGiaoData = [];
                 let rawDaGiaoData = [];
                 let rawKhongMuaData = [];
+                let rawDaAnData = [];
 
                 // Highlight tracker
                 let highlightedKey = '';
@@ -362,7 +377,6 @@
                 let lastActionData = null; // { makb, mabn, hoTen, actionType }
                 let undoToastTimer = null;
 
-    
                 function updateTime() {
                     const now = new Date();
                     const dateEl = $id('date-str');
@@ -492,6 +506,8 @@
 
                     if (actionType === 'khong_mua') {
                         await actionHoanTacKhongMua(makb, mabn, hoTen);
+                    } else if (actionType === 'an') {
+                        await actionBoAn(makb, mabn, hoTen);
                     } else {
                         await actionHoanTac(makb, mabn, hoTen);
                     }
@@ -797,27 +813,40 @@
                     currentGiaoTab = tab;
                     const btnChoGiao = $id('tab-btn-cho-giao');
                     const btnDaGiao = $id('tab-btn-da-giao');
+                    const btnDaAn = $id('tab-btn-da-an');
                     const listChoGiao = $id('cho-giao-list');
                     const listDaGiao = $id('da-giao-list');
+                    const listDaAn = $id('da-an-list');
+
+                    if (btnChoGiao) btnChoGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
+                    if (btnDaGiao) btnDaGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
+                    if (btnDaAn) btnDaAn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
+
+                    if (listChoGiao) listChoGiao.classList.add('hidden');
+                    if (listDaGiao) listDaGiao.classList.add('hidden');
+                    if (listDaAn) listDaAn.classList.add('hidden');
 
                     if (tab === 'cho-giao') {
                         if (btnChoGiao) btnChoGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand text-white shadow-2xs cursor-pointer';
-                        if (btnDaGiao) btnDaGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
                         if (listChoGiao) listChoGiao.classList.remove('hidden');
-                        if (listDaGiao) listDaGiao.classList.add('hidden');
                         renderChoGiaoList();
-                    } else {
+                    } else if (tab === 'da-giao') {
                         if (btnDaGiao) btnDaGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-2xs cursor-pointer';
-                        if (btnChoGiao) btnChoGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
                         if (listDaGiao) listDaGiao.classList.remove('hidden');
-                        if (listChoGiao) listChoGiao.classList.add('hidden');
+                        renderDaGiaoList();
                         loadDanhSachDaGiao();
+                    } else if (tab === 'da-an') {
+                        if (btnDaAn) btnDaAn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-slate-700 text-white shadow-2xs cursor-pointer';
+                        if (listDaAn) listDaAn.classList.remove('hidden');
+                        renderDaAnList();
+                        loadDanhSachDaAn();
                     }
                 }
 
                 function refreshGiaoTab() {
                     loadDanhSachChuaGiao();
                     if (currentGiaoTab === 'da-giao') loadDanhSachDaGiao();
+                    if (currentGiaoTab === 'da-an') loadDanhSachDaAn();
                 }
 
                 function filterGiaoList() {
@@ -826,7 +855,8 @@
                     if (clearBtn) clearBtn.classList.toggle('hidden', !query);
 
                     if (currentGiaoTab === 'cho-giao') renderChoGiaoList();
-                    else renderDaGiaoList();
+                    else if (currentGiaoTab === 'da-giao') renderDaGiaoList();
+                    else if (currentGiaoTab === 'da-an') renderDaAnList();
                 }
 
                 function clearGiaoSearch() {
@@ -869,7 +899,7 @@
                     for (const item of filtered) {
                         const curOcua = String(item.oCua || '').trim();
                         const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                        const safeTrangThai = 'Chờ thu';
+                        const safeTrangThai = 'Chờ thu tiền';
                         const sohdVal = item.sohd || item.maba || '';
                         const typeTag = item.hasBoth
                             ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Toa DV</span>`
@@ -881,7 +911,7 @@
                             const activeCls = isCurrent
                                 ? 'bg-amber-500 text-white font-black border-amber-500 shadow-2xs ring-2 ring-amber-200'
                                 : 'bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-800 border-slate-200';
-                            return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', false, 'Chờ thu', ${item.khochan || 13})"
+                            return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', false, 'Chờ thu tiền', ${item.khochan || 13})"
                                                                                 class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
                                                                                 title="Gọi Ô ${num} đóng tiền">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
                         }).join('');
@@ -923,11 +953,13 @@
                                                                             <div class="flex items-center gap-1">
                                                                                 ${assignBtns}
                                                                             </div>
-                                                                            <button type="button" onclick="actionKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                                                                    title="Khách không mua thuốc"
-                                                                                    class="px-2.5 py-1 text-xs rounded-lg border border-rose-200 bg-rose-50/60 hover:bg-rose-600 hover:text-white text-rose-700 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
-                                                                                <i class="fa-solid fa-ban text-[11px]"></i> Không mua
-                                                                            </button>
+                                                                            <div class="flex items-center gap-1.5 shrink-0">
+                                                                                <button type="button" onclick="actionKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                        title="Khách không mua thuốc"
+                                                                                        class="px-2.5 py-1 text-xs rounded-lg border border-rose-200 bg-rose-50/60 hover:bg-rose-600 hover:text-white text-rose-700 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
+                                                                                    <i class="fa-solid fa-ban text-[11px]"></i> Không mua
+                                                                                </button>
+                                                                            </div>
                                                                         </div>
                                                                     </div>`;
                     }
@@ -1090,10 +1122,17 @@
 
                                                                         <!-- Bottom: Segmented Call Buttons & Action -->
                                                                         <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
-                                                                            <div class="flex items-center gap-1">
+                                                                            <div class="flex items-center gap-1 flex-wrap">
                                                                                 ${assignBtns}
                                                                             </div>
-                                                                            ${phatBtnHtml}
+                                                                            <div class="flex items-center gap-1.5 shrink-0">
+                                                                                <button type="button" onclick="actionAn('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                        title="Tạm ẩn bệnh nhân khỏi hàng chờ"
+                                                                                        class="px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-700 hover:text-white text-slate-600 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
+                                                                                    <i class="fa-solid fa-eye-slash text-[11px]"></i> Ẩn
+                                                                                </button>
+                                                                                ${phatBtnHtml}
+                                                                            </div>
                                                                         </div>
                                                                     </div>`;
                     }
@@ -1169,6 +1208,73 @@
                     container.scrollTop = prevScrollTop;
                 }
 
+                function renderDaAnList() {
+                    const container = $id('da-an-list');
+                    const countEl = $id('da-an-count');
+                    const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
+
+                    if (countEl) countEl.textContent = rawDaAnData.length;
+                    if (!container) return;
+
+                    const filtered = query
+                        ? rawDaAnData.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
+                        : rawDaAnData;
+
+                    if (filtered.length === 0) {
+                        container.innerHTML = `
+                            <div id="da-an-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                <i class="fa-solid fa-eye-slash text-3xl text-slate-300"></i>
+                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào bị ẩn hôm nay'}</p>
+                            </div>`;
+                        return;
+                    }
+
+                    const prevScrollTop = container.scrollTop;
+                    let html = '';
+                    for (const item of filtered) {
+                        let typeTag = '';
+                        if (item.hasBoth) {
+                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">BHYT + Dịch vụ</span>`;
+                        } else if (item.hasDichVu) {
+                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Dịch vụ</span>`;
+                        } else {
+                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">BHYT</span>`;
+                        }
+                        const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                        const sohdVal = item.sohd || item.maba || '';
+                        const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
+
+                        html += `
+                            <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
+                                <div class="min-w-0">
+                                    <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight flex items-center gap-1.5">
+                                        <span class="text-slate-400"><i class="fa-solid fa-eye-slash text-xs"></i></span>
+                                        <span>${escapeHtml(item.hoTen)}</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                                        ${typeTag}
+                                        ${hasMoney ? `<span>•</span><span class="text-xs md:text-sm font-black text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.soTienStr}</span>` : ''}
+                                        ${sohdVal ? `<span>•</span><span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span>` : ''}
+                                        <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                title="Sao chép mã khám"
+                                                class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
+                                            <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                        </button>
+                                        ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">Ẩn: ${item.ngayNhapStr}</span>` : ''}
+                                    </div>
+                                </div>
+                                <button onclick="actionBoAn('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                        title="Khôi phục lại vào danh sách chờ"
+                                        class="px-3 py-1.5 bg-blue-50 hover:bg-brand hover:text-white text-brand border border-blue-200 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0 active:scale-95">
+                                    <i class="fa-solid fa-eye text-[11px]"></i> Bỏ ẩn
+                                </button>
+                            </div>`;
+                    }
+
+                    container.innerHTML = html;
+                    container.scrollTop = prevScrollTop;
+                }
+
                 // ========================================================
                 // SERVER ACTIONS (OPTIMISTIC + REALTIME)
                 // ========================================================
@@ -1177,11 +1283,10 @@
                     try {
                         const r = await fetch('/api/duoc-nhap/danh-sach-khong-mua');
                         const list = await r.json() || [];
-                        const json = JSON.stringify(list);
-                        if (json === lastKhongMuaJson) return;
-                        lastKhongMuaJson = json;
+                        const countEl = $id('khong-mua-count');
+                        if (countEl) countEl.textContent = list.length;
                         rawKhongMuaData = list;
-                        renderKhongMuaList();
+                        if (currentThuTab === 'khong-mua') renderKhongMuaList();
                     } catch (e) {
                         console.warn('Lỗi load danh sách không mua:', e);
                     }
@@ -1192,13 +1297,26 @@
                     try {
                         const r = await fetch('/api/duoc-nhap/danh-sach-da-giao');
                         const list = await r.json() || [];
-                        const json = JSON.stringify(list);
-                        if (json === lastDaGiaoJson) return;
-                        lastDaGiaoJson = json;
+                        const countEl = $id('da-giao-count');
+                        if (countEl) countEl.textContent = list.length;
                         rawDaGiaoData = list;
-                        renderDaGiaoList();
+                        if (currentGiaoTab === 'da-giao') renderDaGiaoList();
                     } catch (e) {
                         console.warn('Lỗi load danh sách đã giao:', e);
+                    }
+                }
+
+                let lastDaAnJson = '';
+                async function loadDanhSachDaAn() {
+                    try {
+                        const r = await fetch('/api/duoc-nhap/danh-sach-an');
+                        const list = await r.json() || [];
+                        const countEl = $id('da-an-count');
+                        if (countEl) countEl.textContent = list.length;
+                        rawDaAnData = list;
+                        if (currentGiaoTab === 'da-an') renderDaAnList();
+                    } catch (e) {
+                        console.warn('Lỗi load danh sách đã ẩn:', e);
                     }
                 }
 
@@ -1278,6 +1396,95 @@
                         } else {
                             playScanBeep(false);
                             showError(res.message || 'Lỗi khi khôi phục');
+                            refreshAllColumns(true);
+                        }
+                    } catch (e) {
+                        showError('Lỗi kết nối máy chủ.');
+                        refreshAllColumns(true);
+                    }
+                }
+
+                async function actionAn(makb, mabn, hoTen) {
+                    try {
+                        const key = (makb || mabn || '').trim();
+                        if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
+                            const idx = rawChuaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                            if (idx !== -1) {
+                                const removed = rawChuaGiaoData.splice(idx, 1)[0];
+                                renderChoThuList();
+                                renderChoGiaoList();
+                                if (rawDaAnData) {
+                                    rawDaAnData.unshift({
+                                        ...removed,
+                                        an: 1,
+                                        ngayNhapStr: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                                    });
+                                    const countEl = $id('da-an-count');
+                                    if (countEl) countEl.textContent = rawDaAnData.length;
+                                    if (currentGiaoTab === 'da-an') renderDaAnList();
+                                }
+                            }
+                        }
+
+                        playScanBeep(true);
+                        showUndoToast(`Đã tạm ẩn ${hoTen}`, { makb, mabn, hoTen, actionType: 'an' });
+
+                        const r = await fetch('/api/duoc-nhap/an', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ makb, mabn })
+                        });
+                        const res = await r.json();
+                        if (res.success) {
+                            refreshAllColumns();
+                        } else {
+                            playScanBeep(false);
+                            showError(res.message || 'Lỗi khi ẩn bệnh nhân');
+                            refreshAllColumns(true);
+                        }
+                    } catch (e) {
+                        showError('Lỗi kết nối máy chủ.');
+                        refreshAllColumns(true);
+                    }
+                }
+
+                async function actionBoAn(makb, mabn, hoTen) {
+                    try {
+                        const key = (makb || mabn || '').trim();
+                        if (key && rawDaAnData && rawDaAnData.length > 0) {
+                            const idx = rawDaAnData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                            if (idx !== -1) {
+                                const removed = rawDaAnData.splice(idx, 1)[0];
+                                const countEl = $id('da-an-count');
+                                if (countEl) countEl.textContent = rawDaAnData.length;
+                                if (currentGiaoTab === 'da-an') renderDaAnList();
+                                if (rawChuaGiaoData) {
+                                    rawChuaGiaoData.unshift({
+                                        ...removed,
+                                        an: 0,
+                                        dagiao: 0
+                                    });
+                                    renderChoThuList();
+                                    renderChoGiaoList();
+                                }
+                            }
+                        }
+
+                        playScanBeep(true);
+                        showUndoToast(`✓ Đã bỏ ẩn cho ${hoTen}`, null);
+                        triggerHighlight(makb || mabn);
+
+                        const r = await fetch('/api/duoc-nhap/bo-an', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ makb, mabn })
+                        });
+                        const res = await r.json();
+                        if (res.success) {
+                            refreshAllColumns();
+                        } else {
+                            playScanBeep(false);
+                            showError(res.message || 'Lỗi khi bỏ ẩn');
                             refreshAllColumns(true);
                         }
                     } catch (e) {
@@ -1461,6 +1668,7 @@
 
                 function doRefreshAll() {
                     loadDanhSachChuaGiao();
+                    loadDanhSachDaAn();
                     if (currentThuTab === 'khong-mua') loadDanhSachKhongMua();
                     if (currentGiaoTab === 'da-giao') loadDanhSachDaGiao();
                 }
@@ -1548,8 +1756,8 @@
 
                 // Khởi tạo
                 resetAll();
+                loadDanhSachDaAn();
                 initSignalR();
         </script>
     </body>
-
 </html>

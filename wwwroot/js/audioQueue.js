@@ -1,6 +1,4 @@
 (function (global) {
-  const DEFAULT_DEDUP_WINDOW_MS = 4500;
-  const DEFAULT_MAX_QUEUE_SIZE = 10;
   const DEFAULT_WATCHDOG_TIMEOUT_MS = 15000;
   const DEFAULT_PLAYBACK_RATE = 1.1;
   const DEFAULT_VOLUME = 1.0;
@@ -80,12 +78,15 @@
     constructor({
       isEnabled,
       gapMs = 350,
-      dedupWindowMs = DEFAULT_DEDUP_WINDOW_MS,
-      maxQueueSize = DEFAULT_MAX_QUEUE_SIZE,
+      dedupWindowMs = 600,
+      maxQueueSize = 50,
       watchdogTimeoutMs = DEFAULT_WATCHDOG_TIMEOUT_MS,
       playbackRate = DEFAULT_PLAYBACK_RATE,
       volume = DEFAULT_VOLUME,
       gainMultiplier = DEFAULT_GAIN_MULTIPLIER,
+      onStart = null,
+      onEnd = null,
+      onQueueChange = null,
     } = {}) {
       this.isEnabled = typeof isEnabled === "function" ? isEnabled : () => true;
       this.gapMs = gapMs;
@@ -95,11 +96,16 @@
       this.playbackRate = playbackRate;
       this.volume = volume;
       this.gainMultiplier = gainMultiplier;
+      this.onStart = typeof onStart === "function" ? onStart : null;
+      this.onEnd = typeof onEnd === "function" ? onEnd : null;
+      this.onQueueChange = typeof onQueueChange === "function" ? onQueueChange : null;
+
       this.queue = [];
       this.isPlaying = false;
       this.currentAudio = null;
       this.currentBufferSource = null;
       this.currentText = "";
+      this.currentMeta = null;
       this.lastEnqueuedText = "";
       this.lastEnqueuedAt = 0;
       this.generation = 0;
@@ -124,30 +130,69 @@
       }
     }
 
-    enqueue(speakText) {
-      if (!this.isEnabled() || !speakText || !speakText.trim()) return false;
+    getQueueStatus() {
+      return {
+        isPlaying: this.isPlaying,
+        currentText: this.currentText,
+        currentMeta: this.currentMeta,
+        queueLength: this.queue.length,
+        queue: [...this.queue],
+      };
+    }
+
+    // Tự động tải trước audio tiếp theo trong hàng đợi vào cache trình duyệt
+    prefetchNext() {
+      try {
+        if (this.queue.length > 0) {
+          const nextItem = this.queue[0];
+          const nextText = typeof nextItem === "string" ? nextItem : nextItem.text;
+          if (nextText) {
+            const prefetchAudio = new Audio(`/api/tts?text=${encodeURIComponent(nextText)}`);
+            prefetchAudio.preload = "auto";
+          }
+        }
+      } catch (e) {}
+    }
+
+    enqueue(speakText, meta = null) {
+      if (!this.isEnabled() || !speakText || !String(speakText).trim()) return false;
 
       // Mỗi khi nhận lệnh enqueue, cố gắng kích hoạt lại pipeline âm thanh
       aggressiveAutoUnlock();
 
-      const text = speakText.trim();
+      const text = String(speakText).trim();
       const now = Date.now();
       const isCurrent = this.isPlaying && this.currentText === text;
-      const isQueued = this.queue.includes(text);
+      const isQueued = this.queue.some(
+        (item) => (typeof item === "string" ? item : item.text) === text
+      );
       const isRecentlyEnqueued =
         this.lastEnqueuedText === text &&
         now - this.lastEnqueuedAt < this.dedupWindowMs;
 
+      // Chống click đúp vô tình trong khoảng debounce ngắn (600ms)
       if (isCurrent || isQueued || isRecentlyEnqueued) return false;
 
       if (this.queue.length >= this.maxQueueSize) {
         this.queue.shift();
       }
 
-      this.queue.push(text);
+      const itemObj = { text, meta: meta || {}, enqueuedAt: now };
+      this.queue.push(itemObj);
       this.lastEnqueuedText = text;
       this.lastEnqueuedAt = now;
-      if (!this.isPlaying) this.playNext();
+
+      if (this.onQueueChange) {
+        try {
+          this.onQueueChange(this.getQueueStatus());
+        } catch (e) {}
+      }
+
+      if (!this.isPlaying) {
+        this.playNext();
+      } else {
+        this.prefetchNext();
+      }
       return true;
     }
 
@@ -157,15 +202,42 @@
         this.currentAudio = null;
         this.currentBufferSource = null;
         this.currentText = "";
+        this.currentMeta = null;
+
+        if (this.onQueueChange) {
+          try {
+            this.onQueueChange(this.getQueueStatus());
+          } catch (e) {}
+        }
         return;
       }
 
       this.isPlaying = true;
-      this.currentText = this.queue.shift();
+      const itemObj = this.queue.shift();
+      this.currentText = typeof itemObj === "string" ? itemObj : itemObj.text;
+      this.currentMeta = typeof itemObj === "string" ? null : itemObj.meta;
+
       const textToSpeak = this.currentText;
+      const currentMeta = this.currentMeta;
       const generation = this.generation;
       let advanced = false;
       let fallbackStarted = false;
+
+      // Callback báo hiệu bắt đầu phát giọng đọc
+      if (this.onStart) {
+        try {
+          this.onStart({ text: textToSpeak, meta: currentMeta });
+        } catch (e) {}
+      }
+
+      if (this.onQueueChange) {
+        try {
+          this.onQueueChange(this.getQueueStatus());
+        } catch (e) {}
+      }
+
+      // Tải trước bài tiếp theo trong hàng đợi
+      this.prefetchNext();
 
       if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
       this.watchdogTimer = setTimeout(() => {
@@ -181,6 +253,14 @@
           clearTimeout(this.watchdogTimer);
           this.watchdogTimer = null;
         }
+
+        // Callback kết thúc đọc item hiện tại
+        if (this.onEnd) {
+          try {
+            this.onEnd({ text: textToSpeak, meta: currentMeta });
+          } catch (e) {}
+        }
+
         setTimeout(() => {
           if (generation === this.generation) this.playNext();
         }, this.gapMs);
@@ -219,7 +299,7 @@
             if (!res.ok) throw new Error("TTS fetch failed");
             const arrayBuf = await res.arrayBuffer();
             const audioBuffer = await ctx.decodeAudioData(arrayBuf);
-            
+
             const source = ctx.createBufferSource();
             source.buffer = audioBuffer;
             source.playbackRate.value = this.playbackRate;
@@ -290,6 +370,9 @@
 
     clear() {
       this.generation += 1;
+      const prevItem = this.currentText
+        ? { text: this.currentText, meta: this.currentMeta }
+        : null;
       this.queue = [];
       if (this.watchdogTimer) {
         clearTimeout(this.watchdogTimer);
@@ -309,9 +392,21 @@
       this.currentBufferSource = null;
       this.isPlaying = false;
       this.currentText = "";
+      this.currentMeta = null;
       this.lastEnqueuedText = "";
       this.lastEnqueuedAt = 0;
       if ("speechSynthesis" in global) global.speechSynthesis.cancel();
+
+      if (this.onEnd && prevItem) {
+        try {
+          this.onEnd(prevItem);
+        } catch (e) {}
+      }
+      if (this.onQueueChange) {
+        try {
+          this.onQueueChange(this.getQueueStatus());
+        } catch (e) {}
+      }
     }
   }
 

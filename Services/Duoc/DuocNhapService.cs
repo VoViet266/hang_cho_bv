@@ -48,7 +48,7 @@ namespace HangChoKhamBenh.Web.Services
                          && c.Ngaylap >= today && c.Ngaylap < today.AddDays(1));
 
         private IQueryable<HangChoDuocTmd> HangChoQuery()
-            => _context.HangChoDuocTmd.AsNoTracking().Where(h => h.Xoa == 0);
+            => _context.HangChoDuocTmd.AsNoTracking().Where(h => h.Xoa == 0 && h.An == 0);
 
         private static Task<List<HangChoRow>> ToRowsAsync(IQueryable<HangChoDuocTmd> q)
             => q.Select(h => new HangChoRow(h.Makb, h.Mabn, h.Khochan, h.Dagiao, h.Dathu,
@@ -179,9 +179,9 @@ namespace HangChoKhamBenh.Web.Services
             {
                 await _context.Database.ExecuteSqlInterpolatedAsync($@"
                     INSERT INTO current.hangchoduoc_tmd
-                        (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao, dathu)
+                        (mabn, makb, ngaynhap, ngaygiao, taikhoan, khochan, xoa, ngaykcb, maba, dagiao, dathu, an)
                     VALUES
-                        ({mabn}, {makb}, now(), now(), {req.OCua}, {khoInsert}, 0, {ngayKcb}, {req.Maba}, 0, {dathu})");
+                        ({mabn}, {makb}, now(), now(), {req.OCua}, {khoInsert}, 0, {ngayKcb}, {req.Maba}, 0, {dathu}, 0)");
                 return HangChoState.Moi;
             }
 
@@ -192,6 +192,7 @@ namespace HangChoKhamBenh.Web.Services
                     ngaygiao = now(), ngaynhap = now(),
                     taikhoan = COALESCE({req.OCua}, taikhoan),
                     dathu    = CASE WHEN {updateDathu} THEN {dathu} ELSE dathu END,
+                    an       = 0,
                     xoa      = 0
                 WHERE (makb = {makb} OR mabn = {mabn}) AND khochan = ANY({khoMatch})");
 
@@ -400,7 +401,7 @@ namespace HangChoKhamBenh.Web.Services
                         Khochan = kho, HasBhyt = hasBhyt, HasDichVu = hasDv,
                         HasBoth = hasBhyt && hasDv, IsBhyt = kho != 13,
                         Dagiao = g.Dagiao, DaThu = daThu,
-                        TrangThai = daThu ? "Đang soạn" : "Chờ thu",
+                        TrangThai = daThu ? "Đang soạn thuốc" : "Chờ thu tiền",
                         SoTien = tien, SoTienStr = tienStr, Sohd = sohd,
                         Maba = g.Maba, NgayNhapStr = g.Ngaynhap?.ToString("HH:mm") ?? "", OCua = oCua
                     };
@@ -484,6 +485,44 @@ namespace HangChoKhamBenh.Web.Services
             })];
         }
 
+        // ===== 4. Danh sách bệnh nhân đã ẩn =====
+        public async Task<List<DuocChuaGiaoItemDto>> LayDanhSachDaAnAsync()
+        {
+            try
+            {
+                var today = DateTime.Today;
+                var rows = await ToRowsAsync(_context.HangChoDuocTmd.AsNoTracking()
+                    .Where(h => h.Xoa == 0 && h.An == 1 && (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today || h.Ngaykcb >= today))
+                    .OrderByDescending(h => h.Ngaygiao ?? h.Ngaynhap).Take(100));
+
+                var groups  = (await BuildGroupsAsync(rows)).OrderByDescending(x => x.Ngaygiao ?? x.Ngaynhap).ToList();
+                var infoMap = await LoadChungTuInfoAsync(groups);
+
+                return [.. groups.Select(g =>
+                {
+                    var info = FindInfo(infoMap, g);
+                    return new DuocChuaGiaoItemDto
+                    {
+                        Makb = g.Makb ?? "", Mabn = g.Mabn ?? "",
+                        HoTen = g.HoTen, NamSinh = g.NamSinh, GioiTinh = g.GioiTinhStr,
+                        Khochan = g.Khochan, HasBhyt = g.HasBhyt, HasDichVu = g.HasDv,
+                        HasBoth = g.HasBoth, IsBhyt = g.Khochan == 14, Dagiao = g.Dagiao,
+                        TrangThai = "Đã ẩn",
+                        SoTien = info?.TotalTien,
+                        SoTienStr = info != null ? Money(info.TotalTien, "—") : "—",
+                        Sohd = info?.Sohd ?? "", Maba = "",
+                        NgayNhapStr = g.Ngaygiao?.ToString("HH:mm") ?? (g.Ngaynhap?.ToString("HH:mm") ?? ""),
+                        OCua = g.Taikhoan
+                    };
+                })];
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách đã ẩn");
+                return new List<DuocChuaGiaoItemDto>();
+            }
+        }
+
         // ===== CapNhatTrangThaiAsync =====
         public async Task<bool> CapNhatTrangThaiAsync(DuocCapNhatTrangThaiRequest req)
         {
@@ -491,7 +530,7 @@ namespace HangChoKhamBenh.Web.Services
             var mabn = req.Mabn?.Trim() ?? "";
             if (string.IsNullOrEmpty(makb) && string.IsNullOrEmpty(mabn)) return false;
 
-            var oCua  = req.OCua?.Trim();
+            object oCua = (object?)req.OCua?.Trim() ?? DBNull.Value;
             var today = DateTime.Today;
             var khoSql = KhoFilter(req.Khochan);
 
@@ -556,7 +595,7 @@ namespace HangChoKhamBenh.Web.Services
             var today = DateTime.Today;
             var rows = await _context.Database.ExecuteSqlRawAsync(@"
                 UPDATE current.hangchoduoc_tmd
-                SET dagiao = 0, ngaygiao = now(), ngaynhap = now()
+                SET dagiao = 0, an = 0, ngaygiao = now(), ngaynhap = now()
                 WHERE ((@p0 <> '' AND makb = @p0) OR (@p1 <> '' AND mabn = @p1))
                   AND xoa = 0
                   AND (ngaynhap IS NULL OR ngaynhap >= @p2 OR ngaygiao >= @p2)",
@@ -585,7 +624,7 @@ namespace HangChoKhamBenh.Web.Services
             {
                 rows = await _context.Database.ExecuteSqlAsync($@"
                     UPDATE current.hangchoduoc_tmd
-                    SET dagiao = 3, ngaygiao = now()
+                    SET dagiao = 3, an = 0, ngaygiao = now()
                     WHERE (({cleanMakb} <> '' AND makb = {cleanMakb}) OR ({cleanMabn} <> '' AND mabn = {cleanMabn}))
                       AND (khochan = 13 OR khochan = 3)
                       AND xoa = 0
@@ -595,11 +634,47 @@ namespace HangChoKhamBenh.Web.Services
             {
                 rows = await _context.Database.ExecuteSqlAsync($@"
                     UPDATE current.hangchoduoc_tmd
-                    SET dagiao = 3, ngaygiao = now()
+                    SET dagiao = 3, an = 0, ngaygiao = now()
                     WHERE (({cleanMakb} <> '' AND makb = {cleanMakb}) OR ({cleanMabn} <> '' AND mabn = {cleanMabn}))
                       AND xoa = 0
                       AND (ngaynhap IS NULL OR ngaynhap >= {today})");
             }
+
+            return rows > 0;
+        }
+
+        public async Task<bool> AnAsync(string makb, string mabn)
+        {
+            var cleanMakb = makb.Trim();
+            var cleanMabn = mabn.Trim();
+            if (string.IsNullOrEmpty(cleanMakb) && string.IsNullOrEmpty(cleanMabn)) return false;
+
+            var today = DateTime.Today;
+            var rows = await _context.Database.ExecuteSqlRawAsync(@"
+                UPDATE current.hangchoduoc_tmd
+                SET an = 1, ngaygiao = now()
+                WHERE ((@p0 <> '' AND makb = @p0) OR (@p1 <> '' AND mabn = @p1))
+                  AND xoa = 0
+                  AND (ngaynhap IS NULL OR ngaynhap >= @p2 OR ngaygiao >= @p2 OR ngaykcb >= @p2)",
+                cleanMakb, cleanMabn, today);
+
+            return rows > 0;
+        }
+
+        public async Task<bool> BoAnAsync(string makb, string mabn)
+        {
+            var cleanMakb = makb.Trim();
+            var cleanMabn = mabn.Trim();
+            if (string.IsNullOrEmpty(cleanMakb) && string.IsNullOrEmpty(cleanMabn)) return false;
+
+            var today = DateTime.Today;
+            var rows = await _context.Database.ExecuteSqlRawAsync(@"
+                UPDATE current.hangchoduoc_tmd
+                SET an = 0, ngaygiao = now()
+                WHERE ((@p0 <> '' AND makb = @p0) OR (@p1 <> '' AND mabn = @p1))
+                  AND xoa = 0
+                  AND (ngaynhap IS NULL OR ngaynhap >= @p2 OR ngaygiao >= @p2 OR ngaykcb >= @p2)",
+                cleanMakb, cleanMabn, today);
 
             return rows > 0;
         }
