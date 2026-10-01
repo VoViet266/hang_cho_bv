@@ -56,7 +56,7 @@ namespace HangChoKhamBenh.Web.Data
             modelBuilder.Entity<HangChoDuocTmd>(entity =>
             {
                 entity.ToTable("hangchoduoc_tmd", "current");
-                entity.HasKey(e => e.Macho);
+                entity.HasKey(e => new { e.Makb, e.Mabn, e.Khochan });
             });
 
             modelBuilder.Entity<ChungTu>(entity =>

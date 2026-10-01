@@ -6,11 +6,6 @@ namespace HangChoKhamBenh.Web.Data.Entities
     [Table("hangchoduoc_tmd", Schema = "current")]
     public class HangChoDuocTmd
     {
-        [Key]
-        [Column("macho")]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Macho { get; set; }
-
         [Column("mabn")]
         public string Mabn { get; set; } = string.Empty;
 
