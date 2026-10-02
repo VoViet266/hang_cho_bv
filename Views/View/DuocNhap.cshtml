@@ -44,26 +44,72 @@
                 background: #94a3b8;
             }
 
-            @@keyframes cardGlideIn {
-                0% {
-                    opacity: 0;
-                    transform: translateY(10px) scale(0.99);
-                }
-
-                100% {
-                    opacity: 1;
-                    transform: translateY(0) scale(1);
-                }
-            }
-
             .patient-card-item {
-                animation: cardGlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
-                transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-                will-change: transform, opacity;
+                transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
             }
 
-            .patient-card-item:hover {
-                transform: translateY(-1px);
+            /* Tên và trạng thái là thông tin chính khi nhân viên tìm toa để phát. */
+            #scan-input {
+                min-height: 42px;
+                font-size: 16px;
+            }
+
+            #search-thu-input, #search-giao-input {
+                min-height: 36px;
+                font-size: 14px;
+            }
+
+            [id^="tab-btn-"] {
+                min-height: 34px;
+                font-size: 13px;
+            }
+
+            #p-hoten {
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                white-space: normal;
+                overflow: hidden;
+                overflow-wrap: anywhere;
+                font-size: clamp(18px, 1.4vw, 22px);
+                line-height: 1.2;
+            }
+
+            .duoc-queue-list .patient-card-item {
+                padding: 12px;
+                border-left-width: 4px;
+                gap: 8px;
+            }
+
+            #cho-thu-list .patient-card-item { border-left-color: #f59e0b; }
+            #cho-giao-list .patient-card-item { border-left-color: #2563eb; }
+            #da-giao-list .patient-card-item { border-left-color: #16a34a; }
+            #khong-mua-list .patient-card-item,
+            #da-an-list .patient-card-item { border-left-color: #94a3b8; }
+
+            .patient-card-item .duoc-card-name {
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                overflow: hidden;
+                overflow-wrap: anywhere;
+                font-size: clamp(18px, 1.35vw, 21px);
+                font-weight: 900;
+                line-height: 1.2;
+                color: #0f172a;
+            }
+
+            .patient-card-item .duoc-card-meta {
+                min-width: 0;
+                overflow-wrap: anywhere;
+                font-size: 13px;
+                line-height: 1.4;
+                color: #475569;
+            }
+
+            .duoc-card-actions button {
+                min-height: 34px;
+                font-size: 14px;
             }
     </style>
 </head>
@@ -145,13 +191,14 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
                         <span id="p-hoten"
-                              class="text-sm md:text-base font-black text-slate-900 uppercase tracking-wide truncate"></span>
+                              class="font-black text-slate-900 uppercase tracking-wide"></span>
                         <div id="loai-badge" class="flex items-center gap-1"></div>
                     </div>
                     <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
                         <span>Năm sinh: <strong id="p-ngaysinh" class="text-slate-700">—</strong></span>
                         <span>•</span>
                         <span>MKB: <strong id="p-makb" class="text-slate-700 font-mono">—</strong></span>
+                        <span class="text-blue-700 font-semibold">• Nhấn 1–5 để gọi ô phát</span>
                     </div>
                 </div>
             </div>
@@ -234,7 +281,7 @@
                 </div>
 
                 <!-- Danh sách Chưa Thu -->
-                <div class="flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="cho-thu-list">
+                <div class="duoc-queue-list flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="cho-thu-list">
                     <div id="cho-thu-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-receipt text-3xl text-slate-300"></i>
@@ -243,7 +290,7 @@
                 </div>
 
                 <!-- Danh sách Không Mua -->
-                <div class="hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="khong-mua-list">
+                <div class="duoc-queue-list hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="khong-mua-list">
                     <div id="khong-mua-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-ban text-3xl text-slate-300"></i>
@@ -305,7 +352,7 @@
                 </div>
 
                 <!-- Danh sách Chờ Phát -->
-                <div class="flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="cho-giao-list">
+                <div class="duoc-queue-list flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="cho-giao-list">
                     <div id="cho-giao-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-clipboard-check text-3xl text-slate-300"></i>
@@ -314,7 +361,7 @@
                 </div>
 
                 <!-- Danh sách Đã Phát -->
-                <div class="hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="da-giao-list">
+                <div class="duoc-queue-list hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="da-giao-list">
                     <div id="da-giao-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-300"></i>
@@ -323,7 +370,7 @@
                 </div>
 
                 <!-- Danh sách Đã Ẩn -->
-                <div class="hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="da-an-list">
+                <div class="duoc-queue-list hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="da-an-list">
                     <div id="da-an-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-eye-slash text-3xl text-slate-300"></i>
@@ -397,7 +444,7 @@
                 }
 
                 function getOcuaBadge(ocua) {
-                    if (!ocua) return `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-400">Chưa gọi ô</span>`;
+                    if (!ocua) return `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Chưa gọi ô</span>`;
                     const val = String(ocua).trim();
                     let cls = 'bg-blue-50 text-blue-800 border-blue-200';
                     if (val === '2') cls = 'bg-emerald-50 text-emerald-800 border-emerald-200';
@@ -753,11 +800,44 @@
                             return;
                         }
 
+                        // Quét lại toa đã chờ: máy chủ chỉ phát khi đúng lượt khám,
+                        // đã chọn ô và (với toa dịch vụ) đã thu đủ tiền.
+                        if (res.action === 'da-co-trong-hang-cho') {
+                            let dispense;
+                            try {
+                                const r = await fetch('/api/duoc-nhap/phat-theo-ma-quet', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ makb: data.makb, mabn: data.mabn })
+                                });
+                                if (!r.ok) throw new Error('Không thể xác nhận phát thuốc.');
+                                dispense = await r.json();
+                            } catch (err) {
+                                playScanBeep(false);
+                                showError('Lỗi kết nối khi xác nhận phát thuốc.');
+                                refreshAllColumns();
+                                return;
+                            }
+
+                            if (dispense.action === 'da-phat') {
+                                playScanBeep(true);
+                                setScanState('success');
+                                showUndoToast(`${data.hoTen}: ${dispense.message}`, null);
+                                refreshAllColumns();
+                                if (scanInput) scanInput.focus({ preventScroll: true });
+                                return;
+                            }
+                            playScanBeep(false);
+                            showError(dispense.message || 'Toa chưa đủ điều kiện phát thuốc.');
+                            refreshAllColumns();
+                            return;
+                        }
+
                         // 4. Thành công
                         playScanBeep(true);
                         setScanState('success');
-                        triggerHighlight(data.makb || data.mabn);
-                        showUndoToast(`Đã tiếp nhận: ${data.hoTen}`, null);
+                        if (res.action !== 'da-xu-ly') triggerHighlight(data.makb || data.mabn);
+                        showUndoToast(`${data.hoTen}: ${res.message || 'Đã tiếp nhận.'}`, null);
 
                         // Cập nhật các danh sách
                         refreshAllColumns();
@@ -926,10 +1006,10 @@
                                                                         <!-- Top: Họ tên & Tiền -->
                                                                         <div class="flex items-start justify-between gap-2">
                                                                             <div class="min-w-0">
-                                                                                <div class="font-black text-slate-900 text-sm md:text-base uppercase tracking-tight truncate leading-tight">
+                                                                                <div class="duoc-card-name uppercase tracking-tight" title="${escapeHtml(item.hoTen)}">
                                                                                     ${escapeHtml(item.hoTen)}
                                                                                 </div>
-                                                                                <div class="text-xs text-slate-500 flex items-center gap-2 mt-1 flex-wrap">
+                                                                                <div class="duoc-card-meta flex items-center gap-2 mt-1 flex-wrap">
                                                                                     ${typeTag}
                                                                                     ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
                                                                                     <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
@@ -949,7 +1029,7 @@
                                                                         </div>
 
                                                                         <!-- Bottom: Segmented Call Buttons & Action -->
-                                                                        <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
+                                                                        <div class="duoc-card-actions flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
                                                                             <div class="flex items-center gap-1">
                                                                                 ${assignBtns}
                                                                             </div>
@@ -996,10 +1076,10 @@
 
                         html += `<div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
                                                                         <div class="min-w-0">
-                                                                            <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight">
+                                                                            <div class="duoc-card-name uppercase" title="${escapeHtml(item.hoTen)}">
                                                                                 ${escapeHtml(item.hoTen)}
                                                                             </div>
-                                                                            <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                                                                            <div class="duoc-card-meta flex items-center gap-2 mt-0.5 flex-wrap">
                                                                                 ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
                                                                                 ${item.soTienStr ? `<span class="text-slate-700 font-mono font-semibold">${item.soTienStr}</span><span>•</span>` : ''}
                                                                                 <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
@@ -1098,10 +1178,10 @@
                                                                         <!-- Top: Họ tên & Tiền / Ô cửa -->
                                                                         <div class="flex items-start justify-between gap-2">
                                                                             <div class="min-w-0">
-                                                                                <div class="font-black text-slate-900 text-sm md:text-base uppercase tracking-tight truncate leading-tight">
+                                                                                <div class="duoc-card-name uppercase tracking-tight" title="${escapeHtml(item.hoTen)}">
                                                                                     ${escapeHtml(item.hoTen)}
                                                                                 </div>
-                                                                                <div class="text-xs text-slate-500 flex items-center gap-2 mt-1 flex-wrap">
+                                                                                <div class="duoc-card-meta flex items-center gap-2 mt-1 flex-wrap">
                                                                                     ${typeTag}
                                                                                     ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
                                                                                     <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
@@ -1121,7 +1201,7 @@
                                                                         </div>
 
                                                                         <!-- Bottom: Segmented Call Buttons & Action -->
-                                                                        <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
+                                                                        <div class="duoc-card-actions flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
                                                                             <div class="flex items-center gap-1 flex-wrap">
                                                                                 ${assignBtns}
                                                                             </div>
@@ -1180,10 +1260,10 @@
                         html += `
                                                                     <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
                                                                         <div class="min-w-0">
-                                                                            <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight">
+                                                                            <div class="duoc-card-name uppercase" title="${escapeHtml(item.hoTen)}">
                                                                                 ${escapeHtml(item.hoTen)}
                                                                             </div>
-                                                                            <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                                                                            <div class="duoc-card-meta flex items-center gap-2 mt-0.5 flex-wrap">
                                                                                 ${typeTag}
                                                                                 ${hasMoney ? `<span>•</span><span class="text-xs md:text-sm font-black text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.soTienStr}</span>` : ''}
                                                                                 ${sohdVal ? `<span>•</span><span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span>` : ''}
@@ -1247,11 +1327,11 @@
                         html += `
                             <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
                                 <div class="min-w-0">
-                                    <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight flex items-center gap-1.5">
+                                    <div class="flex items-start gap-1.5 min-w-0">
                                         <span class="text-slate-400"><i class="fa-solid fa-eye-slash text-xs"></i></span>
-                                        <span>${escapeHtml(item.hoTen)}</span>
+                                        <span class="duoc-card-name uppercase min-w-0" title="${escapeHtml(item.hoTen)}">${escapeHtml(item.hoTen)}</span>
                                     </div>
-                                    <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                                    <div class="duoc-card-meta flex items-center gap-2 mt-0.5 flex-wrap">
                                         ${typeTag}
                                         ${hasMoney ? `<span>•</span><span class="text-xs md:text-sm font-black text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.soTienStr}</span>` : ''}
                                         ${sohdVal ? `<span>•</span><span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span>` : ''}
@@ -1698,29 +1778,94 @@
                     });
                 }
 
+                let hidBuffer = '';
+                let hidFirstKeyAt = 0;
+                let hidLastKeyAt = 0;
+                let hidSource = null;
+                let hidSourceValue = '';
+                let hidClearTimer = null;
+                function clearHidBuffer() {
+                    hidBuffer = '';
+                    hidFirstKeyAt = 0;
+                    hidLastKeyAt = 0;
+                    hidSource = null;
+                    hidSourceValue = '';
+                    clearTimeout(hidClearTimer);
+                }
+
                 document.addEventListener('keydown', e => {
                     if (e.key === 'Escape') {
+                        clearHidBuffer();
                         resetAll();
                         return;
                     }
                     if (e.key === 'F11') {
+                        clearHidBuffer();
                         e.preventDefault();
                         toggleFullScreen();
                         return;
                     }
-                    const tag = document.activeElement ? document.activeElement.tagName : '';
-                    if (['BUTTON', 'INPUT', 'TEXTAREA', 'A'].includes(tag)) {
+
+                    // Ô quét đã có xử lý Enter và máy quét không có suffix riêng.
+                    if (e.target === scanInput) {
+                        clearHidBuffer();
                         return;
                     }
-                    const ignoredKeys = [
-                        'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F12',
-                        'Tab', 'CapsLock', 'Shift', 'Control', 'Alt', 'Meta',
-                        'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'
-                    ];
-                    if (!ignoredKeys.includes(e.key) && scanInput && document.activeElement !== scanInput) {
-                        scanInput.focus({ preventScroll: true });
+
+                    if (e.isComposing || e.ctrlKey || e.altKey || e.metaKey || e.repeat) {
+                        clearHidBuffer();
+                        return;
                     }
-                });
+
+                    const now = performance.now();
+                    if (e.key === 'Enter') {
+                        const sourceIsInput = hidSource instanceof HTMLInputElement;
+                        const minLength = sourceIsInput ? 6 : 4;
+                        const isScanner = hidBuffer.length >= minLength
+                            && now - hidLastKeyAt <= 250
+                            && now - hidFirstKeyAt <= (sourceIsInput
+                                ? hidBuffer.length * 55 + 100
+                                : hidBuffer.length * 85 + 150);
+                        const shortScanOnButton = hidSource instanceof Element && Boolean(hidSource.closest('button'))
+                            && hidBuffer.length >= 1 && now - hidLastKeyAt <= 250;
+                        const code = hidBuffer;
+                        const source = hidSource;
+                        const sourceValue = hidSourceValue;
+                        clearHidBuffer();
+                        if ((isScanner || shortScanOnButton) && scanInput) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (!isScanner) {
+                                scanInput.focus({ preventScroll: true });
+                                showUndoToast('Mã quét quá ngắn; vui lòng quét lại.', null, true);
+                                return;
+                            }
+                            if (source instanceof HTMLInputElement && source !== scanInput && source.isConnected) {
+                                source.value = sourceValue;
+                                source.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                            scanInput.value = code;
+                            scanInput.focus({ preventScroll: true });
+                            handleScan(code);
+                        }
+                        return;
+                    }
+
+                    if (e.key.length !== 1 || e.key.trim() === '' || e.target?.isContentEditable) {
+                        clearHidBuffer();
+                        return;
+                    }
+                    if (!hidLastKeyAt || now - hidLastKeyAt > 90) {
+                        clearHidBuffer();
+                        hidFirstKeyAt = now;
+                        hidSource = e.target;
+                        hidSourceValue = e.target instanceof HTMLInputElement ? e.target.value : '';
+                    }
+                    hidBuffer += e.key;
+                    hidLastKeyAt = now;
+                    clearTimeout(hidClearTimer);
+                    hidClearTimer = setTimeout(clearHidBuffer, 260);
+                }, true);
 
                 function toggleFullScreen() {
                     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
