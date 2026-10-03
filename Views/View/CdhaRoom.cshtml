@@ -15,7 +15,7 @@
     <title>Danh Sách Hàng Chờ Siêu Âm - @(string.IsNullOrEmpty(room.Tenphong) ? "CDHA" : room.Tenphong)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/board.css">
+    <link rel="stylesheet" href="/board.css?v=audio-autoplay-1">
     <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
     <script>
             tailwind.config = {
@@ -121,9 +121,6 @@
             </a>
         </div>
     </header>
-
-    <!-- Kích hoạt quyền phát âm thanh ngầm tự động -->
-    <iframe src="/audio/silent.mp3" allow="autoplay; encrypted-media" style="position:absolute; width:0; height:0; border:0; visibility:hidden; pointer-events:none;" tabindex="-1"></iframe>
 
     <!-- MAIN BODY -->
     <main class="flex-grow p-1.5 overflow-hidden flex flex-col">
@@ -518,7 +515,6 @@
     <!-- Scripts -->
     <script src="/js/signalr.min.js?v=@DateTime.UtcNow.Ticks"></script>
     <script src="/js/socket-signalr-adapter.js?v=@DateTime.UtcNow.Ticks"></script>
-    <script src="/js/remoteNav.js?v=@DateTime.UtcNow.Ticks"></script>
     <script src="/js/queuePolicy.js?v=@DateTime.UtcNow.Ticks"></script>
     <script src="/js/audioQueue.js?v=@DateTime.UtcNow.Ticks"></script>
     <script src="/js/displayBoard.js?v=@DateTime.UtcNow.Ticks"></script>

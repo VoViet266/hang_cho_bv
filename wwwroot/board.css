@@ -203,6 +203,10 @@
   box-shadow: none !important;
 }
 
+.tv-board .patient-table tbody tr {
+  transition: none !important;
+}
+
 .patient-table tbody tr:nth-child(even):not(.bg-red-50):not(.bg-yellow-100) {
   background: #f8fafc;
 }
@@ -498,3 +502,23 @@ tr.tv-focused .btn-hide-patient,
     animation: none !important;
   }
 }
+/* Cảnh báo rõ ràng khi TV từ chối autoplay, thay vì chỉ hiện biểu tượng loa bật. */
+.audio-playback-status {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 100;
+  max-width: 85vw;
+  padding: 0.75rem 1.25rem;
+  border: 2px solid #d97706;
+  border-radius: 0.75rem;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: clamp(16px, 1.3vw, 24px);
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+}
+
+.audio-playback-status[hidden] { display: none; }

@@ -48,8 +48,8 @@ builder.Services.AddSignalR(options =>
 });
 
 // Data & Business Services
-var rawDbConn = builder.Configuration.GetConnectionString("DefaultConnection") 
-              ?? builder.Configuration["DATABASE_URL"] 
+var rawDbConn = builder.Configuration.GetConnectionString("DefaultConnection")
+              ?? builder.Configuration["DATABASE_URL"]
               ?? string.Empty;
 var npgsqlConnString = NpgsqlConnectionFactory.ConvertToNpgsqlConnectionString(rawDbConn);
 

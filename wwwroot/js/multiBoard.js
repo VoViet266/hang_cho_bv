@@ -2,6 +2,7 @@
 let soundEnabled = localStorage.getItem("soundEnabled") === "true";
 
 let lastKnownMultiRoomsData = {}; // Cache dữ liệu các phòng
+const renderedRoomSignatures = new Map();
 
 // ==========================================
 // HÀM TIỆN ÍCH CHỐNG XSS (HTML ESCAPING)
@@ -572,7 +573,28 @@ function updateQuadrantDOM(roomId, data) {
   const waitingList = window.QueuePolicy
     ? window.QueuePolicy.applyQueuePolicy(rawList)
     : [...rawList];
-  const activeWaitingCount = waitingList.filter((p) => p.dakham == 0).length;
+  const renderSignature = JSON.stringify(waitingList);
+  const shouldRender = renderedRoomSignatures.get(roomId) !== renderSignature;
+  let activeWaitingCount = 0;
+  let nextPatientNameToRead = "";
+  let nextPatientKeyToRead = "";
+  let nextPatientDobYearToRead = "";
+  let nextPatientIndex = -1;
+  waitingList.forEach((patient, index) => {
+    if (patient.dakham == 0) {
+      activeWaitingCount++;
+      if (nextPatientIndex === -1) {
+        nextPatientIndex = index;
+        if (shouldRender) {
+          nextPatientNameToRead = `${patient.holot || ""} ${patient.ten || ""}`.trim();
+          nextPatientKeyToRead = getPatientKey(patient);
+          nextPatientDobYearToRead = extractBirthYear(
+            patient.dobStr || patient.ngaysinh || patient.namSinh,
+          );
+        }
+      }
+    }
+  });
 
   // 1. Cập nhật số liệu Đang Chờ & Tổng Đăng Ký
   const waitEl = document.getElementById(`total-wait-${roomId}`);
@@ -589,11 +611,7 @@ function updateQuadrantDOM(roomId, data) {
   const tbody = document.getElementById(`tbody-${roomId}`);
   if (!tbody) return;
 
-  let nextPatientNameToRead = "";
-  let nextPatientKeyToRead = "";
-  let nextPatientDobYearToRead = "";
-
-  if (waitingList.length === 0) {
+  if (shouldRender && waitingList.length === 0) {
     tbody.innerHTML = `
       <tr>
         <td colspan="4" class="text-center py-8 text-slate-400 font-bold text-base md:text-2xl italic">
@@ -603,25 +621,7 @@ function updateQuadrantDOM(roomId, data) {
     `;
     const existingBadge = document.getElementById(`page-badge-${roomId}`);
     if (existingBadge) existingBadge.remove();
-  } else {
-    let waitCounter = 0;
-    let nextPatientIndex = -1;
-
-    waitingList.forEach((patient, idx) => {
-      if (patient.dakham == 0) {
-        waitCounter++;
-        if (waitCounter === 1) {
-          nextPatientIndex = idx;
-          nextPatientNameToRead =
-            `${patient.holot || ""} ${patient.ten || ""}`.trim();
-          nextPatientKeyToRead = getPatientKey(patient);
-          nextPatientDobYearToRead = extractBirthYear(
-            patient.dobStr || patient.ngaysinh || patient.namSinh,
-          );
-        }
-      }
-    });
-
+  } else if (shouldRender) {
     const existingBadge = document.getElementById(`page-badge-${roomId}`);
     if (existingBadge) existingBadge.remove();
 
@@ -682,7 +682,7 @@ function updateQuadrantDOM(roomId, data) {
       );
 
       rowsHtml += `
-        <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-dob-year="${safeDobYear}" data-room="${safeRoomTitle}" onclick="onRowClick(this)" class="remote-item cursor-pointer transition-all ${rowClass}" tabindex="0">
+        <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-dob-year="${safeDobYear}" data-room="${safeRoomTitle}" onclick="onRowClick(this)" class="remote-item cursor-pointer ${rowClass}" tabindex="0">
           <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${sttClass}">
             ${sttDisplay}
           </td>
@@ -709,16 +709,17 @@ function updateQuadrantDOM(roomId, data) {
 
     tbody.innerHTML = rowsHtml;
   }
+  if (shouldRender) renderedRoomSignatures.set(roomId, renderSignature);
 
   // 3. Cập nhật bệnh nhân tới lượt để gọi bằng phím Space khi cần.
   const tracker = document.getElementById(`speech-track-${roomId}`);
-  if (tracker) {
+  if (tracker && shouldRender) {
     tracker.dataset.patient = nextPatientNameToRead;
     tracker.dataset.patientKey = nextPatientKeyToRead;
     tracker.dataset.dobYear = nextPatientDobYearToRead;
   }
 
-  if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
+  if (shouldRender && window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
     window.TVRemoteNav.refresh();
   }
 }

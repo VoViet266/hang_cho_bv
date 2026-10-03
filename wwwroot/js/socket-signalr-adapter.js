@@ -1,6 +1,6 @@
 /**
  * SignalR to Socket.IO compatibility adapter for HangChoKhamBenh
- * Giúp client script (displayBoard.js, multiBoard.js) hoạt động hoàn hảo với SignalR Hub
+ * Adapter cho displayBoard.js dùng SignalR Hub.
  * Tích hợp cơ chế tự động kết nối vô hạn (Infinite Reconnect), khôi phục phòng và Fallback Reload khi mạng lag/đứt kết nối
  */
 (function (window) {

@@ -172,8 +172,13 @@ namespace HangChoKhamBenh.Web.Services
             string makb, string mabn, DuocNhapThemRequest req, DateTime? ngayKcb,
             int khoInsert, int[] khoMatch, bool dathu, bool updateDathu)
         {
+            var today = DateTime.Today;
             var existing = await _context.HangChoDuocTmd.AsNoTracking()
-                .Where(h => h.Makb == makb && h.Mabn == mabn && khoMatch.Contains(h.Khochan))
+                .Where(h => h.Makb == makb && h.Mabn == mabn && khoMatch.Contains(h.Khochan)
+                         && h.Xoa == 0 && h.An == 0
+                         && (h.Ngaynhap == null || h.Ngaynhap >= today))
+                .OrderBy(h => h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat ? 0 : 1)
+                .ThenByDescending(h => h.Ngaynhap)
                 .Select(h => new { h.Dagiao, h.Khochan })
                 .FirstOrDefaultAsync();
 

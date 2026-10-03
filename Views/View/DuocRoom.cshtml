@@ -15,7 +15,7 @@
     <title>@Model.Title - Bệnh Viện Tâm Minh Đức</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/board.css">
+    <link rel="stylesheet" href="/board.css?v=audio-autoplay-1">
     <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
     <script>
             tailwind.config = {
@@ -39,14 +39,6 @@
             .no-scrollbar {
                 -ms-overflow-style: none;
                 scrollbar-width: none;
-            }
-
-            .duoc-patient-table tbody tr {
-                transition: background-color 0.2s ease;
-            }
-
-            .badge-money, .badge-status, .badge-ocua {
-                transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             }
 
             .duoc-patient-table {
@@ -102,7 +94,7 @@
             /* --- CHẾ ĐỘ 1 BẢNG (KHI <= 6-8 BỆNH NHÂN): CHỮ CỰC TO, ĐẬM NÉT, RÕ RÀNG TRÊN TV 43 INCH --- */
             .duoc-table-single th {
                 font-size: clamp(20px, 1.8vw, 30px) !important;
-                padding: 10px 6px !important;
+                padding: 10px 3px !important;
             }
 
             .duoc-table-single th:first-child {
@@ -111,7 +103,7 @@
             }
 
             .duoc-table-single .patient-name-text {
-                font-size: clamp(32px, 3.2vw, 54px) !important;
+                font-size: clamp(38px, 3.8vw, 62px) !important;
                 font-weight: 900 !important;
                 color: #1e3a8a !important;
                 line-height: 1.15 !important;
@@ -127,13 +119,13 @@
             .duoc-table-single .badge-money {
                 font-size: clamp(22px, 2.2vw, 34px) !important;
                 font-weight: 900 !important;
-                padding: 6px 14px !important;
+                padding: 4px 6px !important;
             }
 
             .duoc-table-single .badge-status {
                 font-size: clamp(20px, 2.0vw, 30px) !important;
                 font-weight: 900 !important;
-                padding: 6px 14px !important;
+                padding: 4px 6px !important;
                 white-space: nowrap !important;
             }
 
@@ -149,7 +141,7 @@
             }
 
             .duoc-table-split .patient-name-text {
-                font-size: clamp(22px, 2.1vw, 36px) !important;
+                font-size: clamp(28px, 2.7vw, 44px) !important;
                 font-weight: 900 !important;
                 color: #1e3a8a !important;
                 line-height: 1.15 !important;
@@ -165,13 +157,13 @@
             .duoc-table-split .badge-money {
                 font-size: clamp(15px, 1.35vw, 22px) !important;
                 font-weight: 900 !important;
-                padding: 4px 8px !important;
+                padding: 2px 4px !important;
             }
 
             .duoc-table-split .badge-status {
                 font-size: clamp(13px, 1.15vw, 19px) !important;
                 font-weight: 900 !important;
-                padding: 4px 8px !important;
+                padding: 2px 4px !important;
                 letter-spacing: -0.01em !important;
                 white-space: nowrap !important;
             }
@@ -212,8 +204,9 @@
                 display: -webkit-box !important;
                 -webkit-line-clamp: 2 !important;
                 -webkit-box-orient: vertical !important;
-                font-size: var(--duoc-name-font, 29px) !important;
-                line-height: 1.08 !important;
+                font-size: var(--duoc-name-font, 24px) !important;
+                /* Chừa khoảng cho dấu tiếng Việt và giữ hai dòng vừa trong chiều cao hàng. */
+                line-height: 1.3 !important;
                 white-space: normal !important;
                 word-break: normal !important;
                 overflow-wrap: anywhere;
@@ -247,14 +240,39 @@
 
             .duoc-notice {
                 flex: none;
-                padding: 3px 12px;
-                background: #fff;
-                border-top: 1px solid #cbd5e1;
+                padding: 3px 0;
+                background: transparent;
+                overflow: hidden;
                 color: #b91c1c;
                 font-size: clamp(12px, 1vw, 17px);
                 font-weight: 800;
-                line-height: 1.2;
-                text-align: center;
+                line-height: 1.4;
+            }
+
+            .duoc-notice-text {
+                display: inline-block;
+                padding-left: 100%;
+                white-space: nowrap;
+                animation: duoc-notice-scroll 40s linear infinite;
+            }
+
+            .duoc-notice:hover .duoc-notice-text {
+                animation-play-state: paused;
+            }
+
+            @@keyframes duoc-notice-scroll {
+                from { transform: translateX(0); }
+                to { transform: translateX(-100%); }
+            }
+
+            @@media (prefers-reduced-motion: reduce) {
+                .duoc-notice-text {
+                    animation: none;
+                    display: block;
+                    padding-left: 0;
+                    white-space: normal;
+                    text-align: center;
+                }
             }
     </style>
 </head>
@@ -290,16 +308,7 @@
                 </span>
             </div>
 
-            <!-- Badge Phân Trang (Hiện khi có nhiều trang) -->
-            <div id="pageBadge"
-                class="hidden bg-blue-50 px-2.5 py-1 text-center min-w-[70px] rounded border border-blue-200">
-                <span class="block text-brand font-bold text-[10px] uppercase tracking-wide">Trang</span>
-                <span id="pageBadgeText"
-                      class="block text-brand font-black text-lg md:text-xl tabular-nums leading-none mt-0.5">
-                    1/1
-                </span>
-            </div>
-
+         
             <!-- Nút quay lại -->
             <a href="/duoc"
                class="remote-item icon-button bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
@@ -309,18 +318,16 @@
         </div>
     </header>
 
-    <iframe src="/audio/silent.mp3" allow="autoplay; encrypted-media" style="position:absolute; width:0; height:0; border:0; visibility:hidden; pointer-events:none;" tabindex="-1"></iframe>
-
     <main id="mainContent" class="flex-grow overflow-hidden flex flex-col">
         <div id="paginationContainer" class="flex-grow overflow-hidden flex flex-col">
             <div id="ssrTableWrapper" class="room-container flex-grow overflow-hidden flex flex-col bg-white ">
                 <table
                     class="w-full h-full border-collapse table-fixed select-none duoc-patient-table duoc-table-single">
                     <colgroup>
-                        <col style="width: 40%;">
-                        <col style="width: 15%;">
-                        <col style="width: 17%;">
-                        <col style="width: 28%;">
+                        <col style="width: 47%;">
+                        <col style="width: 10%;">
+                        <col style="width: 18%;">
+                        <col style="width: 25%;">
                     </colgroup>
                     <thead
                         class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-xl md:text-2xl">
@@ -425,7 +432,7 @@
     </main>
 
     <footer class="duoc-notice">
-        Quý khách vui lòng ngồi chờ gọi tên và kiểm tra thuốc trước khi rời quầy. Xin cảm ơn!
+        <span class="duoc-notice-text">Quý khách vui lòng ngồi chờ gọi tên và kiểm tra thuốc trước khi rời quầy. Xin cảm ơn!</span>
     </footer>
 
     <!-- SCRIPTS -->
@@ -459,20 +466,15 @@
                 }
                 window.extractBirthYear = extractBirthYear;
 
-                // Trạng thái âm thanh: Mặc định luôn BẬT
-                let isSoundEnabled = localStorage.getItem("duocSoundEnabled") !== "false";
+                // Mỗi lần mở màn hình đều bật loa; tắt loa chỉ áp dụng cho phiên này.
+                let isSoundEnabled = true;
 
                 // ═══════════════ HỆ THỐNG ÂM THANH & GIỌNG ĐỌC (TTS) ═══════════════
                 const audioQueue = new window.AudioQueueManager({
                     isEnabled: () => isSoundEnabled,
                     gapMs: 350,
+                    onPlaybackStateChange: () => updateSoundIcon(),
                 });
-
-                function unlockAudio() {
-                    if (typeof window.aggressiveAutoUnlock === 'function') {
-                        window.aggressiveAutoUnlock();
-                    }
-                }
 
                 function updateSoundIcon() {
                     const icon = document.getElementById('soundIcon');
@@ -490,6 +492,7 @@
                             btn.className = 'icon-button bg-white border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer';
                         }
                     }
+                    window.QueueAudio.updateSoundControl(audioQueue, isSoundEnabled);
                 }
 
                 function toggleSound(forceOn) {
@@ -498,8 +501,7 @@
                     } else {
                         isSoundEnabled = !isSoundEnabled;
                     }
-                    localStorage.setItem("duocSoundEnabled", isSoundEnabled ? "true" : "false");
-                    unlockAudio();
+                    window.QueueAudio.unlock();
                     updateSoundIcon();
 
                     if (!isSoundEnabled) {
@@ -655,9 +657,11 @@
                     const pyClass = isSplit ? 'py-1.5 md:py-2' : 'py-2.5 md:py-3.5';
                     const modeClass = isSplit ? 'duoc-table-split' : 'duoc-table-single';
 
-                    const nameFont = Math.max(17, Math.min(isSplit ? 34 : 44,
-                        Math.floor((rowHeightPx - 6) / 2.18),
-                        Math.floor(window.innerWidth * (isSplit ? 0.0175 : 0.024))));
+                    // Cùng cỡ chữ cho mọi tên; tối đa hai dòng với line-height 1.3.
+                    const nameFont = Math.max(18, Math.min(isSplit ? 40 : 52,
+                        Math.floor((rowHeightPx - 6) / 2.6),
+                        Math.floor(window.innerWidth * (isSplit ? 0.024 : 0.032))));
+
                     const yearFont = Math.max(15, Math.min(isSplit ? 26 : 32,
                         Math.floor(rowHeightPx * 0.36), Math.floor(window.innerWidth * (isSplit ? 0.015 : 0.02))));
                     const moneyFont = Math.max(12, Math.min(isSplit ? 20 : 27,
@@ -669,14 +673,14 @@
                     const sizeVars = `--duoc-row-height:${rowHeightPx}px;--duoc-name-font:${nameFont}px;--duoc-year-font:${yearFont}px;--duoc-money-font:${moneyFont}px;--duoc-status-font:${statusFont}px;--duoc-header-font:${headerFont}px`;
 
                     const colWidths = isSplit
-                        ? `<col style="width: 41%;">
-                           <col style="width: 12%;">
-                           <col style="width: 19%;">
-                           <col style="width: 28%;">`
-                        : `<col style="width: 42%;">
-                           <col style="width: 13%;">
+                        ? `<col style="width: 52%;">
+                           <col style="width: 9%;">
+                           <col style="width: 16%;">
+                           <col style="width: 23%;">`
+                        : `<col style="width: 52%;">
+                           <col style="width: 8%;">
                            <col style="width: 18%;">
-                           <col style="width: 27%;">`;
+                           <col style="width: 22%;">`;
 
                     const rowList = rows || [];
                     let tbodyContent = '';
@@ -857,9 +861,8 @@
                     hubConnection.on("duoc_trigger_speak", (payload) => {
                         duocDisconnectStartTime = null;
                         if (!payload || !payload.hoTen) return;
-                        unlockAudio();
+                        window.QueueAudio.unlock();
                         isSoundEnabled = true;
-                        localStorage.setItem("duocSoundEnabled", "true");
                         updateSoundIcon();
 
                         const targetLoc = payload.oCua ? `ô số ${payload.oCua}` : "quầy";
