@@ -51,6 +51,18 @@ namespace HangChoKhamBenh.Web.Controllers.Api
             return Ok(result);
         }
 
+        [HttpPost("phat-theo-ma-quet")]
+        public async Task<IActionResult> PhatTheoMaQuet([FromBody] DuocBarcodeDispenseRequest req)
+        {
+            var result = await _duocNhapService.PhatTheoMaQuetAsync(req);
+            if (result.Success)
+            {
+                _logger.LogInformation("Phát thuốc bằng mã quét: makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
+                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
+            }
+            return Ok(result);
+        }
+
         /// <summary>
         /// Lấy danh sách chưa giao cho quầy dược (Cột 1 Chưa thu, Cột 2 Chờ phát)
         /// </summary>

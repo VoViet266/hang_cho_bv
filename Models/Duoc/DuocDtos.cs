@@ -258,6 +258,27 @@ namespace HangChoKhamBenh.Web.Models
         public string? OCua { get; set; }
     }
 
+    public class DuocBarcodeDispenseRequest
+    {
+        [JsonPropertyName("makb")]
+        public string Makb { get; set; } = string.Empty;
+
+        [JsonPropertyName("mabn")]
+        public string Mabn { get; set; } = string.Empty;
+    }
+
+    public class DuocBarcodeDispenseResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
+
+        [JsonPropertyName("action")]
+        public string Action { get; set; } = string.Empty;
+
+        [JsonPropertyName("message")]
+        public string Message { get; set; } = string.Empty;
+    }
+
     public class DuocCapNhatTrangThaiRequest
     {
         [JsonPropertyName("makb")]

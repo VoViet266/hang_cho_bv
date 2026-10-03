@@ -1,18 +1,8 @@
-// soundEnabled lưu trong localStorage - mặc định BẬT (true) để TV và máy trạm luôn sẵn sàng phát loa
-let soundEnabled = localStorage.getItem("soundEnabled") !== "false";
+// Mỗi lần mở màn hình đều bật loa; nút tắt chỉ áp dụng cho phiên đang xem.
+let soundEnabled = true;
 
 let lastKnownRoomsData = {}; // Cache dữ liệu phòng gần nhất theo roomId
-
-function unlockBrowserAudio() {
-  try {
-    const unlockAudio = new Audio("/audio/silent.mp3");
-    unlockAudio.volume = 0.01;
-    unlockAudio.play().catch(() => {});
-  } catch (e) {}
-}
-["click", "keydown", "touchstart", "pointerdown"].forEach((evt) => {
-  document.addEventListener(evt, unlockBrowserAudio, { passive: true, once: true });
-});
+const renderedRoomSignatures = new Map();
 
 function formatRoomSpokenName(roomName) {
   if (!roomName || !roomName.trim()) return "";
@@ -80,6 +70,7 @@ function highlightSpeakingRow(patientName, isSpeaking) {
 const audioQueue = new window.AudioQueueManager({
   isEnabled: () => soundEnabled,
   gapMs: 350,
+  onPlaybackStateChange: () => updateSoundIcon(),
   onStart: (item) => {
     if (item && item.meta && item.meta.patientName) {
       highlightSpeakingRow(item.meta.patientName, true);
@@ -123,17 +114,15 @@ function updateSoundIcon() {
       btn.setAttribute("aria-label", "Bật âm thanh");
     }
   }
+  window.QueueAudio.updateSoundControl(audioQueue, soundEnabled);
 }
 
 function toggleSound() {
   soundEnabled = !soundEnabled;
-  localStorage.setItem("soundEnabled", soundEnabled);
   updateSoundIcon();
 
   if (soundEnabled) {
-    const unlockAudio = new Audio("/audio/silent.mp3");
-    unlockAudio.volume = 0.01;
-    unlockAudio.play().catch(() => {});
+    window.QueueAudio.unlock();
     // Bật loa chỉ mở khóa âm thanh cho trình duyệt, KHÔNG tự động phát tiếng bệnh nhân hiện tại
   } else {
     audioQueue.clear();
@@ -632,12 +621,9 @@ window.toggleHiddenModal = toggleHiddenModal;
 function onRowClick(el) {
   if (!soundEnabled) {
     soundEnabled = true;
-    localStorage.setItem("soundEnabled", "true");
     updateSoundIcon();
   }
-  const unlockAudio = new Audio("/audio/silent.mp3");
-  unlockAudio.volume = 0.01;
-  unlockAudio.play().catch(() => {});
+  window.QueueAudio.unlock();
 
   if (!el) return;
   const row = el.tagName === "TR" ? el : el.closest("tr[data-patient]");
@@ -668,24 +654,13 @@ function onRowClick(el) {
     (window.location.pathname.includes("/cdha") ? "cdha" : "room");
 
   if (patientName) {
-    if (!soundEnabled) {
-      soundEnabled = true;
-      localStorage.setItem("soundEnabled", "true");
-      updateSoundIcon();
-      unlockBrowserAudio();
-    }
-
-  
-
     requestSpeak(patientName, roomName, dobYear);
     emitBroadcastSpeak(roomType, roomId, patientName, roomName, dobYear);
   }
 }
 window.onRowClick = onRowClick;
 
-// ==========================================
-// GỌI BỆNH NHÂN HIỆN TẠI BẰNG PHÍM SPACE
-// ==========================================
+
 function speakCurrentPatients(force = false) {
   if (!force || !soundEnabled) return;
 
@@ -733,10 +708,7 @@ function speakCurrentPatients(force = false) {
   });
 }
 
-// ==========================================
-// ==========================================
-// TỰ ĐỘNG CUỘN MƯỢT DANH SÁCH (SMOOTH AUTO-SCROLL)
-// ==========================================
+
 let lastUserInteractionAt = 0;
 
 function registerUserActivity() {
@@ -814,9 +786,7 @@ function stepAutoScroll() {
 }
 requestAnimationFrame(stepAutoScroll);
 
-// ==========================================
-// CẬP NHẬT GIAO DIỆN DOM PHÒNG KHÁM
-// ==========================================
+
 function updateRoomDOM(roomId, data) {
   if (!data) return;
   lastKnownRoomsData[roomId] = data;
@@ -840,11 +810,29 @@ function updateRoomDOM(roomId, data) {
       : window.QueuePolicy
         ? window.QueuePolicy.applyManualDemotions(rawList)
         : [...rawList];
-  const activeWaitingCount = waitingList.filter((p) => p.dakham == 0).length;
+  const renderSignature = JSON.stringify(waitingList);
+  const shouldRender = renderedRoomSignatures.get(roomId) !== renderSignature;
 
+  let activeWaitingCount = 0;
   let nextPatientNameToRead = "";
   let nextPatientKeyToRead = "";
   let nextPatientDobYearToRead = "";
+  let nextPatientIndex = -1;
+  waitingList.forEach((patient, index) => {
+    if (patient.dakham == 0) {
+      activeWaitingCount++;
+      if (nextPatientIndex === -1) {
+        nextPatientIndex = index;
+        if (shouldRender) {
+          nextPatientNameToRead = `${patient.holot || ""} ${patient.ten || ""}`.trim();
+          nextPatientKeyToRead = getPatientKey(patient);
+          nextPatientDobYearToRead = extractBirthYear(
+            patient.dobStr || patient.ngaysinh || patient.namSinh,
+          );
+        }
+      }
+    }
+  });
 
   // 1. Cập nhật các badge số đếm
   const singleDk = document.getElementById("totalDKPlus");
@@ -871,7 +859,7 @@ function updateRoomDOM(roomId, data) {
     ? document.getElementById(`tbody-${roomId}`)
     : document.getElementById("patientTableBody");
 
-  if (tbody) {
+  if (tbody && shouldRender) {
     if (waitingList.length === 0) {
       tbody.innerHTML = `
         <tr>
@@ -883,25 +871,6 @@ function updateRoomDOM(roomId, data) {
       const existingBadge = document.getElementById(`page-badge-${roomId}`);
       if (existingBadge) existingBadge.remove();
     } else {
-      // Xác định bệnh nhân tới lượt khám
-      let waitCounter = 0;
-      let nextPatientIndex = -1;
-
-      waitingList.forEach((patient, idx) => {
-        if (patient.dakham == 0) {
-          waitCounter++;
-          if (waitCounter === 1) {
-            nextPatientIndex = idx;
-            nextPatientNameToRead =
-              `${patient.holot || ""} ${patient.ten || ""}`.trim();
-            nextPatientKeyToRead = getPatientKey(patient);
-            nextPatientDobYearToRead = extractBirthYear(
-              patient.dobStr || patient.ngaysinh || patient.namSinh,
-            );
-          }
-        }
-      });
-
       const existingBadge = document.getElementById(`page-badge-${roomId}`);
       if (existingBadge) existingBadge.remove();
 
@@ -967,7 +936,7 @@ function updateRoomDOM(roomId, data) {
           `;
 
           rowsHtml += `
-            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-dob-year="${safeDobYear}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item cursor-pointer transition-all ${rowClass}" tabindex="0">
+            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-dob-year="${safeDobYear}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item cursor-pointer ${rowClass}" tabindex="0">
               <td class="py-2.5 px-2 text-center font-bold text-blue-900 ${sttClass} overflow-hidden">
                 ${sttDisplay}
               </td>
@@ -1022,7 +991,7 @@ function updateRoomDOM(roomId, data) {
           `;
 
           rowsHtml += `
-            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-dob-year="${safeDobYear}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item transition-all cursor-pointer ${rowClass}" tabindex="0">
+            <tr data-patient="${safePatientName}" data-patient-key="${safeKey}" data-dob-year="${safeDobYear}" data-makb="${safeMakb}" data-mabn="${safeMabn}" data-room="${safeRoomName}" data-room-type="${safeRoomType}" onclick="onRowClick(this)" class="remote-item cursor-pointer ${rowClass}" tabindex="0">
               <td class="py-5 px-4 font-bold text-center text-blue-900 ${sttClass} overflow-hidden">
                 ${sttDisplay}
               </td>
@@ -1050,6 +1019,7 @@ function updateRoomDOM(roomId, data) {
 
       tbody.innerHTML = rowsHtml;
     }
+    renderedRoomSignatures.set(roomId, renderSignature);
   }
 
   updateHiddenBadge();
@@ -1058,13 +1028,13 @@ function updateRoomDOM(roomId, data) {
   const tracker =
     document.getElementById(`speech-track-${roomId}`) ||
     document.getElementById("speechData");
-  if (tracker) {
+  if (tracker && shouldRender) {
     tracker.dataset.patient = nextPatientNameToRead;
     tracker.dataset.patientKey = nextPatientKeyToRead;
     tracker.dataset.dobYear = nextPatientDobYearToRead;
   }
 
-  if (window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
+  if (shouldRender && window.TVRemoteNav && typeof window.TVRemoteNav.refresh === "function") {
     window.TVRemoteNav.refresh();
   }
 }

@@ -13,66 +13,218 @@
     <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
     <script src="/js/signalr.min.js"></script>
     <script>
-            tailwind.config = {
-                theme: {
-                    extend: {
-                        colors: {
-                            brand: '#1e40af',
-                            danger: '#dc2626',
-                            success: '#16a34a',
-                        }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#1e40af',
+                        danger: '#dc2626',
+                        success: '#16a34a',
                     }
                 }
             }
+        }
     </script>
     <style>
-            ::-webkit-scrollbar {
-                width: 6px;
-                height: 6px;
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .patient-card-item {
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+
+        /* Tên và trạng thái là thông tin chính khi nhân viên tìm toa để phát. */
+        #scan-input {
+            min-height: 36px;
+            font-size: 14px;
+        }
+
+        #search-thu-input,
+        #search-giao-input {
+            min-height: 30px;
+            font-size: 12px;
+        }
+
+        [id^="tab-btn-"] {
+            min-height: 30px;
+            font-size: 12px;
+        }
+
+        #p-hoten {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            white-space: normal;
+            overflow: hidden;
+            overflow-wrap: anywhere;
+            font-size: clamp(18px, 1.4vw, 22px);
+            line-height: 1.2;
+        }
+
+        .duoc-queue-list .patient-card-item {
+            padding: 6px 8px;
+            border-left-width: 4px;
+            gap: 4px;
+        }
+
+        #cho-thu-list .patient-card-item {
+            border-left-color: #f59e0b;
+        }
+
+        #cho-giao-list .patient-card-item {
+            border-left-color: #2563eb;
+        }
+
+        #da-giao-list .patient-card-item {
+            border-left-color: #16a34a;
+        }
+
+        #khong-mua-list .patient-card-item,
+        #da-an-list .patient-card-item {
+            border-left-color: #94a3b8;
+        }
+
+        .patient-card-item .duoc-card-name {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
+            overflow-wrap: anywhere;
+            font-size: 16px;
+            font-weight: 900;
+            line-height: 1.3;
+            color: #0f172a;
+        }
+
+        .patient-card-item .duoc-card-meta {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            font-size: 11px;
+            line-height: 1.3;
+            margin-top: 2px;
+            gap: 2px 4px;
+            color: #475569;
+        }
+
+        .duoc-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .duoc-card-money {
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .patient-card-item .duoc-card-actions {
+            padding-top: 4px;
+            gap: 4px;
+        }
+
+        .duoc-card-actions button {
+            min-height: 26px;
+            padding: 2px 6px;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .duoc-card-top {
+            min-width: 0;
+        }
+
+        .duoc-card-summary {
+            flex-shrink: 0;
+            display: grid;
+            grid-template-rows: 20px 22px;
+            justify-items: end;
+            align-items: center;
+        }
+
+        @@media (min-width: 1280px) {
+            .duoc-queue-list .duoc-card-active {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 336px;
+                align-items: center;
+                gap: 8px;
+                border-top-width: 1px;
+                border-right-width: 1px;
+                border-bottom-width: 1px;
             }
 
-            ::-webkit-scrollbar-track {
-                background: #f1f5f9;
+            .duoc-card-active .duoc-card-top {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 104px;
+                align-items: start;
+                gap: 6px;
             }
 
-            ::-webkit-scrollbar-thumb {
-                background: #cbd5e1;
-                border-radius: 4px;
+            .duoc-card-active .duoc-card-actions {
+                display: grid;
+                grid-template-columns: 200px 128px;
+                border-top: 0;
+                padding-top: 0;
+                gap: 8px;
             }
 
-            ::-webkit-scrollbar-thumb:hover {
-                background: #94a3b8;
+            .duoc-card-active .duoc-card-actions>div {
+                display: grid;
+                min-width: 0;
+                align-items: center;
+                grid-template-columns: 44px 80px;
+                gap: 4px;
             }
 
-            @@keyframes cardGlideIn {
-                0% {
-                    opacity: 0;
-                    transform: translateY(10px) scale(0.99);
-                }
-
-                100% {
-                    opacity: 1;
-                    transform: translateY(0) scale(1);
-                }
+            .duoc-card-active .duoc-card-actions>div:first-child {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                gap: 3px;
             }
 
-            .patient-card-item {
-                animation: cardGlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
-                transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-                will-change: transform, opacity;
+            .duoc-card-active .duoc-card-actions button {
+                min-width: 0;
+                width: 100%;
+                justify-content: center;
+                white-space: nowrap;
             }
 
-            .patient-card-item:hover {
-                transform: translateY(-1px);
+            .duoc-card-active .duoc-card-actions>div:first-child button {
+                padding-left: 2px;
+                padding-right: 2px;
+                gap: 2px;
+                font-size: 11px;
             }
+
+            #cho-thu-list .duoc-card-actions>div:last-child {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767px) {
+            .duoc-card-actions button {
+                min-height: 32px;
+            }
+        }
     </style>
 </head>
 
-<body
-    class="bg-slate-100 text-slate-800 font-sans flex flex-col h-screen overflow-hidden select-none p-2.5 antialiased">
+<body class="bg-slate-100 text-slate-800 font-sans flex flex-col h-screen overflow-hidden select-none p-2 antialiased">
 
     <header
-        class="bg-white border border-slate-200 shadow-xs rounded-lg px-4 py-2 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 mb-2.5">
+        class="bg-white border border-slate-200 shadow-xs rounded-lg px-3 py-1.5 flex flex-col md:flex-row items-center justify-between gap-2 shrink-0 mb-2">
         
         <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
             <div class="flex items-center gap-2.5">
@@ -144,14 +296,14 @@
                 </div>
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <span id="p-hoten"
-                              class="text-sm md:text-base font-black text-slate-900 uppercase tracking-wide truncate"></span>
+                        <span id="p-hoten" class="font-black text-slate-900 uppercase tracking-wide"></span>
                         <div id="loai-badge" class="flex items-center gap-1"></div>
                     </div>
                     <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
                         <span>Năm sinh: <strong id="p-ngaysinh" class="text-slate-700">—</strong></span>
                         <span>•</span>
                         <span>MKB: <strong id="p-makb" class="text-slate-700 font-mono">—</strong></span>
+                        <span class="text-blue-700 font-semibold">• Nhấn 1–5 để gọi ô phát</span>
                     </div>
                 </div>
             </div>
@@ -194,7 +346,7 @@
             <section class="bg-white border border-slate-200 rounded-lg flex flex-col min-h-0 shadow-xs overflow-hidden">
                 <!-- Header Tab Cột 1 -->
                 <div
-                    class="flex items-center justify-between border-b border-slate-200 px-3.5 py-2 shrink-0 bg-slate-50/70 gap-2">
+                    class="flex items-center justify-between border-b border-slate-200 px-3 py-1.5 shrink-0 bg-slate-50/70 gap-2">
                     <div class="flex items-center gap-1.5">
                         <button type="button" id="tab-btn-cho-thu" onclick="switchThuTab('cho-thu')"
                                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-amber-500 text-white shadow-2xs cursor-pointer">
@@ -234,7 +386,8 @@
                 </div>
 
                 <!-- Danh sách Chưa Thu -->
-                <div class="flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="cho-thu-list">
+                <div class="duoc-queue-list flex-grow overflow-y-auto p-2 space-y-1.5 min-h-0 bg-slate-50/40"
+                     id="cho-thu-list">
                     <div id="cho-thu-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-receipt text-3xl text-slate-300"></i>
@@ -243,7 +396,8 @@
                 </div>
 
                 <!-- Danh sách Không Mua -->
-                <div class="hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="khong-mua-list">
+                <div class="duoc-queue-list hidden flex-grow overflow-y-auto p-2 space-y-1.5 min-h-0 bg-slate-50/40"
+                     id="khong-mua-list">
                     <div id="khong-mua-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-ban text-3xl text-slate-300"></i>
@@ -257,7 +411,8 @@
             <!-- ======================================================== -->
             <section class="bg-white border border-slate-200 rounded-lg flex flex-col min-h-0 shadow-xs overflow-hidden">
                 <!-- Header Tab Cột 2 -->
-                <div class="flex items-center justify-between border-b border-slate-200 px-3.5 py-2 shrink-0 bg-slate-50/70 gap-2">
+                <div
+                    class="flex items-center justify-between border-b border-slate-200 px-3 py-1.5 shrink-0 bg-slate-50/70 gap-2">
                     <div class="flex items-center gap-1.5 flex-wrap">
                         <button type="button" id="tab-btn-cho-giao" onclick="switchGiaoTab('cho-giao')"
                                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand text-white shadow-2xs cursor-pointer">
@@ -295,8 +450,8 @@
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </span>
                         <input type="text" id="search-giao-input" oninput="filterGiaoList()"
-                                class="w-full pl-7 pr-7 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-brand rounded-lg text-xs font-semibold text-slate-800 focus:outline-none transition"
-                                placeholder="Lọc theo tên, mã KB, số đơn...">
+                               class="w-full pl-7 pr-7 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 focus:border-brand rounded-lg text-xs font-semibold text-slate-800 focus:outline-none transition"
+                               placeholder="Lọc theo tên, mã KB, số đơn...">
                         <button type="button" onclick="clearGiaoSearch()" id="clear-giao-search-btn"
                                 class="hidden absolute right-2.5 text-slate-400 hover:text-slate-600 text-xs">
                             <i class="fa-solid fa-xmark"></i>
@@ -305,7 +460,8 @@
                 </div>
 
                 <!-- Danh sách Chờ Phát -->
-                <div class="flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="cho-giao-list">
+                <div class="duoc-queue-list flex-grow overflow-y-auto p-2 space-y-1.5 min-h-0 bg-slate-50/40"
+                     id="cho-giao-list">
                     <div id="cho-giao-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-clipboard-check text-3xl text-slate-300"></i>
@@ -314,7 +470,8 @@
                 </div>
 
                 <!-- Danh sách Đã Phát -->
-                <div class="hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="da-giao-list">
+                <div class="duoc-queue-list hidden flex-grow overflow-y-auto p-2 space-y-1.5 min-h-0 bg-slate-50/40"
+                     id="da-giao-list">
                     <div id="da-giao-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-300"></i>
@@ -323,7 +480,8 @@
                 </div>
 
                 <!-- Danh sách Đã Ẩn -->
-                <div class="hidden flex-grow overflow-y-auto p-3 space-y-2.5 min-h-0 bg-slate-50/40" id="da-an-list">
+                <div class="duoc-queue-list hidden flex-grow overflow-y-auto p-2 space-y-1.5 min-h-0 bg-slate-50/40"
+                     id="da-an-list">
                     <div id="da-an-empty"
                          class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
                         <i class="fa-solid fa-eye-slash text-3xl text-slate-300"></i>
@@ -350,1441 +508,1530 @@
         <!-- LOGIC JAVASCRIPT -->
         <!-- ======================================================== -->
         <script>
-                const $id = id => document.getElementById(id);
-                const scanInput = $id('scan-input');
+            const $id = id => document.getElementById(id);
+            const scanInput = $id('scan-input');
 
-                let autoResetTimer = null;
-                let autoTimer = null;
-                let lastInputTime = 0;
-                let isScanning = false;
-                let currentScannedMakb = '';
+            let autoResetTimer = null;
+            let autoTimer = null;
+            let lastInputTime = 0;
+            let isScanning = false;
+            let currentScannedMakb = '';
 
-                // Tab states
-                let currentThuTab = 'cho-thu';   // 'cho-thu' | 'khong-mua'
-                let currentGiaoTab = 'cho-giao'; // 'cho-giao' | 'da-giao'
+            // Tab states
+            let currentThuTab = 'cho-thu';   // 'cho-thu' | 'khong-mua'
+            let currentGiaoTab = 'cho-giao'; // 'cho-giao' | 'da-giao'
 
-                // Data caches
-                let rawChuaGiaoData = [];
-                let rawDaGiaoData = [];
-                let rawKhongMuaData = [];
-                let rawDaAnData = [];
+            // Data caches
+            let rawChuaGiaoData = [];
+            let rawDaGiaoData = [];
+            let rawKhongMuaData = [];
+            let rawDaAnData = [];
 
-                // Highlight tracker
-                let highlightedKey = '';
-                let highlightTimer = null;
+            // Highlight tracker
+            let highlightedKey = '';
+            let highlightTimer = null;
 
-                // Undo Toast Tracker
-                let lastActionData = null; // { makb, mabn, hoTen, actionType }
-                let undoToastTimer = null;
+            // Undo Toast Tracker
+            let lastActionData = null; // { makb, mabn, hoTen, actionType }
+            let undoToastTimer = null;
 
-                function updateTime() {
-                    const now = new Date();
-                    const dateEl = $id('date-str');
-                    const timeEl = $id('time-str');
-                    if (dateEl) dateEl.textContent = now.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' });
-                    if (timeEl) timeEl.textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            function updateTime() {
+                const now = new Date();
+                const dateEl = $id('date-str');
+                const timeEl = $id('time-str');
+                if (dateEl) dateEl.textContent = now.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                if (timeEl) timeEl.textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            }
+            setInterval(updateTime, 1000);
+            updateTime();
+
+            function fmtMoney(n) {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+            }
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function getOcuaBadge(ocua) {
+                if (!ocua) return `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Chưa gọi ô</span>`;
+                const val = String(ocua).trim();
+                let cls = 'bg-blue-50 text-blue-800 border-blue-200';
+                if (val === '2') cls = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                else if (val === '3') cls = 'bg-purple-50 text-purple-800 border-purple-200';
+                else if (val === '4') cls = 'bg-amber-50 text-amber-800 border-amber-200';
+                else if (val === '5') cls = 'bg-rose-50 text-rose-800 border-rose-200';
+                return `<span class="px-2 py-0.5 rounded-md text-[11px] font-black uppercase border ${cls}"><i class="fa-solid fa-door-open mr-0.5"></i> Ô ${escapeHtml(val)}</span>`;
+            }
+
+            let nhapAudioCtx = null;
+            function getNhapAudioContext() {
+                if (!nhapAudioCtx) {
+                    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtxClass) nhapAudioCtx = new AudioCtxClass();
                 }
-                setInterval(updateTime, 1000);
-                updateTime();
-
-                function fmtMoney(n) {
-                    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+                if (nhapAudioCtx && nhapAudioCtx.state === 'suspended') {
+                    nhapAudioCtx.resume().catch(() => { });
                 }
+                return nhapAudioCtx;
+            }
 
-                function escapeHtml(str) {
-                    if (!str) return '';
-                    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                }
-
-                function getOcuaBadge(ocua) {
-                    if (!ocua) return `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-400">Chưa gọi ô</span>`;
-                    const val = String(ocua).trim();
-                    let cls = 'bg-blue-50 text-blue-800 border-blue-200';
-                    if (val === '2') cls = 'bg-emerald-50 text-emerald-800 border-emerald-200';
-                    else if (val === '3') cls = 'bg-purple-50 text-purple-800 border-purple-200';
-                    else if (val === '4') cls = 'bg-amber-50 text-amber-800 border-amber-200';
-                    else if (val === '5') cls = 'bg-rose-50 text-rose-800 border-rose-200';
-                    return `<span class="px-2 py-0.5 rounded-md text-[11px] font-black uppercase border ${cls}"><i class="fa-solid fa-door-open mr-0.5"></i> Ô ${escapeHtml(val)}</span>`;
-                }
-
-                let nhapAudioCtx = null;
-                function getNhapAudioContext() {
-                    if (!nhapAudioCtx) {
-                        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-                        if (AudioCtxClass) nhapAudioCtx = new AudioCtxClass();
+            function playScanBeep(isSuccess) {
+                try {
+                    const ctx = getNhapAudioContext();
+                    if (!ctx) return;
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    const now = ctx.currentTime;
+                    if (isSuccess) {
+                        osc.frequency.setValueAtTime(880, now);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.2);
+                    } else {
+                        osc.frequency.setValueAtTime(220, now);
+                        gain.gain.setValueAtTime(0.25, now);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.25);
                     }
-                    if (nhapAudioCtx && nhapAudioCtx.state === 'suspended') {
-                        nhapAudioCtx.resume().catch(() => { });
-                    }
-                    return nhapAudioCtx;
-                }
+                } catch (e) { }
+            }
 
-                function playScanBeep(isSuccess) {
-                    try {
-                        const ctx = getNhapAudioContext();
-                        if (!ctx) return;
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        const now = ctx.currentTime;
-                        if (isSuccess) {
-                            osc.frequency.setValueAtTime(880, now);
-                            gain.gain.setValueAtTime(0.2, now);
-                            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                            osc.connect(gain);
-                            gain.connect(ctx.destination);
-                            osc.start(now);
-                            osc.stop(now + 0.2);
-                        } else {
-                            osc.frequency.setValueAtTime(220, now);
-                            gain.gain.setValueAtTime(0.25, now);
-                            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-                            osc.connect(gain);
-                            gain.connect(ctx.destination);
-                            osc.start(now);
-                            osc.stop(now + 0.25);
-                        }
-                    } catch (e) { }
-                }
+            ['click', 'keydown', 'input', 'touchstart'].forEach(type => {
+                document.addEventListener(type, () => getNhapAudioContext(), { passive: true, once: true });
+            });
 
-                ['click', 'keydown', 'input', 'touchstart'].forEach(type => {
-                    document.addEventListener(type, () => getNhapAudioContext(), { passive: true, once: true });
-                });
-
-                function triggerHighlight(key) {
-                    if (!key) return;
-                    highlightedKey = String(key).trim();
-                    if (highlightTimer) clearTimeout(highlightTimer);
-                    highlightTimer = setTimeout(() => {
-                        highlightedKey = '';
-                        renderChoThuList();
-                        renderChoGiaoList();
-                    }, 3500);
-                }
+            function triggerHighlight(key) {
+                if (!key) return;
+                highlightedKey = String(key).trim();
+                if (highlightTimer) clearTimeout(highlightTimer);
+                highlightTimer = setTimeout(() => {
+                    highlightedKey = '';
+                    renderChoThuList();
+                    renderChoGiaoList();
+                }, 3500);
+            }
 
                 
-                function showUndoToast(msg, actionPayload, isError = false) {
-                    const toast = $id('undo-toast');
-                    const msgEl = $id('undo-toast-msg');
-                    const iconEl = $id('undo-toast-icon');
-                    const btnEl = $id('undo-toast-btn');
-                    if (!toast || !msgEl) return;
+            function showUndoToast(msg, actionPayload, isError = false) {
+                const toast = $id('undo-toast');
+                const msgEl = $id('undo-toast-msg');
+                const iconEl = $id('undo-toast-icon');
+                const btnEl = $id('undo-toast-btn');
+                if (!toast || !msgEl) return;
 
-                    lastActionData = actionPayload;
-                    msgEl.textContent = msg;
+                lastActionData = actionPayload;
+                msgEl.textContent = msg;
 
-                    if (iconEl) {
-                        iconEl.className = isError
-                            ? 'fa-solid fa-circle-xmark text-rose-400 text-sm shrink-0'
-                            : 'fa-solid fa-circle-check text-emerald-400 text-sm shrink-0';
-                    }
-
-                    if (btnEl) {
-                        btnEl.classList.toggle('hidden', !actionPayload);
-                    }
-
-                    toast.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
-                    toast.classList.add('opacity-100', 'translate-y-0');
-
-                    if (undoToastTimer) clearTimeout(undoToastTimer);
-                    undoToastTimer = setTimeout(() => {
-                        toast.classList.remove('opacity-100', 'translate-y-0');
-                        toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
-                        lastActionData = null;
-                    }, actionPayload ? 4500 : 2500);
+                if (iconEl) {
+                    iconEl.className = isError
+                        ? 'fa-solid fa-circle-xmark text-rose-400 text-sm shrink-0'
+                        : 'fa-solid fa-circle-check text-emerald-400 text-sm shrink-0';
                 }
 
-                async function triggerToastUndo() {
-                    if (!lastActionData) return;
-                    const { makb, mabn, hoTen, actionType } = lastActionData;
+                if (btnEl) {
+                    btnEl.classList.toggle('hidden', !actionPayload);
+                }
 
-                    const toast = $id('undo-toast');
-                    if (toast) {
-                        toast.classList.remove('opacity-100', 'translate-y-0');
-                        toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
-                    }
+                toast.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+                toast.classList.add('opacity-100', 'translate-y-0');
+
+                if (undoToastTimer) clearTimeout(undoToastTimer);
+                undoToastTimer = setTimeout(() => {
+                    toast.classList.remove('opacity-100', 'translate-y-0');
+                    toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
                     lastActionData = null;
+                }, actionPayload ? 4500 : 2500);
+            }
 
-                    if (actionType === 'khong_mua') {
-                        await actionHoanTacKhongMua(makb, mabn, hoTen);
-                    } else if (actionType === 'an') {
-                        await actionBoAn(makb, mabn, hoTen);
-                    } else {
-                        await actionHoanTac(makb, mabn, hoTen);
-                    }
+            async function triggerToastUndo() {
+                if (!lastActionData) return;
+                const { makb, mabn, hoTen, actionType } = lastActionData;
+
+                const toast = $id('undo-toast');
+                if (toast) {
+                    toast.classList.remove('opacity-100', 'translate-y-0');
+                    toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
                 }
+                lastActionData = null;
 
-                function copyToClipboard(text, btnElement, event) {
-                    if (event) {
-                        event.stopPropagation();
-                        event.preventDefault();
-                    }
-                    if (!text) return;
-                    const str = String(text).trim();
-                    if (!str) return;
+                if (actionType === 'khong_mua') {
+                    await actionHoanTacKhongMua(makb, mabn, hoTen);
+                } else if (actionType === 'an') {
+                    await actionBoAn(makb, mabn, hoTen);
+                } else {
+                    await actionHoanTac(makb, mabn, hoTen);
+                }
+            }
 
-                    const doFeedback = () => {
-                        showUndoToast(`Đã sao chép: ${str}`, null);
-                        if (btnElement) {
-                            const icon = btnElement.querySelector('i');
-                            if (icon) {
-                                const oldClass = icon.className;
-                                icon.className = 'fa-solid fa-check text-emerald-600';
-                                setTimeout(() => { icon.className = oldClass; }, 1200);
-                            }
+            function copyToClipboard(text, btnElement, event) {
+                if (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+                if (!text) return;
+                const str = String(text).trim();
+                if (!str) return;
+
+                const doFeedback = () => {
+                    showUndoToast(`Đã sao chép: ${str}`, null);
+                    if (btnElement) {
+                        const icon = btnElement.querySelector('i');
+                        if (icon) {
+                            const oldClass = icon.className;
+                            icon.className = 'fa-solid fa-check text-emerald-600';
+                            setTimeout(() => { icon.className = oldClass; }, 1200);
                         }
-                    };
-
-                    if (navigator.clipboard && window.isSecureContext) {
-                        navigator.clipboard.writeText(str).then(doFeedback).catch(() => fallbackCopy(str, doFeedback));
-                    } else {
-                        fallbackCopy(str, doFeedback);
                     }
-                }
+                };
 
-                function fallbackCopy(text, callback) {
-                    try {
-                        const textarea = document.createElement('textarea');
-                        textarea.value = text;
-                        textarea.style.position = 'fixed';
-                        textarea.style.left = '-999999px';
-                        textarea.style.top = '-999999px';
-                        document.body.appendChild(textarea);
-                        textarea.focus();
-                        textarea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textarea);
-                        if (callback) callback();
-                    } catch (e) {
-                        showUndoToast(`Không thể sao chép: ${text}`, null, true);
-                    }
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(str).then(doFeedback).catch(() => fallbackCopy(str, doFeedback));
+                } else {
+                    fallbackCopy(str, doFeedback);
                 }
+            }
 
-                function copyCurrentPatientMakb(btnEl, event) {
-                    if (currentScannedMakb) copyToClipboard(currentScannedMakb, btnEl, event);
+            function fallbackCopy(text, callback) {
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-999999px';
+                    textarea.style.top = '-999999px';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    if (callback) callback();
+                } catch (e) {
+                    showUndoToast(`Không thể sao chép: ${text}`, null, true);
                 }
+            }
 
-                // ========================================================
-                // QUẢN LÝ TRẠNG THÁI Ô NHẬP & THẺ BỆNH NHÂN
-                // ========================================================
-                function setScanState(type) {
-                    const box = $id('scan-box');
-                    const icon = $id('scan-icon');
+            function copyCurrentPatientMakb(btnEl, event) {
+                if (currentScannedMakb) copyToClipboard(currentScannedMakb, btnEl, event);
+            }
+
+            // ========================================================
+            // QUẢN LÝ TRẠNG THÁI Ô NHẬP & THẺ BỆNH NHÂN
+            // ========================================================
+            function setScanState(type) {
+                const box = $id('scan-box');
+                const icon = $id('scan-icon');
+                if (box) {
+                    box.className = 'relative flex items-center bg-slate-50 hover:bg-white focus-within:bg-white border-2 rounded-lg transition duration-150 shadow-2xs';
+                }
+                if (type === 'loading') {
+                    if (box) box.classList.add('border-amber-400');
+                    if (icon) icon.className = 'fa-solid fa-spinner fa-spin text-amber-500 text-base';
+                } else if (type === 'success') {
+                    if (box) box.classList.add('border-emerald-500', 'bg-emerald-50/40');
+                    if (icon) icon.className = 'fa-solid fa-circle-check text-emerald-600 text-base';
+                } else if (type === 'error') {
                     if (box) {
-                        box.className = 'relative flex items-center bg-slate-50 hover:bg-white focus-within:bg-white border-2 rounded-lg transition duration-150 shadow-2xs';
+                        box.classList.add('border-rose-500', 'bg-rose-50/40');
+                        box.animate([
+                            { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' },
+                            { transform: 'translateX(-3px)' }, { transform: 'translateX(3px)' },
+                            { transform: 'translateX(0)' }
+                        ], { duration: 300 });
                     }
-                    if (type === 'loading') {
-                        if (box) box.classList.add('border-amber-400');
-                        if (icon) icon.className = 'fa-solid fa-spinner fa-spin text-amber-500 text-base';
-                    } else if (type === 'success') {
-                        if (box) box.classList.add('border-emerald-500', 'bg-emerald-50/40');
-                        if (icon) icon.className = 'fa-solid fa-circle-check text-emerald-600 text-base';
-                    } else if (type === 'error') {
-                        if (box) {
-                            box.classList.add('border-rose-500', 'bg-rose-50/40');
-                            box.animate([
-                                { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' },
-                                { transform: 'translateX(-3px)' }, { transform: 'translateX(3px)' },
-                                { transform: 'translateX(0)' }
-                            ], { duration: 300 });
-                        }
-                        if (icon) icon.className = 'fa-solid fa-circle-xmark text-rose-500 text-base';
+                    if (icon) icon.className = 'fa-solid fa-circle-xmark text-rose-500 text-base';
+                } else {
+                    if (box) box.classList.add('border-slate-300', 'focus-within:border-brand');
+                    if (icon) icon.className = 'fa-solid fa-barcode text-slate-500 text-base';
+                }
+            }
+
+            function setStatus(msg) {
+                // Minimal status: handled via toast and scan-box border
+            }
+
+            function showPatient(data) {
+                currentScannedMakb = (data.makb || data.makh || data.mabn || '').trim();
+                if ($id('p-hoten')) $id('p-hoten').textContent = data.hoTen || '—';
+                if ($id('p-ngaysinh')) $id('p-ngaysinh').textContent = data.ngaySinh || '—';
+                if ($id('p-makb')) $id('p-makb').textContent = currentScannedMakb || '—';
+
+                // Badges loại toa
+                const loaiBadge = $id('loai-badge');
+                if (loaiBadge) {
+                    if (data.hasBhyt && data.hasDichVu) {
+                        loaiBadge.innerHTML = `
+                                                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">BẢO HIỂM</span>
+                                                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">DỊCH VỤ</span>`;
+                    } else if (data.hasDichVu) {
+                        loaiBadge.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">DỊCH VỤ</span>`;
                     } else {
-                        if (box) box.classList.add('border-slate-300', 'focus-within:border-brand');
-                        if (icon) icon.className = 'fa-solid fa-barcode text-slate-500 text-base';
+                        loaiBadge.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">BẢO HIỂM</span>`;
                     }
                 }
 
-                function setStatus(msg) {
-                    // Minimal status: handled via toast and scan-box border
+                // 1. Toa Bảo Hiểm (BHYT)
+                const bhytBlock = $id('p-bhyt-block');
+                if (bhytBlock) {
+                    if (data.hasBhyt) {
+                        bhytBlock.classList.remove('hidden');
+                        const sohdVal = data.sohdBhyt || data.mabaBhyt || data.sohd || data.maba || '—';
+                        if ($id('p-sohd-bhyt')) $id('p-sohd-bhyt').textContent = sohdVal;
+                    } else {
+                        bhytBlock.classList.add('hidden');
+                    }
                 }
 
-                function showPatient(data) {
-                    currentScannedMakb = (data.makb || data.makh || data.mabn || '').trim();
-                    if ($id('p-hoten')) $id('p-hoten').textContent = data.hoTen || '—';
-                    if ($id('p-ngaysinh')) $id('p-ngaysinh').textContent = data.ngaySinh || '—';
-                    if ($id('p-makb')) $id('p-makb').textContent = currentScannedMakb || '—';
-
-                    // Badges loại toa
-                    const loaiBadge = $id('loai-badge');
-                    if (loaiBadge) {
-                        if (data.hasBhyt && data.hasDichVu) {
-                            loaiBadge.innerHTML = `
-                                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">BẢO HIỂM</span>
-                                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">DỊCH VỤ</span>`;
-                        } else if (data.hasDichVu) {
-                            loaiBadge.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">DỊCH VỤ</span>`;
-                        } else {
-                            loaiBadge.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">BẢO HIỂM</span>`;
-                        }
+                // 2. Toa Dịch Vụ
+                const dvBlock = $id('p-dv-block');
+                if (dvBlock) {
+                    if (data.hasDichVu) {
+                        dvBlock.classList.remove('hidden');
+                        const sohdDvVal = data.sohdDv || data.mabaDv || data.sohd || data.maba || '—';
+                        if ($id('p-sohd-dv')) $id('p-sohd-dv').textContent = sohdDvVal;
+                        const totalVal = $id('total-val');
+                        if (totalVal) totalVal.textContent = fmtMoney(data.thanhtien || 0);
+                    } else {
+                        dvBlock.classList.add('hidden');
                     }
-
-                    // 1. Toa Bảo Hiểm (BHYT)
-                    const bhytBlock = $id('p-bhyt-block');
-                    if (bhytBlock) {
-                        if (data.hasBhyt) {
-                            bhytBlock.classList.remove('hidden');
-                            const sohdVal = data.sohdBhyt || data.mabaBhyt || data.sohd || data.maba || '—';
-                            if ($id('p-sohd-bhyt')) $id('p-sohd-bhyt').textContent = sohdVal;
-                        } else {
-                            bhytBlock.classList.add('hidden');
-                        }
-                    }
-
-                    // 2. Toa Dịch Vụ
-                    const dvBlock = $id('p-dv-block');
-                    if (dvBlock) {
-                        if (data.hasDichVu) {
-                            dvBlock.classList.remove('hidden');
-                            const sohdDvVal = data.sohdDv || data.mabaDv || data.sohd || data.maba || '—';
-                            if ($id('p-sohd-dv')) $id('p-sohd-dv').textContent = sohdDvVal;
-                            const totalVal = $id('total-val');
-                            if (totalVal) totalVal.textContent = fmtMoney(data.thanhtien || 0);
-                        } else {
-                            dvBlock.classList.add('hidden');
-                        }
-                    }
-
-                    if ($id('bn-gender-icon')) {
-                        $id('bn-gender-icon').className = data.gioiTinh === 'Nữ'
-                            ? 'fa-solid fa-person-dress text-pink-500 text-sm'
-                            : 'fa-solid fa-person text-brand text-sm';
-                    }
-                    const patientCard = $id('patient-card');
-                    if (patientCard) patientCard.classList.remove('hidden');
                 }
 
-                function resetPatientCard() {
-                    currentScannedMakb = '';
-                    const pCard = $id('patient-card');
-                    if (pCard) pCard.classList.add('hidden');
+                if ($id('bn-gender-icon')) {
+                    $id('bn-gender-icon').className = data.gioiTinh === 'Nữ'
+                        ? 'fa-solid fa-person-dress text-pink-500 text-sm'
+                        : 'fa-solid fa-person text-brand text-sm';
                 }
+                const patientCard = $id('patient-card');
+                if (patientCard) patientCard.classList.remove('hidden');
+            }
 
-                function resetAll() {
-                    if (autoResetTimer) {
-                        clearTimeout(autoResetTimer);
-                        autoResetTimer = null;
-                    }
-                    resetPatientCard();
-                    if (scanInput) scanInput.value = '';
+            function resetPatientCard() {
+                currentScannedMakb = '';
+                const pCard = $id('patient-card');
+                if (pCard) pCard.classList.add('hidden');
+            }
+
+            function resetAll() {
+                if (autoResetTimer) {
+                    clearTimeout(autoResetTimer);
+                    autoResetTimer = null;
+                }
+                resetPatientCard();
+                if (scanInput) scanInput.value = '';
+                setScanState('');
+                if (scanInput) scanInput.focus({ preventScroll: true });
+                refreshAllColumns();
+            }
+
+            function showError(msg) {
+                setScanState('error');
+                showUndoToast(msg || 'Lỗi không xác định', null, true);
+                if (scanInput) {
+                    scanInput.select();
+                    scanInput.focus({ preventScroll: true });
+                }
+                autoResetTimer = setTimeout(() => {
                     setScanState('');
-                    if (scanInput) scanInput.focus({ preventScroll: true });
-                    refreshAllColumns();
+                }, 3000);
+            }
+
+            // ========================================================
+            // QUÉT & TIẾP NHẬN TỰ ĐỘNG
+            // ========================================================
+            async function handleScan(raw) {
+                let code = (raw || '').replace(/[\r\n\t]/g, '').trim();
+                if (!code || isScanning) return;
+                isScanning = true;
+
+                clearTimeout(autoTimer);
+                if (autoResetTimer) {
+                    clearTimeout(autoResetTimer);
+                    autoResetTimer = null;
                 }
 
-                function showError(msg) {
-                    setScanState('error');
-                    showUndoToast(msg || 'Lỗi không xác định', null, true);
-                    if (scanInput) {
-                        scanInput.select();
-                        scanInput.focus({ preventScroll: true });
-                    }
-                    autoResetTimer = setTimeout(() => {
-                        setScanState('');
-                    }, 3000);
-                }
+                setScanState('loading');
 
-                // ========================================================
-                // QUÉT & TIẾP NHẬN TỰ ĐỘNG
-                // ========================================================
-                async function handleScan(raw) {
-                    let code = (raw || '').replace(/[\r\n\t]/g, '').trim();
-                    if (!code || isScanning) return;
-                    isScanning = true;
-
-                    clearTimeout(autoTimer);
-                    if (autoResetTimer) {
-                        clearTimeout(autoResetTimer);
-                        autoResetTimer = null;
-                    }
-
-                    setScanState('loading');
-
+                try {
+                    // 1. Tra cứu thông tin chứng từ & bệnh nhân
+                    let data;
                     try {
-                        // 1. Tra cứu thông tin chứng từ & bệnh nhân
-                        let data;
+                        const r = await fetch(`/api/duoc-nhap/scan?makh=${encodeURIComponent(code)}`);
+                        data = await r.json();
+                    } catch (err) {
+                        playScanBeep(false);
+                        showError('Lỗi kết nối máy chủ.');
+                        return;
+                    }
+
+                    if (!data.success) {
+                        playScanBeep(false);
+                        showError(data.message || `Không tìm thấy mã '${code}'.`);
+                        return;
+                    }
+
+                    // Xoá ô nhập sau khi tìm thấy
+                    if (scanInput) scanInput.value = '';
+
+                    // 2. Hiển thị thông tin bệnh nhân
+                    showPatient(data);
+
+                    // 3. Tự động tiếp nhận vào hàng chờ
+                    let res;
+                    try {
+                        const r = await fetch('/api/duoc-nhap/them-hang-cho', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                makb: data.makb,
+                                mabn: data.mabn,
+                                hasBhyt: data.hasBhyt,
+                                hasDichVu: data.hasDichVu,
+                                loai: data.loai,
+                                maba: data.maba,
+                                ngayKcb: data.ngayKcb,
+                                oCua: null
+                            })
+                        });
+                        res = await r.json();
+                    } catch (err) {
+                        playScanBeep(false);
+                        showError('Lỗi lưu vào hàng chờ.');
+                        return;
+                    }
+
+                    if (!res.success) {
+                        playScanBeep(false);
+                        showError(res.message || 'Lỗi khi lưu vào hàng chờ.');
+                        return;
+                    }
+
+                    // Quét lại toa đã chờ: máy chủ chỉ phát khi đúng lượt khám,
+                    // đã chọn ô và (với toa dịch vụ) đã thu đủ tiền.
+                    if (res.action === 'da-co-trong-hang-cho') {
+                        let dispense;
                         try {
-                            const r = await fetch(`/api/duoc-nhap/scan?makh=${encodeURIComponent(code)}`);
-                            data = await r.json();
-                        } catch (err) {
-                            playScanBeep(false);
-                            showError('Lỗi kết nối máy chủ.');
-                            return;
-                        }
-
-                        if (!data.success) {
-                            playScanBeep(false);
-                            showError(data.message || `Không tìm thấy mã '${code}'.`);
-                            return;
-                        }
-
-                        // Xoá ô nhập sau khi tìm thấy
-                        if (scanInput) scanInput.value = '';
-
-                        // 2. Hiển thị thông tin bệnh nhân
-                        showPatient(data);
-
-                        // 3. Tự động tiếp nhận vào hàng chờ
-                        let res;
-                        try {
-                            const r = await fetch('/api/duoc-nhap/them-hang-cho', {
+                            const r = await fetch('/api/duoc-nhap/phat-theo-ma-quet', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    makb: data.makb,
-                                    mabn: data.mabn,
-                                    hasBhyt: data.hasBhyt,
-                                    hasDichVu: data.hasDichVu,
-                                    loai: data.loai,
-                                    maba: data.maba,
-                                    ngayKcb: data.ngayKcb,
-                                    oCua: null
-                                })
+                                body: JSON.stringify({ makb: data.makb, mabn: data.mabn })
                             });
-                            res = await r.json();
+                            if (!r.ok) throw new Error('Không thể xác nhận phát thuốc.');
+                            dispense = await r.json();
                         } catch (err) {
                             playScanBeep(false);
-                            showError('Lỗi lưu vào hàng chờ.');
+                            showError('Lỗi kết nối khi xác nhận phát thuốc.');
+                            refreshAllColumns();
                             return;
                         }
 
-                        if (!res.success) {
-                            playScanBeep(false);
-                            showError(res.message || 'Lỗi khi lưu vào hàng chờ.');
+                        if (dispense.action === 'da-phat') {
+                            playScanBeep(true);
+                            setScanState('success');
+                            showUndoToast(`${data.hoTen}: ${dispense.message}`, null);
+                            refreshAllColumns();
+                            if (scanInput) scanInput.focus({ preventScroll: true });
                             return;
                         }
-
-                        // 4. Thành công
-                        playScanBeep(true);
-                        setScanState('success');
-                        triggerHighlight(data.makb || data.mabn);
-                        showUndoToast(`Đã tiếp nhận: ${data.hoTen}`, null);
-
-                        // Cập nhật các danh sách
+                        playScanBeep(false);
+                        showError(dispense.message || 'Toa chưa đủ điều kiện phát thuốc.');
                         refreshAllColumns();
-
-                        if (scanInput) scanInput.focus({ preventScroll: true });
-                    } finally {
-                        isScanning = false;
+                        return;
                     }
-                }
-                function switchThuTab(tab) {
-                    currentThuTab = tab;
-                    const btnChoThu = $id('tab-btn-cho-thu');
-                    const btnKhongMua = $id('tab-btn-khong-mua');
-                    const listChoThu = $id('cho-thu-list');
-                    const listKhongMua = $id('khong-mua-list');
 
-                    if (tab === 'cho-thu') {
-                        if (btnChoThu) btnChoThu.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-amber-500 text-white shadow-2xs cursor-pointer';
-                        if (btnKhongMua) btnKhongMua.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
-                        if (listChoThu) listChoThu.classList.remove('hidden');
-                        if (listKhongMua) listKhongMua.classList.add('hidden');
-                        renderChoThuList();
+                    // 4. Thành công
+                    playScanBeep(true);
+                    setScanState('success');
+                    if (res.action !== 'da-xu-ly') triggerHighlight(data.makb || data.mabn);
+                    showUndoToast(`${data.hoTen}: ${res.message || 'Đã tiếp nhận.'}`, null);
+
+                    // Cập nhật các danh sách
+                    refreshAllColumns();
+
+                    if (scanInput) scanInput.focus({ preventScroll: true });
+                } finally {
+                    isScanning = false;
+                }
+            }
+            function switchThuTab(tab) {
+                currentThuTab = tab;
+                const btnChoThu = $id('tab-btn-cho-thu');
+                const btnKhongMua = $id('tab-btn-khong-mua');
+                const listChoThu = $id('cho-thu-list');
+                const listKhongMua = $id('khong-mua-list');
+
+                if (tab === 'cho-thu') {
+                    if (btnChoThu) btnChoThu.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-amber-500 text-white shadow-2xs cursor-pointer';
+                    if (btnKhongMua) btnKhongMua.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
+                    if (listChoThu) listChoThu.classList.remove('hidden');
+                    if (listKhongMua) listKhongMua.classList.add('hidden');
+                    renderChoThuList();
+                } else {
+                    if (btnKhongMua) btnKhongMua.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-rose-600 text-white shadow-2xs cursor-pointer';
+                    if (btnChoThu) btnChoThu.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
+                    if (listKhongMua) listKhongMua.classList.remove('hidden');
+                    if (listChoThu) listChoThu.classList.add('hidden');
+                    loadDanhSachKhongMua();
+                }
+            }
+
+            function refreshThuTab() {
+                loadDanhSachChuaGiao();
+                if (currentThuTab === 'khong-mua') loadDanhSachKhongMua();
+            }
+
+            function filterThuList() {
+                const clearBtn = $id('clear-thu-search-btn');
+                const query = ($id('search-thu-input')?.value || '').trim().toLowerCase();
+                if (clearBtn) clearBtn.classList.toggle('hidden', !query);
+                if (currentThuTab === 'cho-thu') renderChoThuList();
+                else renderKhongMuaList();
+            }
+
+            function clearThuSearch() {
+                const input = $id('search-thu-input');
+                if (input) input.value = '';
+                filterThuList();
+                if (input) input.focus();
+            }
+
+            function switchGiaoTab(tab) {
+                currentGiaoTab = tab;
+                const btnChoGiao = $id('tab-btn-cho-giao');
+                const btnDaGiao = $id('tab-btn-da-giao');
+                const btnDaAn = $id('tab-btn-da-an');
+                const listChoGiao = $id('cho-giao-list');
+                const listDaGiao = $id('da-giao-list');
+                const listDaAn = $id('da-an-list');
+
+                if (btnChoGiao) btnChoGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
+                if (btnDaGiao) btnDaGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
+                if (btnDaAn) btnDaAn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
+
+                if (listChoGiao) listChoGiao.classList.add('hidden');
+                if (listDaGiao) listDaGiao.classList.add('hidden');
+                if (listDaAn) listDaAn.classList.add('hidden');
+
+                if (tab === 'cho-giao') {
+                    if (btnChoGiao) btnChoGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand text-white shadow-2xs cursor-pointer';
+                    if (listChoGiao) listChoGiao.classList.remove('hidden');
+                    renderChoGiaoList();
+                } else if (tab === 'da-giao') {
+                    if (btnDaGiao) btnDaGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-2xs cursor-pointer';
+                    if (listDaGiao) listDaGiao.classList.remove('hidden');
+                    renderDaGiaoList();
+                    loadDanhSachDaGiao();
+                } else if (tab === 'da-an') {
+                    if (btnDaAn) btnDaAn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-slate-700 text-white shadow-2xs cursor-pointer';
+                    if (listDaAn) listDaAn.classList.remove('hidden');
+                    renderDaAnList();
+                    loadDanhSachDaAn();
+                }
+            }
+
+            function refreshGiaoTab() {
+                loadDanhSachChuaGiao();
+                if (currentGiaoTab === 'da-giao') loadDanhSachDaGiao();
+                if (currentGiaoTab === 'da-an') loadDanhSachDaAn();
+            }
+
+            function filterGiaoList() {
+                const clearBtn = $id('clear-giao-search-btn');
+                const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
+                if (clearBtn) clearBtn.classList.toggle('hidden', !query);
+
+                if (currentGiaoTab === 'cho-giao') renderChoGiaoList();
+                else if (currentGiaoTab === 'da-giao') renderDaGiaoList();
+                else if (currentGiaoTab === 'da-an') renderDaAnList();
+            }
+
+            function clearGiaoSearch() {
+                const input = $id('search-giao-input');
+                if (input) input.value = '';
+                filterGiaoList();
+                if (input) input.focus();
+            }
+
+            // ========================================================
+            // RENDER DANH SÁCH THẺ BỆNH NHÂN (CLEAN, ELEGANT UX/UI)
+            // ========================================================
+            function renderChoThuList() {
+                const container = $id('cho-thu-list');
+                const countEl = $id('cho-thu-count');
+                const query = ($id('search-thu-input')?.value || '').trim().toLowerCase();
+
+                const choThuItems = rawChuaGiaoData.filter(item => {
+                    if (Number(item.dagiao) !== 0) return false;
+                    return !item.daThu;
+                });
+                if (countEl) countEl.textContent = choThuItems.length;
+                if (!container) return;
+
+                const filtered = query
+                    ? choThuItems.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
+                    : choThuItems;
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                                                                            <div id="cho-thu-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                                                                <i class="fa-solid fa-receipt text-3xl text-slate-300"></i>
+                                                                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Không có đơn nào chưa thu tiền'}</p>
+                                                                            </div>`;
+                    return;
+                }
+
+                const prevScrollTop = container.scrollTop;
+                let html = '';
+                for (const item of filtered) {
+                    const curOcua = String(item.oCua || '').trim();
+                    const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const safeTrangThai = 'Chờ thu tiền';
+                    const sohdVal = item.sohd || item.maba || '';
+                    const typeTag = item.hasBoth
+                        ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Toa DV</span>`
+                        : `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Toa Dịch vụ</span>`;
+
+                    // Segmented button group gọn gàng
+                    const assignBtns = ['1', '2', '3', '4', '5'].map(num => {
+                        const isCurrent = curOcua === num;
+                        const activeCls = isCurrent
+                            ? 'bg-amber-500 text-white font-black border-amber-500 shadow-2xs ring-2 ring-amber-200'
+                            : 'bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-800 border-slate-200';
+                        return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', false, 'Chờ thu tiền', ${item.khochan || 13})"
+                                                                                        class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
+                                                                                        title="Gọi Ô ${num} đóng tiền">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
+                    }).join('');
+
+                    const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
+                    const cardCls = isHighlighted
+                        ? 'border-2 border-amber-500 bg-amber-50/60 ring-2 ring-amber-200 shadow-md'
+                        : 'border border-slate-200 hover:border-amber-300 bg-white hover:shadow-xs';
+
+                    html += `
+                                                                            <div class="patient-card-item duoc-card-active ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
+                                                                                <!-- Top: Họ tên & Tiền -->
+                                                                                <div class="duoc-card-top flex items-start justify-between gap-2">
+                                                                                    <div class="duoc-card-info min-w-0">
+                                                                                        <div class="duoc-card-name uppercase tracking-tight" title="${escapeHtml(item.hoTen)}">
+                                                                                            ${escapeHtml(item.hoTen)}
+                                                                                        </div>
+                                                                                        <div class="duoc-card-meta flex items-center gap-2 mt-1 flex-wrap">
+                                                                                            ${typeTag}
+                                                                                            <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                                                                    title="Sao chép mã khám"
+                                                                                                    class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
+                                                                                                <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                                                                <i class="fa-regular fa-copy text-[10px]"></i>
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </div>
+                            
+                                                                                    <div class="flex items-center justify-center">
+                                                                                        <div class="duoc-card-money font-black text-rose-700 font-mono tracking-tight">${item.soTienStr || '—'}</div>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <!-- Bottom: Segmented Call Buttons & Action -->
+                                                                                <div class="duoc-card-actions flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
+                                                                                    <div class="flex items-center gap-1">
+                                                                                        ${assignBtns}
+                                                                                    </div>
+                                                                                    <div class="flex items-center gap-1.5 shrink-0">
+                                                                                        <button type="button" onclick="actionKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                                title="Khách không mua thuốc"
+                                                                                                class="px-2.5 py-1 text-xs rounded-lg border border-rose-200 bg-rose-50/60 hover:bg-rose-600 hover:text-white text-rose-700 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
+                                                                                            <i class="fa-solid fa-ban text-[11px]"></i> Không mua
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>`;
+                }
+
+                container.innerHTML = html;
+                container.scrollTop = prevScrollTop;
+            }
+
+            function renderKhongMuaList() {
+                const container = $id('khong-mua-list');
+                const countEl = $id('khong-mua-count');
+                const query = ($id('search-thu-input')?.value || '').trim().toLowerCase();
+
+                if (countEl) countEl.textContent = rawKhongMuaData.length;
+                if (!container) return;
+
+                const filtered = query
+                    ? rawKhongMuaData.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
+                    : rawKhongMuaData;
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `<div id="khong-mua-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                                                                <i class="fa-solid fa-ban text-3xl text-slate-300"></i>
+                                                                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào không mua hôm nay'}</p>
+                                                                            </div>`;
+                    return;
+                }
+
+                const prevScrollTop = container.scrollTop;
+                let html = '';
+                for (const item of filtered) {
+                    const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const sohdVal = item.sohd || item.maba || '';
+
+                    html += `<div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
+                                                                                <div class="min-w-0">
+                                                                                    <div class="duoc-card-name uppercase" title="${escapeHtml(item.hoTen)}">
+                                                                                        ${escapeHtml(item.hoTen)}
+                                                                                    </div>
+                                                                                    <div class="duoc-card-meta flex items-center gap-2 mt-0.5 flex-wrap">
+                                                                                        ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
+                                                                                        ${item.soTienStr ? `<span class="text-slate-700 font-mono font-semibold">${item.soTienStr}</span><span>•</span>` : ''}
+                                                                                        <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                                                                title="Sao chép mã khám"
+                                                                                                class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
+                                                                                            <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <button onclick="actionHoanTacKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                        title="Khách muốn mua lại"
+                                                                                        class="px-3 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-800 border border-amber-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
+                                                                                    <i class="fa-solid fa-rotate-left text-[11px]"></i> Mua lại
+                                                                                </button>
+                                                                            </div>`;
+                }
+
+                container.innerHTML = html;
+                container.scrollTop = prevScrollTop;
+            }
+
+            function renderChoGiaoList() {
+                const container = $id('cho-giao-list');
+                const countEl = $id('cho-giao-count');
+                const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
+
+                // Chờ phát = BHYT hoặc Dịch vụ đã thu (daThu === true)
+                const choGiaoItems = rawChuaGiaoData.filter(item => {
+                    if (Number(item.dagiao) !== 0) return false;
+                    return item.daThu;
+                });
+
+                if (countEl) countEl.textContent = choGiaoItems.length;
+                if (!container) return;
+
+                const filtered = query
+                    ? choGiaoItems.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
+                    : choGiaoItems;
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                                                                            <div id="cho-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                                                                <i class="fa-solid fa-clipboard-check text-3xl text-slate-300"></i>
+                                                                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Không có đơn nào đang chờ phát'}</p>
+                                                                            </div>`;
+                    return;
+                }
+
+                const prevScrollTop = container.scrollTop;
+                let html = '';
+                for (const item of filtered) {
+                    let typeTag = '';
+                    if (item.hasBoth) {
+                        typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">BHYT + Dịch vụ</span>`;
+                    } else if (item.hasDichVu) {
+                        typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Dịch vụ</span>`;
                     } else {
-                        if (btnKhongMua) btnKhongMua.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-rose-600 text-white shadow-2xs cursor-pointer';
-                        if (btnChoThu) btnChoThu.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
-                        if (listKhongMua) listKhongMua.classList.remove('hidden');
-                        if (listChoThu) listChoThu.classList.add('hidden');
-                        loadDanhSachKhongMua();
-                    }
-                }
-
-                function refreshThuTab() {
-                    loadDanhSachChuaGiao();
-                    if (currentThuTab === 'khong-mua') loadDanhSachKhongMua();
-                }
-
-                function filterThuList() {
-                    const clearBtn = $id('clear-thu-search-btn');
-                    const query = ($id('search-thu-input')?.value || '').trim().toLowerCase();
-                    if (clearBtn) clearBtn.classList.toggle('hidden', !query);
-                    if (currentThuTab === 'cho-thu') renderChoThuList();
-                    else renderKhongMuaList();
-                }
-
-                function clearThuSearch() {
-                    const input = $id('search-thu-input');
-                    if (input) input.value = '';
-                    filterThuList();
-                    if (input) input.focus();
-                }
-
-                function switchGiaoTab(tab) {
-                    currentGiaoTab = tab;
-                    const btnChoGiao = $id('tab-btn-cho-giao');
-                    const btnDaGiao = $id('tab-btn-da-giao');
-                    const btnDaAn = $id('tab-btn-da-an');
-                    const listChoGiao = $id('cho-giao-list');
-                    const listDaGiao = $id('da-giao-list');
-                    const listDaAn = $id('da-an-list');
-
-                    if (btnChoGiao) btnChoGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
-                    if (btnDaGiao) btnDaGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
-                    if (btnDaAn) btnDaAn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 cursor-pointer';
-
-                    if (listChoGiao) listChoGiao.classList.add('hidden');
-                    if (listDaGiao) listDaGiao.classList.add('hidden');
-                    if (listDaAn) listDaAn.classList.add('hidden');
-
-                    if (tab === 'cho-giao') {
-                        if (btnChoGiao) btnChoGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand text-white shadow-2xs cursor-pointer';
-                        if (listChoGiao) listChoGiao.classList.remove('hidden');
-                        renderChoGiaoList();
-                    } else if (tab === 'da-giao') {
-                        if (btnDaGiao) btnDaGiao.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-2xs cursor-pointer';
-                        if (listDaGiao) listDaGiao.classList.remove('hidden');
-                        renderDaGiaoList();
-                        loadDanhSachDaGiao();
-                    } else if (tab === 'da-an') {
-                        if (btnDaAn) btnDaAn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-slate-700 text-white shadow-2xs cursor-pointer';
-                        if (listDaAn) listDaAn.classList.remove('hidden');
-                        renderDaAnList();
-                        loadDanhSachDaAn();
-                    }
-                }
-
-                function refreshGiaoTab() {
-                    loadDanhSachChuaGiao();
-                    if (currentGiaoTab === 'da-giao') loadDanhSachDaGiao();
-                    if (currentGiaoTab === 'da-an') loadDanhSachDaAn();
-                }
-
-                function filterGiaoList() {
-                    const clearBtn = $id('clear-giao-search-btn');
-                    const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
-                    if (clearBtn) clearBtn.classList.toggle('hidden', !query);
-
-                    if (currentGiaoTab === 'cho-giao') renderChoGiaoList();
-                    else if (currentGiaoTab === 'da-giao') renderDaGiaoList();
-                    else if (currentGiaoTab === 'da-an') renderDaAnList();
-                }
-
-                function clearGiaoSearch() {
-                    const input = $id('search-giao-input');
-                    if (input) input.value = '';
-                    filterGiaoList();
-                    if (input) input.focus();
-                }
-
-                // ========================================================
-                // RENDER DANH SÁCH THẺ BỆNH NHÂN (CLEAN, ELEGANT UX/UI)
-                // ========================================================
-                function renderChoThuList() {
-                    const container = $id('cho-thu-list');
-                    const countEl = $id('cho-thu-count');
-                    const query = ($id('search-thu-input')?.value || '').trim().toLowerCase();
-
-                    const choThuItems = rawChuaGiaoData.filter(item => {
-                        if (Number(item.dagiao) !== 0) return false;
-                        return !item.daThu;
-                    });
-                    if (countEl) countEl.textContent = choThuItems.length;
-                    if (!container) return;
-
-                    const filtered = query
-                        ? choThuItems.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
-                        : choThuItems;
-
-                    if (filtered.length === 0) {
-                        container.innerHTML = `
-                                                                    <div id="cho-thu-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
-                                                                        <i class="fa-solid fa-receipt text-3xl text-slate-300"></i>
-                                                                        <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Không có đơn nào chưa thu tiền'}</p>
-                                                                    </div>`;
-                        return;
+                        typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">BHYT</span>`;
                     }
 
-                    const prevScrollTop = container.scrollTop;
-                    let html = '';
-                    for (const item of filtered) {
-                        const curOcua = String(item.oCua || '').trim();
-                        const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                        const safeTrangThai = 'Chờ thu tiền';
-                        const sohdVal = item.sohd || item.maba || '';
-                        const typeTag = item.hasBoth
-                            ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Toa DV</span>`
-                            : `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Toa Dịch vụ</span>`;
+                    const sohdVal = item.sohd || item.maba || '';
+                    const curOcua = String(item.oCua || '').trim();
+                    const hasBeenCalled = Boolean(curOcua && curOcua !== '' && curOcua !== 'null');
+                    const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const safeTrangThai = 'Nhận thuốc';
+                    const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
-                        // Segmented button group gọn gàng
-                        const assignBtns = ['1', '2', '3', '4', '5'].map(num => {
-                            const isCurrent = curOcua === num;
-                            const activeCls = isCurrent
-                                ? 'bg-amber-500 text-white font-black border-amber-500 shadow-2xs ring-2 ring-amber-200'
-                                : 'bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-800 border-slate-200';
-                            return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', false, 'Chờ thu tiền', ${item.khochan || 13})"
-                                                                                class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
-                                                                                title="Gọi Ô ${num} đóng tiền">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
-                        }).join('');
+                    // Segmented button group gọn gàng
+                    const assignBtns = ['1', '2', '3', '4', '5'].map(num => {
+                        const isCurrent = curOcua === num;
+                        const activeCls = isCurrent
+                            ? 'bg-brand text-white font-black border-brand shadow-2xs ring-2 ring-blue-200'
+                            : 'bg-white text-slate-600 hover:bg-blue-50 hover:text-brand border-slate-200';
+                        return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', ${item.isBhyt}, '${safeTrangThai}', ${item.khochan || 0})"
+                                                                                        class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
+                                                                                        title="Gọi Ô ${num} nhận thuốc">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
+                    }).join('');
 
-                        const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
-                        const cardCls = isHighlighted
-                            ? 'border-2 border-amber-500 bg-amber-50/60 ring-2 ring-amber-200 shadow-md'
-                            : 'border border-slate-200 hover:border-amber-300 bg-white hover:shadow-xs';
+                    const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
+                    const cardCls = isHighlighted
+                        ? 'border-2 border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-200 shadow-md'
+                        : (hasBeenCalled
+                            ? 'border border-blue-300 bg-blue-50/30 hover:shadow-xs'
+                            : 'border border-slate-200 hover:border-slate-300 bg-white hover:shadow-xs');
 
-                        html += `
-                                                                    <div class="patient-card-item ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
-                                                                        <!-- Top: Họ tên & Tiền -->
-                                                                        <div class="flex items-start justify-between gap-2">
-                                                                            <div class="min-w-0">
-                                                                                <div class="font-black text-slate-900 text-sm md:text-base uppercase tracking-tight truncate leading-tight">
-                                                                                    ${escapeHtml(item.hoTen)}
+                    const phatBtnHtml = hasBeenCalled
+                        ? `<button onclick="actionPhatThuoc('${item.makb}', '${item.mabn}', '${safeHoTen}', ${item.khochan || 0})"
+                                                                                    title="Xác nhận đã phát thuốc"
+                                                                                    class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs uppercase flex items-center gap-1.5 shadow-xs transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0">
+                                                                                <i class="fa-solid fa-check text-xs"></i> Đã phát
+                                                                               </button>`
+                        : '';
+
+                    html += `
+                                                                            <div class="patient-card-item duoc-card-active ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
+                                                                                <!-- Top: Họ tên & Tiền / Ô cửa -->
+                                                                                <div class="duoc-card-top flex items-start justify-between gap-2">
+                                                                                    <div class="duoc-card-info min-w-0">
+                                                                                        <div class="duoc-card-name uppercase tracking-tight" title="${escapeHtml(item.hoTen)}">
+                                                                                            ${escapeHtml(item.hoTen)}
+                                                                                        </div>
+                                                                                        <div class="duoc-card-meta flex items-center gap-2 mt-1 flex-wrap">
+                                                                                            ${typeTag}
+                                                                                  
+                                                                                            <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                                                                    title="Sao chép mã khám"
+                                                                                                    class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
+                                                                                                <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                                                                <i class="fa-regular fa-copy text-[10px]"></i>
+                                                                                            </button>
+
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </div>
-                                                                                <div class="text-xs text-slate-500 flex items-center gap-2 mt-1 flex-wrap">
-                                                                                    ${typeTag}
-                                                                                    ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
-                                                                                    <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
-                                                                                            title="Sao chép mã khám"
-                                                                                            class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
-                                                                                        <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
-                                                                                        <i class="fa-regular fa-copy text-[10px]"></i>
-                                                                                    </button>
-                                                                                    ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">${item.ngayNhapStr}</span>` : ''}
+
+                                                                                <!-- Bottom: Segmented Call Buttons & Action -->
+                                                                                <div class="duoc-card-actions flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
+                                                                                    <div class="flex items-center gap-1 flex-wrap">
+                                                                                        ${assignBtns}
+                                                                                    </div>
+                                                                                    <div class="flex items-center gap-1.5 shrink-0">
+                                                                                        <button type="button" onclick="actionAn('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                                title="Tạm ẩn bệnh nhân khỏi hàng chờ"
+                                                                                                class="px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-700 hover:text-white text-slate-600 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
+                                                                                            <i class="fa-solid fa-eye-slash text-[11px]"></i> Ẩn
+                                                                                        </button>
+                                                                                        ${phatBtnHtml}
+                                                                                    </div>
                                                                                 </div>
-                                                                            </div>
-                            
-                                                                            <div class="text-right shrink-0">
-                                                                                <div class="text-base md:text-lg font-black text-rose-700 font-mono tracking-tight">${item.soTienStr || '—'}</div>
-                                                                                <div class="mt-0.5">${getOcuaBadge(item.oCua)}</div>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <!-- Bottom: Segmented Call Buttons & Action -->
-                                                                        <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
-                                                                            <div class="flex items-center gap-1">
-                                                                                ${assignBtns}
-                                                                            </div>
-                                                                            <div class="flex items-center gap-1.5 shrink-0">
-                                                                                <button type="button" onclick="actionKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                                                                        title="Khách không mua thuốc"
-                                                                                        class="px-2.5 py-1 text-xs rounded-lg border border-rose-200 bg-rose-50/60 hover:bg-rose-600 hover:text-white text-rose-700 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
-                                                                                    <i class="fa-solid fa-ban text-[11px]"></i> Không mua
-                                                                                </button>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>`;
-                    }
-
-                    container.innerHTML = html;
-                    container.scrollTop = prevScrollTop;
+                                                                            </div>`;
                 }
 
-                function renderKhongMuaList() {
-                    const container = $id('khong-mua-list');
-                    const countEl = $id('khong-mua-count');
-                    const query = ($id('search-thu-input')?.value || '').trim().toLowerCase();
+                container.innerHTML = html;
+                container.scrollTop = prevScrollTop;
+            }
 
-                    if (countEl) countEl.textContent = rawKhongMuaData.length;
-                    if (!container) return;
+            function renderDaGiaoList() {
+                const container = $id('da-giao-list');
+                const countEl = $id('da-giao-count');
+                const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
 
-                    const filtered = query
-                        ? rawKhongMuaData.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
-                        : rawKhongMuaData;
+                if (countEl) countEl.textContent = rawDaGiaoData.length;
+                if (!container) return;
 
-                    if (filtered.length === 0) {
-                        container.innerHTML = `<div id="khong-mua-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
-                                                                        <i class="fa-solid fa-ban text-3xl text-slate-300"></i>
-                                                                        <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào không mua hôm nay'}</p>
-                                                                    </div>`;
-                        return;
-                    }
+                const filtered = query
+                    ? rawDaGiaoData.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
+                    : rawDaGiaoData;
 
-                    const prevScrollTop = container.scrollTop;
-                    let html = '';
-                    for (const item of filtered) {
-                        const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                        const sohdVal = item.sohd || item.maba || '';
-
-                        html += `<div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
-                                                                        <div class="min-w-0">
-                                                                            <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight">
-                                                                                ${escapeHtml(item.hoTen)}
-                                                                            </div>
-                                                                            <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
-                                                                                ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
-                                                                                ${item.soTienStr ? `<span class="text-slate-700 font-mono font-semibold">${item.soTienStr}</span><span>•</span>` : ''}
-                                                                                <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
-                                                                                        title="Sao chép mã khám"
-                                                                                        class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
-                                                                                    <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
-                                                                                </button>
-                                                                            </div>
-                                                                        </div>
-                                                                        <button onclick="actionHoanTacKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                                                                title="Khách muốn mua lại"
-                                                                                class="px-3 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-800 border border-amber-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
-                                                                            <i class="fa-solid fa-rotate-left text-[11px]"></i> Mua lại
-                                                                        </button>
-                                                                    </div>`;
-                    }
-
-                    container.innerHTML = html;
-                    container.scrollTop = prevScrollTop;
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                                                                            <div id="da-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                                                                <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-300"></i>
+                                                                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào đã phát hôm nay'}</p>
+                                                                            </div>`;
+                    return;
                 }
 
-                function renderChoGiaoList() {
-                    const container = $id('cho-giao-list');
-                    const countEl = $id('cho-giao-count');
-                    const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
-
-                    // Chờ phát = BHYT hoặc Dịch vụ đã thu (daThu === true)
-                    const choGiaoItems = rawChuaGiaoData.filter(item => {
-                        if (Number(item.dagiao) !== 0) return false;
-                        return item.daThu;
-                    });
-
-                    if (countEl) countEl.textContent = choGiaoItems.length;
-                    if (!container) return;
-
-                    const filtered = query
-                        ? choGiaoItems.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
-                        : choGiaoItems;
-
-                    if (filtered.length === 0) {
-                        container.innerHTML = `
-                                                                    <div id="cho-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
-                                                                        <i class="fa-solid fa-clipboard-check text-3xl text-slate-300"></i>
-                                                                        <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Không có đơn nào đang chờ phát'}</p>
-                                                                    </div>`;
-                        return;
+                const prevScrollTop = container.scrollTop;
+                let html = '';
+                for (const item of filtered) {
+                    let typeTag = '';
+                    if (item.hasBoth) {
+                        typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">BHYT + Dịch vụ</span>`;
+                    } else if (item.hasDichVu) {
+                        typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Dịch vụ</span>`;
+                    } else {
+                        typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">BHYT</span>`;
                     }
+                    const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const sohdVal = item.sohd || item.maba || '';
+                    const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
-                    const prevScrollTop = container.scrollTop;
-                    let html = '';
-                    for (const item of filtered) {
-                        let typeTag = '';
-                        if (item.hasBoth) {
-                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">BHYT + Dịch vụ</span>`;
-                        } else if (item.hasDichVu) {
-                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Dịch vụ</span>`;
-                        } else {
-                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">BHYT</span>`;
-                        }
-
-                        const sohdVal = item.sohd || item.maba || '';
-                        const curOcua = String(item.oCua || '').trim();
-                        const hasBeenCalled = Boolean(curOcua && curOcua !== '' && curOcua !== 'null');
-                        const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                        const safeTrangThai = 'Nhận thuốc';
-                        const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
-
-                        // Segmented button group gọn gàng
-                        const assignBtns = ['1', '2', '3', '4', '5'].map(num => {
-                            const isCurrent = curOcua === num;
-                            const activeCls = isCurrent
-                                ? 'bg-brand text-white font-black border-brand shadow-2xs ring-2 ring-blue-200'
-                                : 'bg-white text-slate-600 hover:bg-blue-50 hover:text-brand border-slate-200';
-                            return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', ${item.isBhyt}, '${safeTrangThai}', ${item.khochan || 0})"
-                                                                                class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
-                                                                                title="Gọi Ô ${num} nhận thuốc">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
-                        }).join('');
-
-                        const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
-                        const cardCls = isHighlighted
-                            ? 'border-2 border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-200 shadow-md'
-                            : (hasBeenCalled
-                                ? 'border border-blue-300 bg-blue-50/30 hover:shadow-xs'
-                                : 'border border-slate-200 hover:border-slate-300 bg-white hover:shadow-xs');
-
-                        const phatBtnHtml = hasBeenCalled
-                            ? `<button onclick="actionPhatThuoc('${item.makb}', '${item.mabn}', '${safeHoTen}', ${item.khochan || 0})"
-                                                                            title="Xác nhận đã phát thuốc"
-                                                                            class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs uppercase flex items-center gap-1.5 shadow-xs transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0">
-                                                                        <i class="fa-solid fa-check text-xs"></i> Đã phát
-                                                                       </button>`
-                            : '';
-
-                        html += `
-                                                                    <div class="patient-card-item ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
-                                                                        <!-- Top: Họ tên & Tiền / Ô cửa -->
-                                                                        <div class="flex items-start justify-between gap-2">
-                                                                            <div class="min-w-0">
-                                                                                <div class="font-black text-slate-900 text-sm md:text-base uppercase tracking-tight truncate leading-tight">
-                                                                                    ${escapeHtml(item.hoTen)}
+                    html += `
+                                                                            <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
+                                                                                <div class="min-w-0">
+                                                                                    <div class="duoc-card-name uppercase" title="${escapeHtml(item.hoTen)}">
+                                                                                        ${escapeHtml(item.hoTen)}
+                                                                                    </div>
+                                                                                    <div class="duoc-card-meta flex items-center gap-2 mt-0.5 flex-wrap">
+                                                                                        ${typeTag}
+                        
+                                                                             
+                                                                                        <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                                                                title="Sao chép mã khám"
+                                                                                                class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
+                                                                                            <span>Mã KB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                                                        </button>
+                                                                                    </div>
                                                                                 </div>
-                                                                                <div class="text-xs text-slate-500 flex items-center gap-2 mt-1 flex-wrap">
-                                                                                    ${typeTag}
-                                                                                    ${sohdVal ? `<span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span><span>•</span>` : ''}
-                                                                                    <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
-                                                                                            title="Sao chép mã khám"
-                                                                                            class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
-                                                                                        <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
-                                                                                        <i class="fa-regular fa-copy text-[10px]"></i>
-                                                                                    </button>
-                                                                                    ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">${item.ngayNhapStr}</span>` : ''}
-                                                                                </div>
-                                                                            </div>
-                            
-                                                                            <div class="text-right shrink-0 flex flex-col items-end gap-1">
-                                                                                ${hasMoney ? `<div class="text-xs md:text-sm lg:text-base font-black text-emerald-700 font-mono bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-300 shadow-2xs">${item.soTienStr}</div>` : ''}
-                                                                                <div>${getOcuaBadge(item.oCua)}</div>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <!-- Bottom: Segmented Call Buttons & Action -->
-                                                                        <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
-                                                                            <div class="flex items-center gap-1 flex-wrap">
-                                                                                ${assignBtns}
-                                                                            </div>
-                                                                            <div class="flex items-center gap-1.5 shrink-0">
-                                                                                <button type="button" onclick="actionAn('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                                                                        title="Tạm ẩn bệnh nhân khỏi hàng chờ"
-                                                                                        class="px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-700 hover:text-white text-slate-600 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
-                                                                                    <i class="fa-solid fa-eye-slash text-[11px]"></i> Ẩn
+                                                                                <button onclick="actionHoanTac('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                        title="Đưa bệnh nhân trở lại danh sách Chờ phát"
+                                                                                        class="px-3 py-1.5 bg-slate-50 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
+                                                                                    <i class="fa-solid fa-rotate-left text-[11px]"></i> Hoàn tác
                                                                                 </button>
-                                                                                ${phatBtnHtml}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>`;
-                    }
-
-                    container.innerHTML = html;
-                    container.scrollTop = prevScrollTop;
+                                                                            </div>`;
                 }
 
-                function renderDaGiaoList() {
-                    const container = $id('da-giao-list');
-                    const countEl = $id('da-giao-count');
-                    const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
+                container.innerHTML = html;
+                container.scrollTop = prevScrollTop;
+            }
 
-                    if (countEl) countEl.textContent = rawDaGiaoData.length;
-                    if (!container) return;
+            function renderDaAnList() {
+                const container = $id('da-an-list');
+                const countEl = $id('da-an-count');
+                const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
 
-                    const filtered = query
-                        ? rawDaGiaoData.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
-                        : rawDaGiaoData;
+                if (countEl) countEl.textContent = rawDaAnData.length;
+                if (!container) return;
 
-                    if (filtered.length === 0) {
-                        container.innerHTML = `
-                                                                    <div id="da-giao-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
-                                                                        <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-300"></i>
-                                                                        <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào đã phát hôm nay'}</p>
-                                                                    </div>`;
-                        return;
-                    }
+                const filtered = query
+                    ? rawDaAnData.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
+                    : rawDaAnData;
 
-                    const prevScrollTop = container.scrollTop;
-                    let html = '';
-                    for (const item of filtered) {
-                        let typeTag = '';
-                        if (item.hasBoth) {
-                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">BHYT + Dịch vụ</span>`;
-                        } else if (item.hasDichVu) {
-                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Dịch vụ</span>`;
-                        } else {
-                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">BHYT</span>`;
-                        }
-                        const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                        const sohdVal = item.sohd || item.maba || '';
-                        const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
-
-                        html += `
-                                                                    <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
-                                                                        <div class="min-w-0">
-                                                                            <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight">
-                                                                                ${escapeHtml(item.hoTen)}
-                                                                            </div>
-                                                                            <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
-                                                                                ${typeTag}
-                                                                                ${hasMoney ? `<span>•</span><span class="text-xs md:text-sm font-black text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.soTienStr}</span>` : ''}
-                                                                                ${sohdVal ? `<span>•</span><span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span>` : ''}
-                                                                                ${getOcuaBadge(item.oCua)}
-                                                                                <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
-                                                                                        title="Sao chép mã khám"
-                                                                                        class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
-                                                                                    <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
-                                                                                </button>
-                                                                                ${item.ngayGiaoStr ? `<span>•</span><span class="text-slate-400">${item.ngayGiaoStr}</span>` : ''}
-                                                                            </div>
-                                                                        </div>
-                                                                        <button onclick="actionHoanTac('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                                                                title="Đưa bệnh nhân trở lại danh sách Chờ phát"
-                                                                                class="px-3 py-1.5 bg-slate-50 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
-                                                                            <i class="fa-solid fa-rotate-left text-[11px]"></i> Hoàn tác
-                                                                        </button>
-                                                                    </div>`;
-                    }
-
-                    container.innerHTML = html;
-                    container.scrollTop = prevScrollTop;
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                                    <div id="da-an-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
+                                        <i class="fa-solid fa-eye-slash text-3xl text-slate-300"></i>
+                                        <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào bị ẩn hôm nay'}</p>
+                                    </div>`;
+                    return;
                 }
 
-                function renderDaAnList() {
-                    const container = $id('da-an-list');
-                    const countEl = $id('da-an-count');
-                    const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
-
-                    if (countEl) countEl.textContent = rawDaAnData.length;
-                    if (!container) return;
-
-                    const filtered = query
-                        ? rawDaAnData.filter(i => (i.hoTen || '').toLowerCase().includes(query) || (i.makb || '').toLowerCase().includes(query) || (i.mabn || '').toLowerCase().includes(query) || (i.sohd || '').toLowerCase().includes(query))
-                        : rawDaAnData;
-
-                    if (filtered.length === 0) {
-                        container.innerHTML = `
-                            <div id="da-an-empty" class="h-full flex flex-col items-center justify-center text-slate-300 gap-2 py-16">
-                                <i class="fa-solid fa-eye-slash text-3xl text-slate-300"></i>
-                                <p class="text-xs font-semibold text-slate-400">${query ? 'Không tìm thấy bệnh nhân phù hợp' : 'Chưa có đơn nào bị ẩn hôm nay'}</p>
-                            </div>`;
-                        return;
+                const prevScrollTop = container.scrollTop;
+                let html = '';
+                for (const item of filtered) {
+                    let typeTag = '';
+                    if (item.hasBoth) {
+                        typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">BHYT + Dịch vụ</span>`;
+                    } else if (item.hasDichVu) {
+                        typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Dịch vụ</span>`;
+                    } else {
+                        typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">BHYT</span>`;
                     }
+                    const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const sohdVal = item.sohd || item.maba || '';
+                    const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
-                    const prevScrollTop = container.scrollTop;
-                    let html = '';
-                    for (const item of filtered) {
-                        let typeTag = '';
-                        if (item.hasBoth) {
-                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">BHYT + Dịch vụ</span>`;
-                        } else if (item.hasDichVu) {
-                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Dịch vụ</span>`;
-                        } else {
-                            typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">BHYT</span>`;
-                        }
-                        const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                        const sohdVal = item.sohd || item.maba || '';
-                        const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
-
-                        html += `
-                            <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
-                                <div class="min-w-0">
-                                    <div class="font-bold text-slate-800 text-sm uppercase truncate leading-tight flex items-center gap-1.5">
-                                        <span class="text-slate-400"><i class="fa-solid fa-eye-slash text-xs"></i></span>
-                                        <span>${escapeHtml(item.hoTen)}</span>
-                                    </div>
-                                    <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
-                                        ${typeTag}
-                                        ${hasMoney ? `<span>•</span><span class="text-xs md:text-sm font-black text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.soTienStr}</span>` : ''}
-                                        ${sohdVal ? `<span>•</span><span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span>` : ''}
-                                        <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
-                                                title="Sao chép mã khám"
-                                                class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
-                                            <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                    html += `
+                                    <div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
+                                        <div class="min-w-0">
+                                            <div class="flex items-start gap-1.5 min-w-0">
+                                                <span class="text-slate-400"><i class="fa-solid fa-eye-slash text-xs"></i></span>
+                                                <span class="duoc-card-name uppercase min-w-0" title="${escapeHtml(item.hoTen)}">${escapeHtml(item.hoTen)}</span>
+                                            </div>
+                                            <div class="duoc-card-meta flex items-center gap-2 mt-0.5 flex-wrap">
+                                                ${typeTag}
+                                                ${hasMoney ? `<span>•</span><span class="text-xs md:text-sm font-black text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.soTienStr}</span>` : ''}
+                                                ${sohdVal ? `<span>•</span><span>Đơn: <strong class="text-slate-700 font-mono">${escapeHtml(sohdVal)}</strong></span>` : ''}
+                                                <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
+                                                        title="Sao chép mã khám"
+                                                        class="inline-flex items-center gap-1 text-slate-400 hover:text-brand font-mono transition cursor-pointer">
+                                                    <span>MKB: ${escapeHtml(item.makb || item.mabn)}</span>
+                                                </button>
+                                                ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">Ẩn: ${item.ngayNhapStr}</span>` : ''}
+                                            </div>
+                                        </div>
+                                        <button onclick="actionBoAn('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                title="Khôi phục lại vào danh sách chờ"
+                                                class="px-3 py-1.5 bg-blue-50 hover:bg-brand hover:text-white text-brand border border-blue-200 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0 active:scale-95">
+                                            <i class="fa-solid fa-eye text-[11px]"></i> Bỏ ẩn
                                         </button>
-                                        ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">Ẩn: ${item.ngayNhapStr}</span>` : ''}
-                                    </div>
-                                </div>
-                                <button onclick="actionBoAn('${item.makb}', '${item.mabn}', '${safeHoTen}')"
-                                        title="Khôi phục lại vào danh sách chờ"
-                                        class="px-3 py-1.5 bg-blue-50 hover:bg-brand hover:text-white text-brand border border-blue-200 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0 active:scale-95">
-                                    <i class="fa-solid fa-eye text-[11px]"></i> Bỏ ẩn
-                                </button>
-                            </div>`;
-                    }
-
-                    container.innerHTML = html;
-                    container.scrollTop = prevScrollTop;
+                                    </div>`;
                 }
 
-                // ========================================================
-                // SERVER ACTIONS (OPTIMISTIC + REALTIME)
-                // ========================================================
-                let lastKhongMuaJson = '';
-                async function loadDanhSachKhongMua() {
-                    try {
-                        const r = await fetch('/api/duoc-nhap/danh-sach-khong-mua');
-                        const list = await r.json() || [];
-                        const countEl = $id('khong-mua-count');
-                        if (countEl) countEl.textContent = list.length;
-                        rawKhongMuaData = list;
-                        if (currentThuTab === 'khong-mua') renderKhongMuaList();
-                    } catch (e) {
-                        console.warn('Lỗi load danh sách không mua:', e);
-                    }
-                }
+                container.innerHTML = html;
+                container.scrollTop = prevScrollTop;
+            }
 
-                let lastDaGiaoJson = '';
-                async function loadDanhSachDaGiao() {
-                    try {
-                        const r = await fetch('/api/duoc-nhap/danh-sach-da-giao');
-                        const list = await r.json() || [];
-                        const countEl = $id('da-giao-count');
-                        if (countEl) countEl.textContent = list.length;
-                        rawDaGiaoData = list;
-                        if (currentGiaoTab === 'da-giao') renderDaGiaoList();
-                    } catch (e) {
-                        console.warn('Lỗi load danh sách đã giao:', e);
-                    }
+            // ========================================================
+            // SERVER ACTIONS (OPTIMISTIC + REALTIME)
+            // ========================================================
+            let lastKhongMuaJson = '';
+            async function loadDanhSachKhongMua() {
+                try {
+                    const r = await fetch('/api/duoc-nhap/danh-sach-khong-mua');
+                    const list = await r.json() || [];
+                    const countEl = $id('khong-mua-count');
+                    if (countEl) countEl.textContent = list.length;
+                    rawKhongMuaData = list;
+                    if (currentThuTab === 'khong-mua') renderKhongMuaList();
+                } catch (e) {
+                    console.warn('Lỗi load danh sách không mua:', e);
                 }
+            }
 
-                let lastDaAnJson = '';
-                async function loadDanhSachDaAn() {
-                    try {
-                        const r = await fetch('/api/duoc-nhap/danh-sach-an');
-                        const list = await r.json() || [];
-                        const countEl = $id('da-an-count');
-                        if (countEl) countEl.textContent = list.length;
-                        rawDaAnData = list;
-                        if (currentGiaoTab === 'da-an') renderDaAnList();
-                    } catch (e) {
-                        console.warn('Lỗi load danh sách đã ẩn:', e);
-                    }
+            let lastDaGiaoJson = '';
+            async function loadDanhSachDaGiao() {
+                try {
+                    const r = await fetch('/api/duoc-nhap/danh-sach-da-giao');
+                    const list = await r.json() || [];
+                    const countEl = $id('da-giao-count');
+                    if (countEl) countEl.textContent = list.length;
+                    rawDaGiaoData = list;
+                    if (currentGiaoTab === 'da-giao') renderDaGiaoList();
+                } catch (e) {
+                    console.warn('Lỗi load danh sách đã giao:', e);
                 }
+            }
 
-                async function actionKhongMua(makb, mabn, hoTen) {
-                    try {
-                        const key = (makb || mabn || '').trim();
-                        if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
-                            const idx = rawChuaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
-                            if (idx !== -1) {
-                                const removed = rawChuaGiaoData.splice(idx, 1)[0];
-                                renderChoThuList();
-                                if (rawKhongMuaData) {
-                                    rawKhongMuaData.unshift({
-                                        ...removed,
-                                        dagiao: 3,
-                                        ngayNhapStr: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-                                    });
-                                    if (currentThuTab === 'khong-mua') renderKhongMuaList();
-                                }
+            let lastDaAnJson = '';
+            async function loadDanhSachDaAn() {
+                try {
+                    const r = await fetch('/api/duoc-nhap/danh-sach-an');
+                    const list = await r.json() || [];
+                    const countEl = $id('da-an-count');
+                    if (countEl) countEl.textContent = list.length;
+                    rawDaAnData = list;
+                    if (currentGiaoTab === 'da-an') renderDaAnList();
+                } catch (e) {
+                    console.warn('Lỗi load danh sách đã ẩn:', e);
+                }
+            }
+
+            async function actionKhongMua(makb, mabn, hoTen) {
+                try {
+                    const key = (makb || mabn || '').trim();
+                    if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
+                        const idx = rawChuaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        if (idx !== -1) {
+                            const removed = rawChuaGiaoData.splice(idx, 1)[0];
+                            renderChoThuList();
+                            if (rawKhongMuaData) {
+                                rawKhongMuaData.unshift({
+                                    ...removed,
+                                    dagiao: 3,
+                                    ngayNhapStr: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                                });
+                                if (currentThuTab === 'khong-mua') renderKhongMuaList();
                             }
                         }
+                    }
 
-                        playScanBeep(true);
-                        showUndoToast(`Đã chuyển ${hoTen} sang Lịch sử không mua`, { makb, mabn, hoTen, actionType: 'khong_mua' });
+                    playScanBeep(true);
+                    showUndoToast(`Đã chuyển ${hoTen} sang Lịch sử không mua`, { makb, mabn, hoTen, actionType: 'khong_mua' });
 
-                        const r = await fetch('/api/duoc-nhap/khong-mua', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ makb, mabn })
-                        });
-                        const res = await r.json();
-                        if (res.success) {
-                            refreshAllColumns();
-                        } else {
-                            playScanBeep(false);
-                            showError(res.message || 'Lỗi khi chuyển sang không mua');
-                            refreshAllColumns(true);
-                        }
-                    } catch (e) {
-                        showError('Lỗi kết nối máy chủ.');
+                    const r = await fetch('/api/duoc-nhap/khong-mua', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ makb, mabn })
+                    });
+                    const res = await r.json();
+                    if (res.success) {
+                        refreshAllColumns();
+                    } else {
+                        playScanBeep(false);
+                        showError(res.message || 'Lỗi khi chuyển sang không mua');
                         refreshAllColumns(true);
                     }
+                } catch (e) {
+                    showError('Lỗi kết nối máy chủ.');
+                    refreshAllColumns(true);
                 }
+            }
 
-                async function actionHoanTacKhongMua(makb, mabn, hoTen) {
-                    try {
-                        const key = (makb || mabn || '').trim();
-                        if (key && rawKhongMuaData && rawKhongMuaData.length > 0) {
-                            const idx = rawKhongMuaData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
-                            if (idx !== -1) {
-                                const removed = rawKhongMuaData.splice(idx, 1)[0];
-                                renderKhongMuaList();
-                                if (rawChuaGiaoData) {
-                                    rawChuaGiaoData.unshift({
-                                        ...removed,
-                                        dagiao: 0
-                                    });
-                                    renderChoThuList();
-                                    renderChoGiaoList();
-                                }
-                            }
-                        }
-
-                        playScanBeep(true);
-                        showUndoToast(`✓ Đã đưa ${hoTen} trở lại Chưa Thu Tiền`, null);
-                        triggerHighlight(makb || mabn);
-                        switchThuTab('cho-thu');
-
-                        const r = await fetch('/api/duoc-nhap/hoan-tac', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ makb, mabn })
-                        });
-                        const res = await r.json();
-                        if (res.success) {
-                            refreshAllColumns();
-                        } else {
-                            playScanBeep(false);
-                            showError(res.message || 'Lỗi khi khôi phục');
-                            refreshAllColumns(true);
-                        }
-                    } catch (e) {
-                        showError('Lỗi kết nối máy chủ.');
-                        refreshAllColumns(true);
-                    }
-                }
-
-                async function actionAn(makb, mabn, hoTen) {
-                    try {
-                        const key = (makb || mabn || '').trim();
-                        if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
-                            const idx = rawChuaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
-                            if (idx !== -1) {
-                                const removed = rawChuaGiaoData.splice(idx, 1)[0];
+            async function actionHoanTacKhongMua(makb, mabn, hoTen) {
+                try {
+                    const key = (makb || mabn || '').trim();
+                    if (key && rawKhongMuaData && rawKhongMuaData.length > 0) {
+                        const idx = rawKhongMuaData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        if (idx !== -1) {
+                            const removed = rawKhongMuaData.splice(idx, 1)[0];
+                            renderKhongMuaList();
+                            if (rawChuaGiaoData) {
+                                rawChuaGiaoData.unshift({
+                                    ...removed,
+                                    dagiao: 0
+                                });
                                 renderChoThuList();
                                 renderChoGiaoList();
-                                if (rawDaAnData) {
-                                    rawDaAnData.unshift({
-                                        ...removed,
-                                        an: 1,
-                                        ngayNhapStr: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-                                    });
-                                    const countEl = $id('da-an-count');
-                                    if (countEl) countEl.textContent = rawDaAnData.length;
-                                    if (currentGiaoTab === 'da-an') renderDaAnList();
-                                }
                             }
                         }
+                    }
 
-                        playScanBeep(true);
-                        showUndoToast(`Đã tạm ẩn ${hoTen}`, { makb, mabn, hoTen, actionType: 'an' });
+                    playScanBeep(true);
+                    showUndoToast(`✓ Đã đưa ${hoTen} trở lại Chưa Thu Tiền`, null);
+                    triggerHighlight(makb || mabn);
+                    switchThuTab('cho-thu');
 
-                        const r = await fetch('/api/duoc-nhap/an', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ makb, mabn })
-                        });
-                        const res = await r.json();
-                        if (res.success) {
-                            refreshAllColumns();
-                        } else {
-                            playScanBeep(false);
-                            showError(res.message || 'Lỗi khi ẩn bệnh nhân');
-                            refreshAllColumns(true);
-                        }
-                    } catch (e) {
-                        showError('Lỗi kết nối máy chủ.');
+                    const r = await fetch('/api/duoc-nhap/hoan-tac', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ makb, mabn })
+                    });
+                    const res = await r.json();
+                    if (res.success) {
+                        refreshAllColumns();
+                    } else {
+                        playScanBeep(false);
+                        showError(res.message || 'Lỗi khi khôi phục');
                         refreshAllColumns(true);
                     }
+                } catch (e) {
+                    showError('Lỗi kết nối máy chủ.');
+                    refreshAllColumns(true);
                 }
+            }
 
-                async function actionBoAn(makb, mabn, hoTen) {
-                    try {
-                        const key = (makb || mabn || '').trim();
-                        if (key && rawDaAnData && rawDaAnData.length > 0) {
-                            const idx = rawDaAnData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
-                            if (idx !== -1) {
-                                const removed = rawDaAnData.splice(idx, 1)[0];
+            async function actionAn(makb, mabn, hoTen) {
+                try {
+                    const key = (makb || mabn || '').trim();
+                    if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
+                        const idx = rawChuaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        if (idx !== -1) {
+                            const removed = rawChuaGiaoData.splice(idx, 1)[0];
+                            renderChoThuList();
+                            renderChoGiaoList();
+                            if (rawDaAnData) {
+                                rawDaAnData.unshift({
+                                    ...removed,
+                                    an: 1,
+                                    ngayNhapStr: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                                });
                                 const countEl = $id('da-an-count');
                                 if (countEl) countEl.textContent = rawDaAnData.length;
                                 if (currentGiaoTab === 'da-an') renderDaAnList();
-                                if (rawChuaGiaoData) {
-                                    rawChuaGiaoData.unshift({
-                                        ...removed,
-                                        an: 0,
-                                        dagiao: 0
-                                    });
-                                    renderChoThuList();
-                                    renderChoGiaoList();
-                                }
                             }
                         }
+                    }
 
-                        playScanBeep(true);
-                        showUndoToast(`✓ Đã bỏ ẩn cho ${hoTen}`, null);
-                        triggerHighlight(makb || mabn);
+                    playScanBeep(true);
+                    showUndoToast(`Đã tạm ẩn ${hoTen}`, { makb, mabn, hoTen, actionType: 'an' });
 
-                        const r = await fetch('/api/duoc-nhap/bo-an', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ makb, mabn })
-                        });
-                        const res = await r.json();
-                        if (res.success) {
-                            refreshAllColumns();
-                        } else {
-                            playScanBeep(false);
-                            showError(res.message || 'Lỗi khi bỏ ẩn');
-                            refreshAllColumns(true);
-                        }
-                    } catch (e) {
-                        showError('Lỗi kết nối máy chủ.');
+                    const r = await fetch('/api/duoc-nhap/an', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ makb, mabn })
+                    });
+                    const res = await r.json();
+                    if (res.success) {
+                        refreshAllColumns();
+                    } else {
+                        playScanBeep(false);
+                        showError(res.message || 'Lỗi khi ẩn bệnh nhân');
                         refreshAllColumns(true);
                     }
+                } catch (e) {
+                    showError('Lỗi kết nối máy chủ.');
+                    refreshAllColumns(true);
                 }
+            }
 
-                async function actionPhatThuoc(makb, mabn, hoTen, khochan) {
-                    try {
-                        const key = (makb || mabn || '').trim();
-                        if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
-                            const idx = rawChuaGiaoData.findIndex(i => ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key)) && (!khochan || i.khochan === khochan || khochan === 0));
-                            if (idx !== -1) {
-                                const removed = rawChuaGiaoData.splice(idx, 1)[0];
+            async function actionBoAn(makb, mabn, hoTen) {
+                try {
+                    const key = (makb || mabn || '').trim();
+                    if (key && rawDaAnData && rawDaAnData.length > 0) {
+                        const idx = rawDaAnData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        if (idx !== -1) {
+                            const removed = rawDaAnData.splice(idx, 1)[0];
+                            const countEl = $id('da-an-count');
+                            if (countEl) countEl.textContent = rawDaAnData.length;
+                            if (currentGiaoTab === 'da-an') renderDaAnList();
+                            if (rawChuaGiaoData) {
+                                rawChuaGiaoData.unshift({
+                                    ...removed,
+                                    an: 0,
+                                    dagiao: 0
+                                });
+                                renderChoThuList();
+                                renderChoGiaoList();
+                            }
+                        }
+                    }
+
+                    playScanBeep(true);
+                    showUndoToast(`✓ Đã bỏ ẩn cho ${hoTen}`, null);
+                    triggerHighlight(makb || mabn);
+
+                    const r = await fetch('/api/duoc-nhap/bo-an', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ makb, mabn })
+                    });
+                    const res = await r.json();
+                    if (res.success) {
+                        refreshAllColumns();
+                    } else {
+                        playScanBeep(false);
+                        showError(res.message || 'Lỗi khi bỏ ẩn');
+                        refreshAllColumns(true);
+                    }
+                } catch (e) {
+                    showError('Lỗi kết nối máy chủ.');
+                    refreshAllColumns(true);
+                }
+            }
+
+            async function actionPhatThuoc(makb, mabn, hoTen, khochan) {
+                try {
+                    const key = (makb || mabn || '').trim();
+                    if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
+                        const idx = rawChuaGiaoData.findIndex(i => ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key)) && (!khochan || i.khochan === khochan || khochan === 0));
+                        if (idx !== -1) {
+                            const removed = rawChuaGiaoData.splice(idx, 1)[0];
+                            renderChoGiaoList();
+                            renderChoThuList();
+                            if (rawDaGiaoData) {
+                                rawDaGiaoData.unshift({
+                                    ...removed,
+                                    dagiao: 1,
+                                    ngayGiaoStr: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                                });
+                                if (currentGiaoTab === 'da-giao') renderDaGiaoList();
+                            }
+                        }
+                    }
+
+                    playScanBeep(true);
+                    showUndoToast(`Đã phát thuốc cho ${hoTen}`, { makb, mabn, hoTen, actionType: 'phat_thuoc' });
+
+                    const r = await fetch('/api/duoc-nhap/cap-nhat-trang-thai', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ makb, mabn, targetDagiao: 1, khochan: khochan || 0 })
+                    });
+                    const res = await r.json();
+                    if (res.success) {
+                        refreshAllColumns();
+                    } else {
+                        playScanBeep(false);
+                        showError(res.message || 'Lỗi khi phát thuốc');
+                        refreshAllColumns(true);
+                    }
+                } catch (e) {
+                    showError('Lỗi kết nối máy chủ.');
+                    refreshAllColumns(true);
+                }
+            }
+
+            async function actionGoiCua(makb, mabn, hoTen, namSinh, oCua, isBhyt, trangThai, khochan) {
+                try {
+                    triggerHighlight(makb || mabn);
+
+                    const key = (makb || mabn || '').trim();
+                    if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
+                        const idx = rawChuaGiaoData.findIndex(i =>
+                            ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key))
+                            && (!khochan || !i.khochan || i.khochan === khochan || khochan === 0)
+                        );
+                        if (idx !== -1) {
+                            const item = rawChuaGiaoData[idx];
+                            item.oCua = oCua;
+                            rawChuaGiaoData.splice(idx, 1);
+                            rawChuaGiaoData.unshift(item);
+                            renderChoGiaoList();
+                            renderChoThuList();
+                        }
+                    }
+
+                    const isChoDongTien = (trangThai && (String(trangThai).toLowerCase().includes('chờ thu') || String(trangThai).toLowerCase().includes('chưa thu') || String(trangThai).toLowerCase().includes('thu tiền') || String(trangThai).toLowerCase().includes('đóng tiền'))) || trangThai === 'Chờ thu';
+                    const actionLabel = isChoDongTien ? 'đóng tiền' : 'nhận thuốc';
+                    showUndoToast(`Đang phát loa TV: Gọi ${hoTen} đến Ô ${oCua} ${actionLabel}`, null);
+
+                    const r = await fetch('/api/duoc-nhap/chi-dinh-o-cua', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ makb, mabn, oCua, hoTen, namSinh, isBhyt, trangThai, khochan: khochan || 0 })
+                    });
+                    const res = await r.json();
+                    if (res.success) {
+                        refreshAllColumns();
+                    } else {
+                        showError(res.message || 'Lỗi khi gọi ô cửa');
+                        refreshAllColumns(true);
+                    }
+                } catch (e) {
+                    showError('Lỗi kết nối máy chủ.');
+                    refreshAllColumns(true);
+                }
+            }
+
+            async function actionHoanTac(makb, mabn, hoTen) {
+                try {
+                    const key = (makb || mabn || '').trim();
+                    if (key && rawDaGiaoData && rawDaGiaoData.length > 0) {
+                        const idx = rawDaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        if (idx !== -1) {
+                            const removed = rawDaGiaoData.splice(idx, 1)[0];
+                            renderDaGiaoList();
+                            if (rawChuaGiaoData) {
+                                rawChuaGiaoData.unshift({
+                                    ...removed,
+                                    dagiao: 0
+                                });
                                 renderChoGiaoList();
                                 renderChoThuList();
-                                if (rawDaGiaoData) {
-                                    rawDaGiaoData.unshift({
-                                        ...removed,
-                                        dagiao: 1,
-                                        ngayGiaoStr: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-                                    });
-                                    if (currentGiaoTab === 'da-giao') renderDaGiaoList();
-                                }
                             }
                         }
+                    }
 
-                        playScanBeep(true);
-                        showUndoToast(`Đã phát thuốc cho ${hoTen}`, { makb, mabn, hoTen, actionType: 'phat_thuoc' });
+                    playScanBeep(true);
+                    showUndoToast(`${hoTen ? 'Đã hoàn tác phát thuốc cho ' + hoTen : 'Đã hoàn tác thành công'}`, null);
+                    triggerHighlight(makb || mabn);
+                    switchGiaoTab('cho-giao');
 
-                        const r = await fetch('/api/duoc-nhap/cap-nhat-trang-thai', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ makb, mabn, targetDagiao: 1, khochan: khochan || 0 })
-                        });
-                        const res = await r.json();
-                        if (res.success) {
-                            refreshAllColumns();
-                        } else {
-                            playScanBeep(false);
-                            showError(res.message || 'Lỗi khi phát thuốc');
-                            refreshAllColumns(true);
-                        }
-                    } catch (e) {
-                        showError('Lỗi kết nối máy chủ.');
+                    const r = await fetch('/api/duoc-nhap/hoan-tac', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ makb, mabn })
+                    });
+                    const res = await r.json();
+                    if (res.success) {
+                        refreshAllColumns();
+                    } else {
+                        playScanBeep(false);
+                        showError(res.message || 'Lỗi khi hoàn tác');
                         refreshAllColumns(true);
                     }
+                } catch (e) {
+                    showError('Lỗi kết nối máy chủ.');
+                    refreshAllColumns(true);
                 }
+            }
 
-                async function actionGoiCua(makb, mabn, hoTen, namSinh, oCua, isBhyt, trangThai, khochan) {
-                    try {
-                        triggerHighlight(makb || mabn);
-
-                        const key = (makb || mabn || '').trim();
-                        if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
-                            const idx = rawChuaGiaoData.findIndex(i =>
-                                ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key))
-                                && (!khochan || !i.khochan || i.khochan === khochan || khochan === 0)
-                            );
-                            if (idx !== -1) {
-                                const item = rawChuaGiaoData[idx];
-                                item.oCua = oCua;
-                                rawChuaGiaoData.splice(idx, 1);
-                                rawChuaGiaoData.unshift(item);
-                                renderChoGiaoList();
-                                renderChoThuList();
-                            }
-                        }
-
-                        const isChoDongTien = (trangThai && (String(trangThai).toLowerCase().includes('chờ thu') || String(trangThai).toLowerCase().includes('chưa thu') || String(trangThai).toLowerCase().includes('thu tiền') || String(trangThai).toLowerCase().includes('đóng tiền'))) || trangThai === 'Chờ thu';
-                        const actionLabel = isChoDongTien ? 'đóng tiền' : 'nhận thuốc';
-                        showUndoToast(`Đang phát loa TV: Gọi ${hoTen} đến Ô ${oCua} ${actionLabel}`, null);
-
-                        const r = await fetch('/api/duoc-nhap/chi-dinh-o-cua', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ makb, mabn, oCua, hoTen, namSinh, isBhyt, trangThai, khochan: khochan || 0 })
-                        });
-                        const res = await r.json();
-                        if (res.success) {
-                            refreshAllColumns();
-                        } else {
-                            showError(res.message || 'Lỗi khi gọi ô cửa');
-                            refreshAllColumns(true);
-                        }
-                    } catch (e) {
-                        showError('Lỗi kết nối máy chủ.');
-                        refreshAllColumns(true);
+            // ========================================================
+            // ĐỒNG BỘ DỮ LIỆU ĐỊNH KỲ (DEBOUNCED & RACE-GUARDED)
+            // ========================================================
+            let isFetchingChuaGiao = false;
+            let pendingChuaGiaoFetch = false;
+            let lastChuaGiaoJson = '';
+            async function loadDanhSachChuaGiao(forceRender = false) {
+                if (isFetchingChuaGiao) {
+                    pendingChuaGiaoFetch = true;
+                    return;
+                }
+                isFetchingChuaGiao = true;
+                pendingChuaGiaoFetch = false;
+                try {
+                    const r = await fetch('/api/duoc-nhap/danh-sach-chua-giao');
+                    const list = await r.json() || [];
+                    const json = JSON.stringify(list);
+                    if (!forceRender && json === lastChuaGiaoJson) return;
+                    lastChuaGiaoJson = json;
+                    rawChuaGiaoData = list;
+                    renderChoThuList();
+                    renderChoGiaoList();
+                } catch (e) {
+                    console.warn('Lỗi load danh sách chưa giao:', e);
+                } finally {
+                    isFetchingChuaGiao = false;
+                    if (pendingChuaGiaoFetch) {
+                        pendingChuaGiaoFetch = false;
+                        loadDanhSachChuaGiao();
                     }
                 }
+            }
 
-                async function actionHoanTac(makb, mabn, hoTen) {
-                    try {
-                        const key = (makb || mabn || '').trim();
-                        if (key && rawDaGiaoData && rawDaGiaoData.length > 0) {
-                            const idx = rawDaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
-                            if (idx !== -1) {
-                                const removed = rawDaGiaoData.splice(idx, 1)[0];
-                                renderDaGiaoList();
-                                if (rawChuaGiaoData) {
-                                    rawChuaGiaoData.unshift({
-                                        ...removed,
-                                        dagiao: 0
-                                    });
-                                    renderChoGiaoList();
-                                    renderChoThuList();
-                                }
-                            }
-                        }
-
-                        playScanBeep(true);
-                        showUndoToast(`${hoTen ? 'Đã hoàn tác phát thuốc cho ' + hoTen : 'Đã hoàn tác thành công'}`, null);
-                        triggerHighlight(makb || mabn);
-                        switchGiaoTab('cho-giao');
-
-                        const r = await fetch('/api/duoc-nhap/hoan-tac', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ makb, mabn })
-                        });
-                        const res = await r.json();
-                        if (res.success) {
-                            refreshAllColumns();
-                        } else {
-                            playScanBeep(false);
-                            showError(res.message || 'Lỗi khi hoàn tác');
-                            refreshAllColumns(true);
-                        }
-                    } catch (e) {
-                        showError('Lỗi kết nối máy chủ.');
-                        refreshAllColumns(true);
-                    }
-                }
-
-                // ========================================================
-                // ĐỒNG BỘ DỮ LIỆU ĐỊNH KỲ (DEBOUNCED & RACE-GUARDED)
-                // ========================================================
-                let isFetchingChuaGiao = false;
-                let pendingChuaGiaoFetch = false;
-                let lastChuaGiaoJson = '';
-                async function loadDanhSachChuaGiao(forceRender = false) {
-                    if (isFetchingChuaGiao) {
-                        pendingChuaGiaoFetch = true;
-                        return;
-                    }
-                    isFetchingChuaGiao = true;
-                    pendingChuaGiaoFetch = false;
-                    try {
-                        const r = await fetch('/api/duoc-nhap/danh-sach-chua-giao');
-                        const list = await r.json() || [];
-                        const json = JSON.stringify(list);
-                        if (!forceRender && json === lastChuaGiaoJson) return;
-                        lastChuaGiaoJson = json;
-                        rawChuaGiaoData = list;
-                        renderChoThuList();
-                        renderChoGiaoList();
-                    } catch (e) {
-                        console.warn('Lỗi load danh sách chưa giao:', e);
-                    } finally {
-                        isFetchingChuaGiao = false;
-                        if (pendingChuaGiaoFetch) {
-                            pendingChuaGiaoFetch = false;
-                            loadDanhSachChuaGiao();
-                        }
-                    }
-                }
-
-                let refreshDebounceTimer = null;
-                function refreshAllColumns(immediate = false) {
-                    if (immediate) {
-                        if (refreshDebounceTimer) clearTimeout(refreshDebounceTimer);
-                        doRefreshAll();
-                        return;
-                    }
+            let refreshDebounceTimer = null;
+            function refreshAllColumns(immediate = false) {
+                if (immediate) {
                     if (refreshDebounceTimer) clearTimeout(refreshDebounceTimer);
-                    refreshDebounceTimer = setTimeout(() => {
-                        doRefreshAll();
-                    }, 120);
+                    doRefreshAll();
+                    return;
                 }
+                if (refreshDebounceTimer) clearTimeout(refreshDebounceTimer);
+                refreshDebounceTimer = setTimeout(() => {
+                    doRefreshAll();
+                }, 120);
+            }
 
-                function doRefreshAll() {
-                    loadDanhSachChuaGiao();
-                    loadDanhSachDaAn();
-                    if (currentThuTab === 'khong-mua') loadDanhSachKhongMua();
-                    if (currentGiaoTab === 'da-giao') loadDanhSachDaGiao();
-                }
+            function doRefreshAll() {
+                loadDanhSachChuaGiao();
+                loadDanhSachDaAn();
+                if (currentThuTab === 'khong-mua') loadDanhSachKhongMua();
+                if (currentGiaoTab === 'da-giao') loadDanhSachDaGiao();
+            }
 
                 
-                if (scanInput) {
-                    scanInput.addEventListener('keydown', e => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            clearTimeout(autoTimer);
-                            const v = scanInput.value.trim();
-                            if (v) handleScan(v);
-                        }
-                    });
-
-                    scanInput.addEventListener('input', () => {
-                        const now = Date.now();
-                        const delta = now - lastInputTime;
-                        lastInputTime = now;
-                        clearTimeout(autoTimer);
-                        if (delta < 25 && scanInput.value.length >= 6) {
-                            autoTimer = setTimeout(() => {
-                                const v = scanInput.value.trim();
-                                if (v.length >= 6) handleScan(v);
-                            }, 100);
-                        }
-                    });
-                }
-
-                document.addEventListener('keydown', e => {
-                    if (e.key === 'Escape') {
-                        resetAll();
-                        return;
-                    }
-                    if (e.key === 'F11') {
+            if (scanInput) {
+                scanInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
                         e.preventDefault();
-                        toggleFullScreen();
-                        return;
-                    }
-                    const tag = document.activeElement ? document.activeElement.tagName : '';
-                    if (['BUTTON', 'INPUT', 'TEXTAREA', 'A'].includes(tag)) {
-                        return;
-                    }
-                    const ignoredKeys = [
-                        'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F12',
-                        'Tab', 'CapsLock', 'Shift', 'Control', 'Alt', 'Meta',
-                        'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'
-                    ];
-                    if (!ignoredKeys.includes(e.key) && scanInput && document.activeElement !== scanInput) {
-                        scanInput.focus({ preventScroll: true });
+                        clearTimeout(autoTimer);
+                        const v = scanInput.value.trim();
+                        if (v) handleScan(v);
                     }
                 });
 
-                function toggleFullScreen() {
-                    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
-                    else document.exitFullscreen?.().catch(() => { });
-                }
-                let hubConnection = null;
-                function initSignalR() {
-                    if (typeof signalR === 'undefined') return;
-                    try {
-                        hubConnection = new signalR.HubConnectionBuilder()
-                            .withUrl('/queueHub')
-                            .withAutomaticReconnect({
-                                nextRetryDelayInMilliseconds: (retryContext) => {
-                                    const delays = [0, 1000, 2000, 3000, 5000];
-                                    return delays[retryContext.previousAttempts] || 5000;
-                                }
-                            })
-                            .build();
-
-                        hubConnection.on('room_data_updated', payload => {
-                            if (payload && (payload.roomType === 'duoc' || !payload.roomType)) {
-                                refreshAllColumns();
-                            }
-                        });
-
-                        hubConnection.onreconnected(() => {
-                            hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
-                            refreshAllColumns(true);
-                        });
-
-                        hubConnection.onclose(() => {
-                            console.warn('[SignalR DuocNhap] Hub connection closed. Đang kết nối lại...');
-                            setTimeout(startHub, 3000);
-                        });
-
-                        async function startHub() {
-                            if (hubConnection.state === signalR.HubConnectionState.Connected) return;
-                            try {
-                                await hubConnection.start();
-                                await hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
-                                refreshAllColumns(true);
-                            } catch (err) {
-                                console.warn('[SignalR DuocNhap] Kết nối thất bại, thử lại sau 3s...', err);
-                                setTimeout(startHub, 3000);
-                            }
-                        }
-
-                        if (typeof window !== 'undefined') {
-                            window.addEventListener('online', () => {
-                                console.log('[DuocNhap] Thiết bị online trở lại, đang kết nối lại SignalR...');
-                                startHub();
-                            });
-                        }
-
-                        startHub();
-                    } catch (e) {
-                        console.warn('Lỗi init SignalR:', e);
+                scanInput.addEventListener('input', () => {
+                    const now = Date.now();
+                    const delta = now - lastInputTime;
+                    lastInputTime = now;
+                    clearTimeout(autoTimer);
+                    if (delta < 25 && scanInput.value.length >= 6) {
+                        autoTimer = setTimeout(() => {
+                            const v = scanInput.value.trim();
+                            if (v.length >= 6) handleScan(v);
+                        }, 100);
                     }
+                });
+            }
+
+            let hidBuffer = '';
+            let hidFirstKeyAt = 0;
+            let hidLastKeyAt = 0;
+            let hidSource = null;
+            let hidSourceValue = '';
+            let hidClearTimer = null;
+            function clearHidBuffer() {
+                hidBuffer = '';
+                hidFirstKeyAt = 0;
+                hidLastKeyAt = 0;
+                hidSource = null;
+                hidSourceValue = '';
+                clearTimeout(hidClearTimer);
+            }
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    clearHidBuffer();
+                    resetAll();
+                    return;
+                }
+                if (e.key === 'F11') {
+                    clearHidBuffer();
+                    e.preventDefault();
+                    toggleFullScreen();
+                    return;
                 }
 
-                // Khởi tạo
-                resetAll();
-                loadDanhSachDaAn();
-                initSignalR();
+                // Ô quét đã có xử lý Enter và máy quét không có suffix riêng.
+                if (e.target === scanInput) {
+                    clearHidBuffer();
+                    return;
+                }
+
+                if (e.isComposing || e.ctrlKey || e.altKey || e.metaKey || e.repeat) {
+                    clearHidBuffer();
+                    return;
+                }
+
+                const now = performance.now();
+                if (e.key === 'Enter') {
+                    const sourceIsInput = hidSource instanceof HTMLInputElement;
+                    const minLength = sourceIsInput ? 6 : 4;
+                    const isScanner = hidBuffer.length >= minLength
+                        && now - hidLastKeyAt <= 250
+                        && now - hidFirstKeyAt <= (sourceIsInput
+                            ? hidBuffer.length * 55 + 100
+                            : hidBuffer.length * 85 + 150);
+                    const shortScanOnButton = hidSource instanceof Element && Boolean(hidSource.closest('button'))
+                        && hidBuffer.length >= 1 && now - hidLastKeyAt <= 250;
+                    const code = hidBuffer;
+                    const source = hidSource;
+                    const sourceValue = hidSourceValue;
+                    clearHidBuffer();
+                    if ((isScanner || shortScanOnButton) && scanInput) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!isScanner) {
+                            scanInput.focus({ preventScroll: true });
+                            showUndoToast('Mã quét quá ngắn; vui lòng quét lại.', null, true);
+                            return;
+                        }
+                        if (source instanceof HTMLInputElement && source !== scanInput && source.isConnected) {
+                            source.value = sourceValue;
+                            source.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                        scanInput.value = code;
+                        scanInput.focus({ preventScroll: true });
+                        handleScan(code);
+                    }
+                    return;
+                }
+
+                if (e.key.length !== 1 || e.key.trim() === '' || e.target?.isContentEditable) {
+                    clearHidBuffer();
+                    return;
+                }
+                if (!hidLastKeyAt || now - hidLastKeyAt > 90) {
+                    clearHidBuffer();
+                    hidFirstKeyAt = now;
+                    hidSource = e.target;
+                    hidSourceValue = e.target instanceof HTMLInputElement ? e.target.value : '';
+                }
+                hidBuffer += e.key;
+                hidLastKeyAt = now;
+                clearTimeout(hidClearTimer);
+                hidClearTimer = setTimeout(clearHidBuffer, 260);
+            }, true);
+
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
+                else document.exitFullscreen?.().catch(() => { });
+            }
+            let hubConnection = null;
+            function initSignalR() {
+                if (typeof signalR === 'undefined') return;
+                try {
+                    hubConnection = new signalR.HubConnectionBuilder()
+                        .withUrl('/queueHub')
+                        .withAutomaticReconnect({
+                            nextRetryDelayInMilliseconds: (retryContext) => {
+                                const delays = [0, 1000, 2000, 3000, 5000];
+                                return delays[retryContext.previousAttempts] || 5000;
+                            }
+                        })
+                        .build();
+
+                    hubConnection.on('room_data_updated', payload => {
+                        if (payload && (payload.roomType === 'duoc' || !payload.roomType)) {
+                            refreshAllColumns();
+                        }
+                    });
+
+                    hubConnection.onreconnected(() => {
+                        hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
+                        refreshAllColumns(true);
+                    });
+
+                    hubConnection.onclose(() => {
+                        console.warn('[SignalR DuocNhap] Hub connection closed. Đang kết nối lại...');
+                        setTimeout(startHub, 3000);
+                    });
+
+                    async function startHub() {
+                        if (hubConnection.state === signalR.HubConnectionState.Connected) return;
+                        try {
+                            await hubConnection.start();
+                            await hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
+                            refreshAllColumns(true);
+                        } catch (err) {
+                            console.warn('[SignalR DuocNhap] Kết nối thất bại, thử lại sau 3s...', err);
+                            setTimeout(startHub, 3000);
+                        }
+                    }
+
+                    if (typeof window !== 'undefined') {
+                        window.addEventListener('online', () => {
+                            console.log('[DuocNhap] Thiết bị online trở lại, đang kết nối lại SignalR...');
+                            startHub();
+                        });
+                    }
+
+                    startHub();
+                } catch (e) {
+                    console.warn('Lỗi init SignalR:', e);
+                }
+            }
+
+            // Khởi tạo
+            resetAll();
+            loadDanhSachDaAn();
+            initSignalR();
         </script>
     </body>
+
 </html>

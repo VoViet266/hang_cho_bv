@@ -15,7 +15,7 @@
     <title>@Model.Title - Bệnh Viện Tâm Minh Đức</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/board.css">
+    <link rel="stylesheet" href="/board.css?v=audio-autoplay-1">
     <link rel="icon" href="/logo_tam-minh-duc.png" type="image/png">
     <script>
             tailwind.config = {
@@ -39,37 +39,6 @@
             .no-scrollbar {
                 -ms-overflow-style: none;
                 scrollbar-width: none;
-            }
-
-            /* --- ANIMATION MƯỢT MÀ CHO HÀNG & CHUYỂN ĐỐI TƯỢNG (FLIP & GLIDE) --- */
-            .duoc-patient-table tbody tr {
-                /* Giữ nền tảng mượt mà, KHÔNG đặt animation mặc định ở đây để tránh chớp cả bảng */
-                transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
-                will-change: transform;
-            }
-
-            .duoc-patient-table tbody tr.row-glide-enter {
-                animation: rowGlideEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-            }
-
-            @@keyframes rowGlideEnter {
-                0% {
-                    opacity: 0;
-                    transform: translateY(16px);
-                }
-                100% {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            .duoc-patient-table tbody tr:hover {
-                transform: translateY(-1px) scale(1.002);
-                box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
-            }
-
-            .badge-money, .badge-status, .badge-ocua {
-                transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             }
 
             .duoc-patient-table {
@@ -125,7 +94,7 @@
             /* --- CHẾ ĐỘ 1 BẢNG (KHI <= 6-8 BỆNH NHÂN): CHỮ CỰC TO, ĐẬM NÉT, RÕ RÀNG TRÊN TV 43 INCH --- */
             .duoc-table-single th {
                 font-size: clamp(20px, 1.8vw, 30px) !important;
-                padding: 10px 6px !important;
+                padding: 10px 3px !important;
             }
 
             .duoc-table-single th:first-child {
@@ -134,7 +103,7 @@
             }
 
             .duoc-table-single .patient-name-text {
-                font-size: clamp(32px, 3.2vw, 54px) !important;
+                font-size: clamp(38px, 3.8vw, 62px) !important;
                 font-weight: 900 !important;
                 color: #1e3a8a !important;
                 line-height: 1.15 !important;
@@ -150,13 +119,13 @@
             .duoc-table-single .badge-money {
                 font-size: clamp(22px, 2.2vw, 34px) !important;
                 font-weight: 900 !important;
-                padding: 6px 14px !important;
+                padding: 4px 6px !important;
             }
 
             .duoc-table-single .badge-status {
                 font-size: clamp(20px, 2.0vw, 30px) !important;
                 font-weight: 900 !important;
-                padding: 6px 14px !important;
+                padding: 4px 6px !important;
                 white-space: nowrap !important;
             }
 
@@ -172,7 +141,7 @@
             }
 
             .duoc-table-split .patient-name-text {
-                font-size: clamp(22px, 2.1vw, 36px) !important;
+                font-size: clamp(28px, 2.7vw, 44px) !important;
                 font-weight: 900 !important;
                 color: #1e3a8a !important;
                 line-height: 1.15 !important;
@@ -188,15 +157,122 @@
             .duoc-table-split .badge-money {
                 font-size: clamp(15px, 1.35vw, 22px) !important;
                 font-weight: 900 !important;
-                padding: 4px 8px !important;
+                padding: 2px 4px !important;
             }
 
             .duoc-table-split .badge-status {
                 font-size: clamp(13px, 1.15vw, 19px) !important;
                 font-weight: 900 !important;
-                padding: 4px 8px !important;
+                padding: 2px 4px !important;
                 letter-spacing: -0.01em !important;
                 white-space: nowrap !important;
+            }
+
+            /* Kích thước hàng và chữ được tính theo phần màn hình thực có. */
+            #mainContent, #paginationContainer {
+                min-height: 0;
+            }
+
+            .duoc-patient-table thead tr,
+            .duoc-patient-table th {
+                height: 44px !important;
+            }
+
+            .duoc-patient-table th {
+                padding: 4px 6px !important;
+                font-size: var(--duoc-header-font, 17px) !important;
+                line-height: 1.1 !important;
+            }
+
+            .duoc-patient-table tbody tr,
+            .duoc-patient-table tbody td {
+                height: var(--duoc-row-height, 74px) !important;
+            }
+
+            .duoc-patient-table tbody td {
+                padding: 2px 6px !important;
+                line-height: 1.1 !important;
+            }
+
+            .duoc-patient-table .patient-name-container {
+                height: calc(var(--duoc-row-height, 74px) - 6px);
+                width: 100%;
+                align-items: center;
+            }
+
+            .duoc-patient-table .patient-name-text {
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
+                font-size: var(--duoc-name-font, 24px) !important;
+                /* Chừa khoảng cho dấu tiếng Việt và giữ hai dòng vừa trong chiều cao hàng. */
+                line-height: 1.3 !important;
+                white-space: normal !important;
+                word-break: normal !important;
+                overflow-wrap: anywhere;
+                overflow: hidden !important;
+                max-height: calc(var(--duoc-row-height, 74px) - 6px);
+            }
+
+            .duoc-patient-table td.cell-namsinh {
+                font-size: var(--duoc-year-font, 24px) !important;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .duoc-patient-table .badge-money {
+                font-size: var(--duoc-money-font, 18px) !important;
+                padding: 3px 5px !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .duoc-patient-table .badge-status {
+                font-size: var(--duoc-status-font, 16px) !important;
+                padding: 3px 6px !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+
+            .duoc-notice {
+                flex: none;
+                padding: 3px 0;
+                background: transparent;
+                overflow: hidden;
+                color: #b91c1c;
+                font-size: clamp(12px, 1vw, 17px);
+                font-weight: 800;
+                line-height: 1.4;
+            }
+
+            .duoc-notice-text {
+                display: inline-block;
+                padding-left: 100%;
+                white-space: nowrap;
+                animation: duoc-notice-scroll 40s linear infinite;
+            }
+
+            .duoc-notice:hover .duoc-notice-text {
+                animation-play-state: paused;
+            }
+
+            @@keyframes duoc-notice-scroll {
+                from { transform: translateX(0); }
+                to { transform: translateX(-100%); }
+            }
+
+            @@media (prefers-reduced-motion: reduce) {
+                .duoc-notice-text {
+                    animation: none;
+                    display: block;
+                    padding-left: 0;
+                    white-space: normal;
+                    text-align: center;
+                }
             }
     </style>
 </head>
@@ -232,16 +308,7 @@
                 </span>
             </div>
 
-            <!-- Badge Phân Trang (Hiện khi có nhiều trang) -->
-            <div id="pageBadge"
-                class="hidden bg-blue-50 px-2.5 py-1 text-center min-w-[70px] rounded border border-blue-200">
-                <span class="block text-brand font-bold text-[10px] uppercase tracking-wide">Trang</span>
-                <span id="pageBadgeText"
-                      class="block text-brand font-black text-lg md:text-xl tabular-nums leading-none mt-0.5">
-                    1/1
-                </span>
-            </div>
-
+         
             <!-- Nút quay lại -->
             <a href="/duoc"
                class="remote-item icon-button bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
@@ -251,18 +318,16 @@
         </div>
     </header>
 
-    <iframe src="/audio/silent.mp3" allow="autoplay; encrypted-media" style="position:absolute; width:0; height:0; border:0; visibility:hidden; pointer-events:none;" tabindex="-1"></iframe>
-
     <main id="mainContent" class="flex-grow overflow-hidden flex flex-col">
         <div id="paginationContainer" class="flex-grow overflow-hidden flex flex-col">
             <div id="ssrTableWrapper" class="room-container flex-grow overflow-hidden flex flex-col bg-white ">
                 <table
                     class="w-full h-full border-collapse table-fixed select-none duoc-patient-table duoc-table-single">
                     <colgroup>
-                        <col style="width: 40%;">
-                        <col style="width: 15%;">
-                        <col style="width: 17%;">
-                        <col style="width: 28%;">
+                        <col style="width: 47%;">
+                        <col style="width: 10%;">
+                        <col style="width: 18%;">
+                        <col style="width: 25%;">
                     </colgroup>
                     <thead
                         class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-extrabold text-xl md:text-2xl">
@@ -366,12 +431,8 @@
         </div>
     </main>
 
-    <!-- FOOTER THÔNG BÁO TRONG SUỐT NHÌN THẤY PHÍA SAU NỔI TRÊN BẢNG DANH SÁCH -->
-    <footer
-        class="fixed bottom-1.5 left-2 right-2 z-40 transparent  flex items-center gap-1 shadow-xs overflow-hidden pointer-events-none">
-        <marquee class="text-red-600 font-black text-sm md:text-base drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
-            Quý khách vui lòng ngồi chờ gọi tên. Kiểm tra BHYT, CCCD, Thuốc trước khi rời quầy. Xin cảm ơn!
-        </marquee>
+    <footer class="duoc-notice">
+        <span class="duoc-notice-text">Quý khách vui lòng ngồi chờ gọi tên và kiểm tra thuốc trước khi rời quầy. Xin cảm ơn!</span>
     </footer>
 
     <!-- SCRIPTS -->
@@ -405,20 +466,15 @@
                 }
                 window.extractBirthYear = extractBirthYear;
 
-                // Trạng thái âm thanh: Mặc định luôn BẬT
-                let isSoundEnabled = localStorage.getItem("duocSoundEnabled") !== "false";
+                // Mỗi lần mở màn hình đều bật loa; tắt loa chỉ áp dụng cho phiên này.
+                let isSoundEnabled = true;
 
                 // ═══════════════ HỆ THỐNG ÂM THANH & GIỌNG ĐỌC (TTS) ═══════════════
                 const audioQueue = new window.AudioQueueManager({
                     isEnabled: () => isSoundEnabled,
                     gapMs: 350,
+                    onPlaybackStateChange: () => updateSoundIcon(),
                 });
-
-                function unlockAudio() {
-                    if (typeof window.aggressiveAutoUnlock === 'function') {
-                        window.aggressiveAutoUnlock();
-                    }
-                }
 
                 function updateSoundIcon() {
                     const icon = document.getElementById('soundIcon');
@@ -436,6 +492,7 @@
                             btn.className = 'icon-button bg-white border-2 border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer';
                         }
                     }
+                    window.QueueAudio.updateSoundControl(audioQueue, isSoundEnabled);
                 }
 
                 function toggleSound(forceOn) {
@@ -444,8 +501,7 @@
                     } else {
                         isSoundEnabled = !isSoundEnabled;
                     }
-                    localStorage.setItem("duocSoundEnabled", isSoundEnabled ? "true" : "false");
-                    unlockAudio();
+                    window.QueueAudio.unlock();
                     updateSoundIcon();
 
                     if (!isSoundEnabled) {
@@ -475,86 +531,34 @@
                 // Biến toàn cục lưu danh sách bệnh nhân đang hiển thị
                 let currentActiveList = [];
 
-                function applyFlipAnimation(container, oldPositions) {
-                    if (!container || !oldPositions || oldPositions.size === 0) {
-                        const allRows = container.querySelectorAll('tbody tr[data-key]');
-                        allRows.forEach((r, idx) => {
-                            r.style.animationDelay = `${Math.min(idx * 0.03, 0.3)}s`;
-                            r.classList.add('row-glide-enter');
-                        });
-                        return;
-                    }
-
-                    const currentRows = Array.from(container.querySelectorAll('tbody tr[data-key]'));
-                    const animatingRows = [];
-
-                    currentRows.forEach(row => {
-                        const key = row.getAttribute('data-key');
-                        if (!key) return;
-
-                        const newRect = row.getBoundingClientRect();
-                        const oldRect = oldPositions.get(key);
-
-                        if (oldRect) {
-                            const deltaX = oldRect.left - newRect.left;
-                            const deltaY = oldRect.top - newRect.top;
-
-                            if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
-                                row.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                                row.style.transition = 'none';
-                                row.style.zIndex = deltaY > 0 ? '40' : '15';
-                                animatingRows.push(row);
-                            }
-                        } else {
-                            row.classList.add('row-glide-enter');
-                        }
-                    });
-
-                    if (animatingRows.length > 0) {
-                        void container.offsetHeight;
-
-                        requestAnimationFrame(() => {
-                            requestAnimationFrame(() => {
-                                animatingRows.forEach(row => {
-                                    row.style.transition = 'transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease, box-shadow 0.4s ease';
-                                    row.style.transform = 'translate(0px, 0px)';
-                                });
-
-                                setTimeout(() => {
-                                    animatingRows.forEach(row => {
-                                        row.style.transform = '';
-                                        row.style.transition = '';
-                                        row.style.zIndex = '';
-                                    });
-                                }, 700);
-                            });
-                        });
-                    }
-                }
-
-                const PAGE_ROTATION_INTERVAL = 8000;
+                const PAGE_ROTATION_INTERVAL = 12000;
                 let currentPageIndex = 0;
                 let paginationTimer = null;
 
                 function calculateRowsPerColumn(isSplit = false) {
                     const container = document.getElementById('paginationContainer');
-                    const totalHeight = (container && container.clientHeight > 100) ? container.clientHeight : (window.innerHeight - 80);
-                    const theadHeight = 48;
-                    const availableBodyHeight = Math.max(150, totalHeight - theadHeight);
-                    
-                    const targetHeight = isSplit ? 60 : 70;
-                    let rows = Math.floor(availableBodyHeight / targetHeight);
-                    if (rows < 5) rows = 5;
-                    if (rows > 18) rows = 18;
-                    return rows;
+                    const totalHeight = container?.clientHeight || Math.max(180, window.innerHeight - 110);
+                    const availableBodyHeight = Math.max(60, totalHeight - 46);
+                    const targetHeight = isSplit ? 68 : 82;
+                    return Math.max(1, Math.min(18, Math.floor(availableBodyHeight / targetHeight)));
                 }
 
                 function getRowHeightPx(rowsCount) {
                     const container = document.getElementById('paginationContainer');
-                    const totalHeight = (container && container.clientHeight > 100) ? container.clientHeight : (window.innerHeight - 80);
-                    const theadHeight = 48;
-                    const availableBodyHeight = Math.max(150, totalHeight - theadHeight);
-                    return Math.floor(availableBodyHeight / Math.max(1, rowsCount));
+                    const totalHeight = container?.clientHeight || Math.max(180, window.innerHeight - 110);
+                    return Math.floor(Math.max(60, totalHeight - 46) / Math.max(1, rowsCount));
+                }
+
+                function getDuocLayout(patientCount) {
+                    const singleRowsCapacity = calculateRowsPerColumn(false);
+                    const leftColumnCapacity = calculateRowsPerColumn(true);
+                    const canSplit = window.innerWidth >= 1180;
+                    const isSplit = canSplit && patientCount > leftColumnCapacity;
+                    // Giữ một bảng toàn màn hình cho đến khi cột đầu thực sự đầy.
+                    const rowsPerCol = isSplit ? leftColumnCapacity
+                        : canSplit ? Math.max(singleRowsCapacity, Math.min(patientCount, leftColumnCapacity))
+                        : singleRowsCapacity;
+                    return { isSplit, rowsPerCol, pageCapacity: isSplit ? rowsPerCol * 2 : rowsPerCol };
                 }
 
                 function updatePageIndicator(current, total) {
@@ -576,16 +580,6 @@
                     if (!list) list = [];
                     currentActiveList = list;
 
-                    // 1. Lưu vết tọa độ các hàng hiện tại cho hiệu ứng FLIP
-                    const oldPositions = new Map();
-                    const existingRows = container.querySelectorAll('tbody tr[data-key]');
-                    existingRows.forEach(row => {
-                        const key = row.getAttribute('data-key');
-                        if (key) {
-                            oldPositions.set(key, row.getBoundingClientRect());
-                        }
-                    });
-
                     if (list.length === 0) {
                         if (paginationTimer) { clearInterval(paginationTimer); paginationTimer = null; }
                         updatePageIndicator(0, 0);
@@ -596,11 +590,7 @@
                         return;
                     }
 
-                    // 2. Tính sức chứa thực tế theo chiều cao màn hình: ưu tiên 1 bảng nếu <= 7 bệnh nhân
-                    const singleRowsCapacity = Math.max(7, calculateRowsPerColumn(false));
-                    const isSplit = list.length > singleRowsCapacity;
-                    const rowsPerCol = calculateRowsPerColumn(isSplit);
-                    const pageCapacity = isSplit ? (rowsPerCol * 2) : rowsPerCol;
+                    const { isSplit, rowsPerCol, pageCapacity } = getDuocLayout(list.length);
                     const rowHeightPx = getRowHeightPx(rowsPerCol);
 
                     // 3. Tính số trang
@@ -614,17 +604,20 @@
                     // Lấy danh sách bệnh nhân thuộc trang hiện tại
                     const startIdx = currentPageIndex * pageCapacity;
                     const pageItems = list.slice(startIdx, startIdx + pageCapacity);
+                    const showSplitPage = isSplit && pageItems.length > rowsPerCol;
 
-                    if (!isSplit) {
+                    if (!showSplitPage) {
                         // Hiện 1 BẢNG DUY NHẤT TOÀN MÀN HÌNH
+                        const singlePageRows = Math.max(calculateRowsPerColumn(false), pageItems.length);
                         container.innerHTML = `
                             <div class="room-container flex-grow bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm overflow-hidden h-full w-full">
-                                ${buildTableHtml(pageItems, false, rowHeightPx)}
+                                ${buildTableHtml(pageItems, false, getRowHeightPx(singlePageRows))}
                             </div>`;
                     } else {
-                        // SPLIT THÀNH 2 CỘT: Điền đầy Cột 1 trước, người dư ra sẽ sang Cột 2
-                        const col1Data = pageItems.slice(0, rowsPerCol);
-                        const col2Data = pageItems.slice(rowsPerCol, pageCapacity);
+                        // Điền hết cột trái theo sức chứa màn hình rồi mới sang cột phải.
+                        const leftCount = Math.min(rowsPerCol, pageItems.length);
+                        const col1Data = pageItems.slice(0, leftCount);
+                        const col2Data = pageItems.slice(leftCount);
 
                         container.innerHTML = `
                             <div class="flex-grow flex flex-row gap-3 h-full overflow-hidden w-full min-w-0">
@@ -639,15 +632,11 @@
                             </div>`;
                     }
 
-                    applyFlipAnimation(container, oldPositions);
-
                     // Tự động xoay trang nếu có hơn 1 trang
                     if (totalPages > 1) {
                         if (!paginationTimer) {
                             paginationTimer = setInterval(() => {
-                                const curIsSplit = currentActiveList.length > Math.max(7, calculateRowsPerColumn(false));
-                                const curRowsPerCol = calculateRowsPerColumn(curIsSplit);
-                                const curCapacity = curIsSplit ? (curRowsPerCol * 2) : curRowsPerCol;
+                                const { pageCapacity: curCapacity } = getDuocLayout(currentActiveList.length);
                                 const curTotalPages = Math.max(1, Math.ceil(currentActiveList.length / curCapacity));
                                 if (curTotalPages > 1) {
                                     currentPageIndex = (currentPageIndex + 1) % curTotalPages;
@@ -668,15 +657,30 @@
                     const pyClass = isSplit ? 'py-1.5 md:py-2' : 'py-2.5 md:py-3.5';
                     const modeClass = isSplit ? 'duoc-table-split' : 'duoc-table-single';
 
+                    // Cùng cỡ chữ cho mọi tên; tối đa hai dòng với line-height 1.3.
+                    const nameFont = Math.max(18, Math.min(isSplit ? 40 : 52,
+                        Math.floor((rowHeightPx - 6) / 2.6),
+                        Math.floor(window.innerWidth * (isSplit ? 0.024 : 0.032))));
+
+                    const yearFont = Math.max(15, Math.min(isSplit ? 26 : 32,
+                        Math.floor(rowHeightPx * 0.36), Math.floor(window.innerWidth * (isSplit ? 0.015 : 0.02))));
+                    const moneyFont = Math.max(12, Math.min(isSplit ? 20 : 27,
+                        Math.floor(rowHeightPx * 0.28), Math.floor(window.innerWidth * (isSplit ? 0.012 : 0.016))));
+                    const statusFont = Math.max(11, Math.min(isSplit ? 17 : 23,
+                        Math.floor(rowHeightPx * 0.26), Math.floor(window.innerWidth * (isSplit ? 0.011 : 0.013))));
+                    const headerFont = Math.max(12, Math.min(isSplit ? 18 : 22,
+                        Math.floor(window.innerWidth * (isSplit ? 0.011 : 0.014))));
+                    const sizeVars = `--duoc-row-height:${rowHeightPx}px;--duoc-name-font:${nameFont}px;--duoc-year-font:${yearFont}px;--duoc-money-font:${moneyFont}px;--duoc-status-font:${statusFont}px;--duoc-header-font:${headerFont}px`;
+
                     const colWidths = isSplit
-                        ? `<col style="width: 38%;">
-                           <col style="width: 15%;">
-                           <col style="width: 17%;">
-                           <col style="width: 30%;">`
-                        : `<col style="width: 40%;">
-                           <col style="width: 15%;">
-                           <col style="width: 17%;">
-                           <col style="width: 28%;">`;
+                        ? `<col style="width: 52%;">
+                           <col style="width: 9%;">
+                           <col style="width: 16%;">
+                           <col style="width: 23%;">`
+                        : `<col style="width: 52%;">
+                           <col style="width: 8%;">
+                           <col style="width: 18%;">
+                           <col style="width: 22%;">`;
 
                     const rowList = rows || [];
                     let tbodyContent = '';
@@ -687,14 +691,14 @@
 
                     return `
                         <div class="flex-grow overflow-hidden w-full bg-white flex flex-col h-full">
-                            <table class="patient-table duoc-patient-table ${modeClass} w-full text-left border-collapse" style="table-layout: fixed;">
+                            <table class="patient-table duoc-patient-table ${modeClass} w-full text-left border-collapse" style="table-layout: fixed;${sizeVars}">
                                 <colgroup>
                                     ${colWidths}
                                 </colgroup>
-                                <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-black shrink-0" style="height: 48px;">
+                                <thead class="sticky top-0 bg-slate-200 z-10 border-b-2 border-slate-300 text-blue-900 uppercase font-black shrink-0" style="height: 44px;">
                                     <tr>
                                         <th class="py-2.5 px-3 text-left font-black">Họ và Tên</th>
-                                        <th class="py-2.5 px-1 text-center font-black">Năm Sinh</th>
+                                        <th class="py-2.5 px-1 text-center font-black">${isSplit ? 'Năm' : 'Năm Sinh'}</th>
                                         <th class="py-2.5 px-1 text-center font-black">Số Tiền</th>
                                         <th class="py-2.5 px-1 text-center font-black">Trạng Thái</th>
                                     </tr>
@@ -727,7 +731,7 @@
                     if (p.soTienStr && p.soTienStr !== '—' && p.soTienStr !== '') {
                         col4Html = `<td class="${pyClass} px-1 text-center">
                                         <div class="flex items-center justify-center min-w-0 max-w-full">
-                                            <span class="badge-money inline-block rounded-lg border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs font-extrabold max-w-full">
+                                            <span title="${escapeHtml(p.soTienStr)}" class="badge-money inline-block rounded-lg border font-mono whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs font-extrabold max-w-full">
                                                 ${escapeHtml(p.soTienStr)}
                                             </span>
                                         </div>
@@ -752,8 +756,8 @@
 
                     // Cột Trạng Thái: Đúng 2 trạng thái chuẩn: "Chờ thu tiền" hoặc "Đang soạn thuốc"
                     const col5Badge = isChoThu
-                        ? `<span class="badge-status inline-block bg-amber-100 text-amber-900 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs">Chờ thu tiền</span>`
-                        : `<span class="badge-status inline-block bg-blue-100 text-blue-900 border-2 border-blue-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs">Đang soạn thuốc</span>`;
+                        ? `<span title="Chờ thu tiền" class="badge-status inline-block bg-amber-100 text-amber-900 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs">${isSplit ? 'Chờ thu' : 'Chờ thu tiền'}</span>`
+                        : `<span title="Đang soạn thuốc" class="badge-status inline-block bg-blue-100 text-blue-900 border-2 border-blue-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs">${isSplit ? 'Soạn thuốc' : 'Đang soạn thuốc'}</span>`;
 
                     const heightStyle = rowHeightPx ? `style="height: ${rowHeightPx}px;"` : '';
 
@@ -764,7 +768,7 @@
                             
                                 <td class="${pyClass} px-3 text-blue-900 overflow-hidden">
                                     <div class="patient-name-container select-none flex items-center min-w-0">
-                                        <span class="patient-name-text uppercase whitespace-normal break-words leading-tight max-w-full font-black text-blue-900">
+                                        <span title="${escapedName}" class="patient-name-text uppercase whitespace-normal break-words leading-tight max-w-full font-black text-blue-900">
                                             ${escapedName.toUpperCase()}
                                         </span>
                                     </div>
@@ -857,9 +861,8 @@
                     hubConnection.on("duoc_trigger_speak", (payload) => {
                         duocDisconnectStartTime = null;
                         if (!payload || !payload.hoTen) return;
-                        unlockAudio();
+                        window.QueueAudio.unlock();
                         isSoundEnabled = true;
-                        localStorage.setItem("duocSoundEnabled", "true");
                         updateSoundIcon();
 
                         const targetLoc = payload.oCua ? `ô số ${payload.oCua}` : "quầy";

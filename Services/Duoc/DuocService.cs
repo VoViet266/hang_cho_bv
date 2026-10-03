@@ -200,9 +200,8 @@ namespace HangChoKhamBenh.Web.Services
                 if (dvPatients.Count > 0)
                 {
                     var allMakhs = dvPatients.Select(g => g.Makb).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-                    var allMabns = dvPatients.Select(g => g.Mabn).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
-                    if (allMakhs.Count > 0 || allMabns.Count > 0)
+                    if (allMakhs.Count > 0)
                     {
                         var today = DateTime.Today;
                         var tomorrow = today.AddDays(1);
@@ -210,36 +209,23 @@ namespace HangChoKhamBenh.Web.Services
                             .Where(c => (c.Xoa == null || c.Xoa == 0)
                                      && (c.Khochan == "13" || c.Khochan == "3")
                                      && c.Ngaylap >= today && c.Ngaylap < tomorrow
-                                     && ((c.Makh != null && allMakhs.Contains(c.Makh)) || (c.Mabn != null && allMabns.Contains(c.Mabn))))
+                                     && c.Makh != null && allMakhs.Contains(c.Makh))
                             .Select(c => new ChungTuShortDto { Sohd = c.Sohd, Makh = c.Makh, Mabn = c.Mabn, Thanhtien = c.Thanhtien, Dain = c.Dain, Dathu = c.Dathu })
                             .ToListAsync();
                         
                         foreach (var g in dvPatients)
                         {
                             var gMakb = g.Makb?.Trim() ?? "";
-                            var gMabn = g.Mabn?.Trim() ?? "";
-                            var key = !string.IsNullOrEmpty(gMakb) ? gMakb : gMabn;
-                            if (string.IsNullOrEmpty(key)) continue;
+                            if (string.IsNullOrEmpty(gMakb)) continue;
                             var patientCts = matchedChungTu
-                                .Where(c => (!string.IsNullOrEmpty(gMakb) && string.Equals(c.Makh?.Trim(), gMakb, StringComparison.OrdinalIgnoreCase))
-                                || (string.IsNullOrEmpty(gMakb) && !string.IsNullOrEmpty(gMabn) && string.Equals(c.Mabn?.Trim(), gMabn, StringComparison.OrdinalIgnoreCase)))
+                                .Where(c => string.Equals(c.Makh?.Trim(), gMakb, StringComparison.OrdinalIgnoreCase))
                                 .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? string.Empty))
-                                .Select(cg => cg.First())
                                 .ToList();
 
-                            if (patientCts.Count == 0 && !string.IsNullOrEmpty(gMabn))
-                            {
-                                patientCts = [.. matchedChungTu
-                                    .Where(c => string.Equals(c.Mabn?.Trim(), gMabn, StringComparison.OrdinalIgnoreCase))
-                                    .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? string.Empty))
-                                    .Select(cg => cg.First())];
-                            }
-
-                            decimal totalTien = patientCts.Sum(c => c.Thanhtien ?? 0);
-                            bool isDaThu = patientCts.Count > 0 && patientCts.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0);
+                            decimal totalTien = patientCts.Sum(cg => cg.First().Thanhtien ?? 0);
+                            bool isDaThu = patientCts.Count > 0 && patientCts.All(cg => cg.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0));
 
                             if (!string.IsNullOrEmpty(gMakb)) dvInfoMap[gMakb] = (totalTien, isDaThu);
-                            if (!string.IsNullOrEmpty(gMabn)) dvInfoMap[gMabn] = (totalTien, isDaThu);
                         }
                     }
                 }
@@ -255,7 +241,6 @@ namespace HangChoKhamBenh.Web.Services
                         hoTen = !string.IsNullOrEmpty(item.Makb) ? item.Makb : item.Mabn;
                     }
                     var cleanMakb = item.Makb?.Trim() ?? "";
-                    var cleanMabn = item.Mabn?.Trim() ?? "";
                     decimal? soTien = null;
                     string soTienStr = string.Empty;
 
@@ -263,8 +248,7 @@ namespace HangChoKhamBenh.Web.Services
                     if (item.HasDichVu)
                     {
                         (decimal TotalTien, bool DaThu) dvInfo = (0, false);
-                        bool found = (!string.IsNullOrEmpty(cleanMakb) && dvInfoMap.TryGetValue(cleanMakb, out dvInfo))
-                                  || (!string.IsNullOrEmpty(cleanMabn) && dvInfoMap.TryGetValue(cleanMabn, out dvInfo));
+                        bool found = !string.IsNullOrEmpty(cleanMakb) && dvInfoMap.TryGetValue(cleanMakb, out dvInfo);
 
                         if (found)
                         {
