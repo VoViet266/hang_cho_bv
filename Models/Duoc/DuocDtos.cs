@@ -256,6 +256,18 @@ namespace HangChoKhamBenh.Web.Models
 
         [JsonPropertyName("oCua")]
         public string? OCua { get; set; }
+
+        [JsonPropertyName("hoTen")]
+        public string HoTen { get; set; } = string.Empty;
+
+        [JsonPropertyName("namSinh")]
+        public string NamSinh { get; set; } = string.Empty;
+
+        [JsonPropertyName("mabn")]
+        public string Mabn { get; set; } = string.Empty;
+
+        [JsonPropertyName("hasDichVu")]
+        public bool HasDichVu { get; set; }
     }
 
     public class DuocBarcodeDispenseRequest
@@ -427,6 +439,39 @@ namespace HangChoKhamBenh.Web.Models
 
         [JsonPropertyName("mabn")]
         public string Mabn { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Kết quả smart scan toa dịch vụ (3 bước: gọi ô 5 → gọi ô 3 → xác nhận đã phát)
+    /// </summary>
+    public class DuocSmartScanDvResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
+
+        [JsonPropertyName("step")]
+        public int Step { get; set; } // 1=Gọi ô 5, 2=Gọi ô 3, 3=Đã phát
+
+        [JsonPropertyName("action")]
+        public string Action { get; set; } = string.Empty;
+
+        [JsonPropertyName("message")]
+        public string Message { get; set; } = string.Empty;
+
+        [JsonPropertyName("makb")]
+        public string Makb { get; set; } = string.Empty;
+
+        [JsonPropertyName("mabn")]
+        public string Mabn { get; set; } = string.Empty;
+
+        [JsonPropertyName("hoTen")]
+        public string HoTen { get; set; } = string.Empty;
+
+        [JsonPropertyName("namSinh")]
+        public string NamSinh { get; set; } = string.Empty;
+
+        [JsonPropertyName("oCua")]
+        public string OCua { get; set; } = string.Empty;
     }
 }
 

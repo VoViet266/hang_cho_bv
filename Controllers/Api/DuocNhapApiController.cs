@@ -64,6 +64,56 @@ namespace HangChoKhamBenh.Web.Controllers.Api
         }
 
         /// <summary>
+        /// Smart scan toa dịch vụ (3 bước tự động):
+        ///   Quét 1 → Thêm hàng chờ + gọi ô 5
+        ///   Quét 2 → Đã thu tiền + gọi ô 3
+        ///   Quét 3 → Xác nhận đã phát
+        /// </summary>
+        [HttpPost("smart-scan-dv")]
+        public async Task<IActionResult> SmartScanDv([FromBody] DuocBarcodeDispenseRequest req)
+        {
+            var code = (!string.IsNullOrWhiteSpace(req.Makb) ? req.Makb : req.Mabn)?.Trim() ?? "";
+            var result = await _duocNhapService.SmartScanDvAsync(code);
+
+            if (result.Success)
+            {
+                _logger.LogInformation(
+                    "SmartScanDv step={Step} action={Action}: makb={Makb}, mabn={Mabn}, oCua={OCua}",
+                    result.Step, result.Action, result.Makb, result.Mabn, result.OCua);
+
+                NotifyDuocQueuesUpdated(result.Makb, result.Mabn);
+
+                // Bước 1 (gọi ô 5) hoặc Bước 2 (gọi ô 3) → phát loa gọi bệnh nhân
+                if (result.Step == 1 || result.Step == 2)
+                {
+                    var trangThai = result.Step == 1 ? "Chờ thu tiền" : "Vào lấy thuốc";
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _hubContext.Clients.All.SendAsync("duoc_trigger_speak", new
+                            {
+                                hoTen = result.HoTen,
+                                namSinh = result.NamSinh,
+                                oCua = result.OCua,
+                                makb = result.Makb,
+                                mabn = result.Mabn,
+                                isBhyt = false,
+                                trangThai
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Lỗi gửi SignalR duoc_trigger_speak (SmartScanDv)");
+                        }
+                    });
+                }
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Lấy danh sách chưa giao cho quầy dược (Cột 1 Chưa thu, Cột 2 Chờ phát)
         /// </summary>
         [HttpGet("chua-giao")]

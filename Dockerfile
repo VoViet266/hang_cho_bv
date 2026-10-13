@@ -1,5 +1,5 @@
-# Multi-stage build for HangChoKhamBenh (.NET 8)
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# Multi-stage build for HangChoKhamBenh (.NET 10)
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies first to cache restore layer
@@ -11,7 +11,7 @@ COPY . ./
 RUN dotnet publish "HangChoKhamBenh.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 ENV ASPNETCORE_ENVIRONMENT=Production \

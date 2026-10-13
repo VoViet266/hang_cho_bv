@@ -1096,16 +1096,17 @@
                         ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Toa DV</span>`
                         : `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Toa Dịch vụ</span>`;
 
-                    // Segmented button group gọn gàng
-                    const assignBtns = ['1', '2', '3', '4', '5'].map(num => {
-                        const isCurrent = curOcua === num;
-                        const activeCls = isCurrent
-                            ? 'bg-amber-500 text-white font-black border-amber-500 shadow-2xs ring-2 ring-amber-200'
-                            : 'bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-800 border-slate-200';
-                        return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', false, 'Chờ thu tiền', ${item.khochan || 13})"
-                                                                                        class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
-                                                                                        title="Gọi Ô ${num} đóng tiền">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
-                    }).join('');
+                    // Toa DV: luôn gọi Ô 5, không cho chọn thủ công
+                    const goiO5Btn = curOcua === '5'
+                        ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 text-white text-xs font-black border border-amber-500 shadow-sm">
+                              <i class="fa-solid fa-volume-high text-[10px]"></i> Ô 5 — Chờ thu tiền
+                           </span>`
+                        : `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '5', false, 'Chờ thu tiền', ${item.khochan || 13})"
+                              class="px-3 py-1 text-xs rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-500 hover:text-white font-bold transition cursor-pointer flex items-center gap-1.5 active:scale-95"
+                              title="Gọi Ô 5 đóng tiền">
+                              <i class="fa-solid fa-bullhorn text-[11px]"></i> Gọi Ô 5
+                           </button>`;
+                    const assignBtns = goiO5Btn;
 
                     const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
                     const cardCls = isHighlighted
@@ -1255,16 +1256,18 @@
                     const safeTrangThai = 'Nhận thuốc';
                     const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
-                    // Segmented button group gọn gàng
-                    const assignBtns = ['1', '2', '3', '4', '5'].map(num => {
-                        const isCurrent = curOcua === num;
-                        const activeCls = isCurrent
-                            ? 'bg-brand text-white font-black border-brand shadow-2xs ring-2 ring-blue-200'
-                            : 'bg-white text-slate-600 hover:bg-blue-50 hover:text-brand border-slate-200';
-                        return `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '${num}', ${item.isBhyt}, '${safeTrangThai}', ${item.khochan || 0})"
-                                                                                        class="px-2.5 py-1 text-xs rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 ${activeCls}"
-                                                                                        title="Gọi Ô ${num} nhận thuốc">${isCurrent ? '<i class="fa-solid fa-volume-high text-[10px] text-white"></i> ' : ''}Ô ${num}</button>`;
-                    }).join('');
+                    // Tất cả items trong cột "Chờ phát" đều gọi Ô 3
+                    // (BHYT, DV đã thu, hoặc cả hai đã thu)
+                    const goiO3Btn = curOcua === '3'
+                        ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-brand text-white text-xs font-black border border-brand shadow-sm">
+                              <i class="fa-solid fa-volume-high text-[10px]"></i> Ô 3 — Vào lấy thuốc
+                           </span>`
+                        : `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '3', ${item.isBhyt}, 'Nhận thuốc', ${item.khochan || 0})"
+                              class="px-3 py-1 text-xs rounded-lg border border-blue-300 bg-blue-50 text-blue-800 hover:bg-brand hover:text-white font-bold transition cursor-pointer flex items-center gap-1.5 active:scale-95"
+                              title="Gọi Ô 3 nhận thuốc">
+                              <i class="fa-solid fa-bullhorn text-[11px]"></i> Gọi Ô 3
+                           </button>`;
+                    const assignBtns = goiO3Btn;
 
                     const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
                     const cardCls = isHighlighted

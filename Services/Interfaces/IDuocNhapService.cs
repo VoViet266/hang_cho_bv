@@ -7,6 +7,7 @@ namespace HangChoKhamBenh.Web.Services
         Task<DuocNhapBarcodeResultDto> ScanAsync(string? makh, string? makb);
         Task<DuocNhapThemResponse> ThemHangChoAsync(DuocNhapThemRequest req);
         Task<DuocBarcodeDispenseResponse> PhatTheoMaQuetAsync(DuocBarcodeDispenseRequest req);
+        Task<DuocSmartScanDvResponse> SmartScanDvAsync(string code);
         Task<List<DuocChuaGiaoItemDto>> LayDanhSachChuaGiaoAsync();
         Task<List<DuocDaGiaoItemDto>> LayDanhSachDaGiaoAsync();
         Task<List<DuocChuaGiaoItemDto>> LayDanhSachKhongMuaAsync();
