@@ -19,7 +19,7 @@ namespace HangChoKhamBenh.Web.Services
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
             var waitingCutoff = DateTime.Now.AddHours(-2);
-            var excludedRooms = new[] { "CLS", "SL", "A12" };
+            var excludedRooms = new List<string> { "CLS", "SL", "A12" };
 
             // 1. Lấy danh sách các phòng khám hợp lệ thuộc khoa khám bệnh
             var baseRooms = await _context.DmPhong.AsNoTracking()

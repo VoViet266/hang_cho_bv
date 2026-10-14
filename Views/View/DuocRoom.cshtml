@@ -230,12 +230,40 @@
             }
 
             .duoc-patient-table .badge-status {
+                display: inline-flex !important;
+                align-items: center;
+                min-width: 0;
                 font-size: var(--duoc-status-font, 16px) !important;
                 padding: 3px 6px !important;
                 max-width: 100% !important;
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
                 white-space: nowrap !important;
+            }
+
+            .duoc-patient-table .badge-pickup {
+                font-size: clamp(20px, 2vw, 34px) !important;
+                font-weight: 900 !important;
+                padding: 5px 12px !important;
+                background: #1d4ed8 !important;
+                color: #fff !important;
+                border-color: #1e3a8a !important;
+                box-shadow: 0 2px 6px rgba(30, 64, 175, 0.25);
+            }
+
+            .badge-pickup .duoc-status-window {
+                margin-left: 0;
+            }
+
+            .duoc-status-label {
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .duoc-status-window {
+                flex-shrink: 0;
+                margin-left: 4px;
             }
 
             .duoc-notice {
@@ -361,6 +389,8 @@
                                         : "bg-emerald-100 text-emerald-800 border-emerald-300");
                                 var rowKey = (!string.IsNullOrEmpty(p.Makb) ? $"makb_{p.Makb}" : (!string.IsNullOrEmpty(p.Mabn) ? $"mabn_{p.Mabn}" : $"name_{currentPatientName}")).Trim();
                                 var isChoThu = (p.TrangThai == "Chờ thu" || p.TrangThai == "Chờ thu tiền" || p.DaThu == false);
+                                var assignedWindow = p.OCua?.Trim();
+                                var windowLabel = assignedWindow is "3" or "5" ? $"→ Ô {assignedWindow}" : "";
                                 var rowClass = isChoThu
                                     ? "border-l-[8px] border-amber-400 bg-amber-50/70 shadow-xs"
                                     : "border-l-[8px] border-blue-500 bg-blue-50/60 shadow-xs";
@@ -410,14 +440,18 @@
                                             {
                                                 <span
                                                     class="badge-status inline-block bg-amber-100 text-amber-900 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-amber-300 shadow-sm">
-                                                    Chờ thu tiền
+                                                    <span class="duoc-status-label">Chờ thu tiền</span>
+                                                    @if (windowLabel != "")
+                                                    {
+                                                        <span class="duoc-status-window">@windowLabel</span>
+                                                    }
                                                 </span>
                                             }
                                             else
                                             {
                                                 <span
-                                                    class="badge-status inline-block bg-blue-100 text-blue-900 px-3 md:px-5 py-1.5 rounded-lg text-base md:text-xl font-black uppercase whitespace-nowrap border-2 border-blue-300 shadow-sm">
-                                                    Đang soạn thuốc
+                                                    class="badge-status badge-pickup inline-block rounded-lg font-black uppercase whitespace-nowrap border-2">
+                                                    <span class="duoc-status-window">@(windowLabel != "" ? windowLabel : "→ Ô 3")</span>
                                                 </span>
                                             }
                                         </div>
@@ -755,9 +789,12 @@
                     }
 
                     // Cột Trạng Thái: Đúng 2 trạng thái chuẩn: "Chờ thu tiền" hoặc "Đang soạn thuốc"
+                    const assignedWindow = String(p.oCua || '').trim();
+                    const windowLabel = ['3', '5'].includes(assignedWindow) ? ` → Ô ${assignedWindow}` : '';
+                    const windowBadge = windowLabel ? `<span class="duoc-status-window">${windowLabel.trim()}</span>` : '';
                     const col5Badge = isChoThu
-                        ? `<span title="Chờ thu tiền" class="badge-status inline-block bg-amber-100 text-amber-900 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs">${isSplit ? 'Chờ thu' : 'Chờ thu tiền'}</span>`
-                        : `<span title="Đang soạn thuốc" class="badge-status inline-block bg-blue-100 text-blue-900 border-2 border-blue-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs">${isSplit ? 'Soạn thuốc' : 'Đang soạn thuốc'}</span>`;
+                        ? `<span title="Chờ thu tiền${windowLabel}" class="badge-status inline-block bg-amber-100 text-amber-900 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs"><span class="duoc-status-label">${isSplit ? 'Chờ thu' : 'Chờ thu tiền'}</span>${windowBadge}</span>`
+                        : `<span title="Nhận thuốc${windowLabel}" class="badge-status badge-pickup border-2 font-black uppercase whitespace-nowrap rounded-lg"><span class="duoc-status-window">${windowLabel.trim() || '→ Ô 3'}</span></span>`;
 
                     const heightStyle = rowHeightPx ? `style="height: ${rowHeightPx}px;"` : '';
 

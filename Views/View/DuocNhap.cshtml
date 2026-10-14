@@ -155,10 +155,19 @@
             align-items: center;
         }
 
+        .duoc-card-actions .duoc-dispense-button {
+            min-width: 92px;
+            width: auto;
+            padding: 5px 10px;
+            flex-shrink: 0;
+            white-space: nowrap;
+            justify-content: center;
+        }
+
         @@media (min-width: 1280px) {
             .duoc-queue-list .duoc-card-active {
                 display: grid;
-                grid-template-columns: minmax(0, 1fr) 336px;
+                grid-template-columns: minmax(0, 1fr) max-content;
                 align-items: center;
                 gap: 8px;
                 border-top-width: 1px;
@@ -166,50 +175,23 @@
                 border-bottom-width: 1px;
             }
 
-            .duoc-card-active .duoc-card-top {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) 104px;
-                align-items: start;
-                gap: 6px;
-            }
-
             .duoc-card-active .duoc-card-actions {
-                display: grid;
-                grid-template-columns: 200px 128px;
+                display: flex;
                 border-top: 0;
                 padding-top: 0;
                 gap: 8px;
             }
 
-            .duoc-card-active .duoc-card-actions>div {
-                display: grid;
-                min-width: 0;
+            .duoc-card-active .duoc-card-actions > div {
+                display: flex;
                 align-items: center;
-                grid-template-columns: 44px 80px;
-                gap: 4px;
-            }
-
-            .duoc-card-active .duoc-card-actions>div:first-child {
-                grid-template-columns: repeat(5, minmax(0, 1fr));
-                gap: 3px;
+                gap: 6px;
             }
 
             .duoc-card-active .duoc-card-actions button {
-                min-width: 0;
-                width: 100%;
+                flex-shrink: 0;
                 justify-content: center;
                 white-space: nowrap;
-            }
-
-            .duoc-card-active .duoc-card-actions>div:first-child button {
-                padding-left: 2px;
-                padding-right: 2px;
-                gap: 2px;
-                font-size: 11px;
-            }
-
-            #cho-thu-list .duoc-card-actions>div:last-child {
-                grid-template-columns: 1fr;
             }
         }
 
@@ -845,117 +827,43 @@
             // QUÉT & TIẾP NHẬN TỰ ĐỘNG
             // ========================================================
             async function handleScan(raw) {
-                let code = (raw || '').replace(/[\r\n\t]/g, '').trim();
+                const code = (raw || '').replace(/[\r\n\t]/g, '').trim();
                 if (!code || isScanning) return;
                 isScanning = true;
-
                 clearTimeout(autoTimer);
                 if (autoResetTimer) {
                     clearTimeout(autoResetTimer);
                     autoResetTimer = null;
                 }
-
                 setScanState('loading');
-
                 try {
-                    // 1. Tra cứu thông tin chứng từ & bệnh nhân
-                    let data;
-                    try {
-                        const r = await fetch(`/api/duoc-nhap/scan?makh=${encodeURIComponent(code)}`);
-                        data = await r.json();
-                    } catch (err) {
+                    const response = await fetch('/api/duoc-nhap/xu-ly-ma-quet', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    });
+                    if (!response.ok) throw new Error('Không thể xử lý lượt quét.');
+                    const result = await response.json();
+                    const patient = result.patient;
+                    if (patient?.success) {
+                        if (scanInput) scanInput.value = '';
+                        showPatient(patient);
+                    }
+                    if (!result.success) {
                         playScanBeep(false);
-                        showError('Lỗi kết nối máy chủ.');
+                        showError(result.message || 'Không thể xử lý toa.');
                         return;
                     }
-
-                    if (!data.success) {
-                        playScanBeep(false);
-                        showError(data.message || `Không tìm thấy mã '${code}'.`);
-                        return;
-                    }
-
-                    // Xoá ô nhập sau khi tìm thấy
-                    if (scanInput) scanInput.value = '';
-
-                    // 2. Hiển thị thông tin bệnh nhân
-                    showPatient(data);
-
-                    // 3. Tự động tiếp nhận vào hàng chờ
-                    let res;
-                    try {
-                        const r = await fetch('/api/duoc-nhap/them-hang-cho', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                makb: data.makb,
-                                mabn: data.mabn,
-                                hasBhyt: data.hasBhyt,
-                                hasDichVu: data.hasDichVu,
-                                loai: data.loai,
-                                maba: data.maba,
-                                ngayKcb: data.ngayKcb,
-                                oCua: null
-                            })
-                        });
-                        res = await r.json();
-                    } catch (err) {
-                        playScanBeep(false);
-                        showError('Lỗi lưu vào hàng chờ.');
-                        return;
-                    }
-
-                    if (!res.success) {
-                        playScanBeep(false);
-                        showError(res.message || 'Lỗi khi lưu vào hàng chờ.');
-                        return;
-                    }
-
-                    // Quét lại toa đã chờ: máy chủ chỉ phát khi đúng lượt khám,
-                    // đã chọn ô và (với toa dịch vụ) đã thu đủ tiền.
-                    if (res.action === 'da-co-trong-hang-cho') {
-                        let dispense;
-                        try {
-                            const r = await fetch('/api/duoc-nhap/phat-theo-ma-quet', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ makb: data.makb, mabn: data.mabn })
-                            });
-                            if (!r.ok) throw new Error('Không thể xác nhận phát thuốc.');
-                            dispense = await r.json();
-                        } catch (err) {
-                            playScanBeep(false);
-                            showError('Lỗi kết nối khi xác nhận phát thuốc.');
-                            refreshAllColumns();
-                            return;
-                        }
-
-                        if (dispense.action === 'da-phat') {
-                            playScanBeep(true);
-                            setScanState('success');
-                            showUndoToast(`${data.hoTen}: ${dispense.message}`, null);
-                            refreshAllColumns();
-                            if (scanInput) scanInput.focus({ preventScroll: true });
-                            return;
-                        }
-                        playScanBeep(false);
-                        showError(dispense.message || 'Toa chưa đủ điều kiện phát thuốc.');
-                        refreshAllColumns();
-                        return;
-                    }
-
-                    // 4. Thành công
                     playScanBeep(true);
                     setScanState('success');
-                    if (res.action !== 'da-xu-ly') triggerHighlight(data.makb || data.mabn);
-                    showUndoToast(`${data.hoTen}: ${res.message || 'Đã tiếp nhận.'}`, null);
-
-                    // Cập nhật các danh sách
-                    refreshAllColumns();
-
+                    if (result.action === 'them') triggerHighlight(patient.makb || patient.mabn);
+                    showUndoToast(`${patient.hoTen}: ${result.message || 'Đã xử lý.'}`, null);
                     if (scanInput) scanInput.focus({ preventScroll: true });
+                } catch (err) {
+                    playScanBeep(false);
+                    showError('Lỗi kết nối máy chủ khi xử lý lượt quét.');
                 } finally {
                     isScanning = false;
+                    refreshAllColumns();
                 }
             }
             function switchThuTab(tab) {
@@ -1090,23 +998,11 @@
                 for (const item of filtered) {
                     const curOcua = String(item.oCua || '').trim();
                     const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                    const safeTrangThai = 'Chờ thu tiền';
                     const sohdVal = item.sohd || item.maba || '';
                     const typeTag = item.hasBoth
                         ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Toa DV</span>`
                         : `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Toa Dịch vụ</span>`;
 
-                    // Toa DV: luôn gọi Ô 5, không cho chọn thủ công
-                    const goiO5Btn = curOcua === '5'
-                        ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 text-white text-xs font-black border border-amber-500 shadow-sm">
-                              <i class="fa-solid fa-volume-high text-[10px]"></i> Ô 5 — Chờ thu tiền
-                           </span>`
-                        : `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '5', false, 'Chờ thu tiền', ${item.khochan || 13})"
-                              class="px-3 py-1 text-xs rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-500 hover:text-white font-bold transition cursor-pointer flex items-center gap-1.5 active:scale-95"
-                              title="Gọi Ô 5 đóng tiền">
-                              <i class="fa-solid fa-bullhorn text-[11px]"></i> Gọi Ô 5
-                           </button>`;
-                    const assignBtns = goiO5Btn;
 
                     const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
                     const cardCls = isHighlighted
@@ -1137,10 +1033,10 @@
                                                                                     </div>
                                                                                 </div>
 
-                                                                                <!-- Bottom: Segmented Call Buttons & Action -->
+                                                                                <!-- Ô được gọi tự động và thao tác -->
                                                                                 <div class="duoc-card-actions flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
                                                                                     <div class="flex items-center gap-1">
-                                                                                        ${assignBtns}
+                                                                                        ${getOcuaBadge(curOcua)}
                                                                                     </div>
                                                                                     <div class="flex items-center gap-1.5 shrink-0">
                                                                                         <button type="button" onclick="actionKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
@@ -1251,23 +1147,10 @@
 
                     const sohdVal = item.sohd || item.maba || '';
                     const curOcua = String(item.oCua || '').trim();
-                    const hasBeenCalled = Boolean(curOcua && curOcua !== '' && curOcua !== 'null');
+                    const hasBeenCalled = curOcua === '3';
                     const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
-                    const safeTrangThai = 'Nhận thuốc';
                     const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
-                    // Tất cả items trong cột "Chờ phát" đều gọi Ô 3
-                    // (BHYT, DV đã thu, hoặc cả hai đã thu)
-                    const goiO3Btn = curOcua === '3'
-                        ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-brand text-white text-xs font-black border border-brand shadow-sm">
-                              <i class="fa-solid fa-volume-high text-[10px]"></i> Ô 3 — Vào lấy thuốc
-                           </span>`
-                        : `<button type="button" onclick="actionGoiCua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${escapeHtml(item.namSinh || '')}', '3', ${item.isBhyt}, 'Nhận thuốc', ${item.khochan || 0})"
-                              class="px-3 py-1 text-xs rounded-lg border border-blue-300 bg-blue-50 text-blue-800 hover:bg-brand hover:text-white font-bold transition cursor-pointer flex items-center gap-1.5 active:scale-95"
-                              title="Gọi Ô 3 nhận thuốc">
-                              <i class="fa-solid fa-bullhorn text-[11px]"></i> Gọi Ô 3
-                           </button>`;
-                    const assignBtns = goiO3Btn;
 
                     const isHighlighted = (item.makb && item.makb === highlightedKey) || (item.mabn && item.mabn === highlightedKey);
                     const cardCls = isHighlighted
@@ -1276,13 +1159,13 @@
                             ? 'border border-blue-300 bg-blue-50/30 hover:shadow-xs'
                             : 'border border-slate-200 hover:border-slate-300 bg-white hover:shadow-xs');
 
-                    const phatBtnHtml = hasBeenCalled
-                        ? `<button onclick="actionPhatThuoc('${item.makb}', '${item.mabn}', '${safeHoTen}', ${item.khochan || 0})"
-                                                                                    title="Xác nhận đã phát thuốc"
-                                                                                    class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs uppercase flex items-center gap-1.5 shadow-xs transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0">
-                                                                                <i class="fa-solid fa-check text-xs"></i> Đã phát
-                                                                               </button>`
-                        : '';
+                    const phatBtnHtml = `<button type="button"
+                            onclick="actionPhatThuoc('${item.makb}', '${item.mabn}', '${safeHoTen}', ${item.khochan || 0})"
+                            ${hasBeenCalled ? '' : 'disabled'}
+                            title="${hasBeenCalled ? 'Xác nhận đã phát thuốc' : 'Chưa gọi nhận thuốc'}"
+                            class="duoc-dispense-button px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-default disabled:pointer-events-none">
+                            <i class="fa-solid fa-check text-xs"></i><span>Đã phát</span>
+                        </button>`;
 
                     html += `
                                                                             <div class="patient-card-item duoc-card-active ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
@@ -1306,12 +1189,9 @@
                                                                                     </div>
                                                                                 </div>
 
-                                                                                <!-- Bottom: Segmented Call Buttons & Action -->
-                                                                                <div class="duoc-card-actions flex items-center justify-between border-t border-slate-100 pt-2 gap-2 flex-wrap">
-                                                                                    <div class="flex items-center gap-1 flex-wrap">
-                                                                                        ${assignBtns}
-                                                                                    </div>
-                                                                                    <div class="flex items-center gap-1.5 shrink-0">
+                                                                                <!-- Ô được gọi tự động và thao tác -->
+                                                                                <div class="duoc-card-actions flex items-center justify-end border-t border-slate-100 pt-2 gap-2 flex-wrap">
+                                                                                    <div class="flex items-center justify-end gap-1.5 shrink-0 ml-auto">
                                                                                         <button type="button" onclick="actionAn('${item.makb}', '${item.mabn}', '${safeHoTen}')"
                                                                                                 title="Tạm ẩn bệnh nhân khỏi hàng chờ"
                                                                                                 class="px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-700 hover:text-white text-slate-600 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
@@ -1719,48 +1599,6 @@
                 }
             }
 
-            async function actionGoiCua(makb, mabn, hoTen, namSinh, oCua, isBhyt, trangThai, khochan) {
-                try {
-                    triggerHighlight(makb || mabn);
-
-                    const key = (makb || mabn || '').trim();
-                    if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
-                        const idx = rawChuaGiaoData.findIndex(i =>
-                            ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key))
-                            && (!khochan || !i.khochan || i.khochan === khochan || khochan === 0)
-                        );
-                        if (idx !== -1) {
-                            const item = rawChuaGiaoData[idx];
-                            item.oCua = oCua;
-                            rawChuaGiaoData.splice(idx, 1);
-                            rawChuaGiaoData.unshift(item);
-                            renderChoGiaoList();
-                            renderChoThuList();
-                        }
-                    }
-
-                    const isChoDongTien = (trangThai && (String(trangThai).toLowerCase().includes('chờ thu') || String(trangThai).toLowerCase().includes('chưa thu') || String(trangThai).toLowerCase().includes('thu tiền') || String(trangThai).toLowerCase().includes('đóng tiền'))) || trangThai === 'Chờ thu';
-                    const actionLabel = isChoDongTien ? 'đóng tiền' : 'nhận thuốc';
-                    showUndoToast(`Đang phát loa TV: Gọi ${hoTen} đến Ô ${oCua} ${actionLabel}`, null);
-
-                    const r = await fetch('/api/duoc-nhap/chi-dinh-o-cua', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ makb, mabn, oCua, hoTen, namSinh, isBhyt, trangThai, khochan: khochan || 0 })
-                    });
-                    const res = await r.json();
-                    if (res.success) {
-                        refreshAllColumns();
-                    } else {
-                        showError(res.message || 'Lỗi khi gọi ô cửa');
-                        refreshAllColumns(true);
-                    }
-                } catch (e) {
-                    showError('Lỗi kết nối máy chủ.');
-                    refreshAllColumns(true);
-                }
-            }
-
             async function actionHoanTac(makb, mabn, hoTen) {
                 try {
                     const key = (makb || mabn || '').trim();
@@ -1990,13 +1828,13 @@
                         .build();
 
                     hubConnection.on('room_data_updated', payload => {
-                        if (payload && (payload.roomType === 'duoc' || !payload.roomType)) {
+                        if (payload && (payload.roomType === 'duoc-nhap' || payload.roomType === 'duoc' || !payload.roomType)) {
                             refreshAllColumns();
                         }
                     });
 
                     hubConnection.onreconnected(() => {
-                        hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
+                        hubConnection.invoke('JoinRoom', 'duoc-nhap', 'all').catch(() => { });
                         refreshAllColumns(true);
                     });
 
@@ -2009,7 +1847,7 @@
                         if (hubConnection.state === signalR.HubConnectionState.Connected) return;
                         try {
                             await hubConnection.start();
-                            await hubConnection.invoke('JoinRoom', 'duoc', 'all').catch(() => { });
+                            await hubConnection.invoke('JoinRoom', 'duoc-nhap', 'all').catch(() => { });
                             refreshAllColumns(true);
                         } catch (err) {
                             console.warn('[SignalR DuocNhap] Kết nối thất bại, thử lại sau 3s...', err);

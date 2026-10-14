@@ -9,6 +9,7 @@ namespace HangChoKhamBenh.Web.Hubs
         private readonly IClinicService _clinicService;
         private readonly ICdhaService _cdhaService;
         private readonly IDuocService _duocService;
+        private readonly IDuocNhapService _duocNhapService;
         private readonly IDashboardService _dashboardService;
         private readonly ILogger<QueueHub> _logger;
 
@@ -17,6 +18,7 @@ namespace HangChoKhamBenh.Web.Hubs
             IClinicService clinicService,
             ICdhaService cdhaService,
             IDuocService duocService,
+            IDuocNhapService duocNhapService,
             IDashboardService dashboardService,
             ILogger<QueueHub> logger)
         {
@@ -24,6 +26,7 @@ namespace HangChoKhamBenh.Web.Hubs
             _clinicService = clinicService;
             _cdhaService = cdhaService;
             _duocService = duocService;
+            _duocNhapService = duocNhapService;
             _dashboardService = dashboardService;
             _logger = logger;
         }
@@ -141,6 +144,7 @@ namespace HangChoKhamBenh.Web.Hubs
                 "room" => await _clinicService.LayDanhSachBenhNhanChoCuaPhongAsync(roomId),
                 "cdha" => await _cdhaService.LayDanhSachBenhNhanChoCDHAAsync(roomId),
                 "duoc" => await _duocService.LayDanhSachHangChoDuocAsync(roomId),
+                "duoc-nhap" => await _duocNhapService.LayDanhSachChuaGiaoAsync(),
                 "dashboard" => await _dashboardService.FetchDashboardStatsAsync(),
                 "cdha_dashboard" => await _cdhaService.LayDanhSachCacPhongCDHAAsync(),
                 _ => null

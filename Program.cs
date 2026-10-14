@@ -61,6 +61,7 @@ builder.Services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IClinicService, ClinicService>();
 builder.Services.AddScoped<ICdhaService, CdhaService>();
+builder.Services.AddScoped<IDuocQueueSnapshotService, DuocQueueSnapshotService>();
 builder.Services.AddScoped<IDuocService, DuocService>();
 builder.Services.AddScoped<IDuocNhapService, DuocNhapService>();
 builder.Services.AddSingleton<ITtsService, TtsService>();

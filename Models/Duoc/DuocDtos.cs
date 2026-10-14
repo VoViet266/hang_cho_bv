@@ -254,6 +254,9 @@ namespace HangChoKhamBenh.Web.Models
         [JsonPropertyName("khochan")]
         public int? Khochan { get; set; }
 
+        [JsonIgnore]
+        public bool? ServicePaid { get; set; }
+
         [JsonPropertyName("oCua")]
         public string? OCua { get; set; }
 
@@ -289,6 +292,33 @@ namespace HangChoKhamBenh.Web.Models
 
         [JsonPropertyName("message")]
         public string Message { get; set; } = string.Empty;
+
+        [JsonPropertyName("oCua")]
+        public string? OCua { get; set; }
+
+        [JsonPropertyName("khochan")]
+        public int? Khochan { get; set; }
+
+        [JsonPropertyName("isBhyt")]
+        public bool IsBhyt { get; set; }
+
+        [JsonPropertyName("hoTen")]
+        public string HoTen { get; set; } = string.Empty;
+
+        [JsonPropertyName("namSinh")]
+        public string NamSinh { get; set; } = string.Empty;
+    }
+
+    public class DuocProcessScanRequest
+    {
+        [JsonPropertyName("code")]
+        public string Code { get; set; } = string.Empty;
+    }
+
+    public class DuocProcessScanResponse : DuocBarcodeDispenseResponse
+    {
+        [JsonPropertyName("patient")]
+        public DuocNhapBarcodeResultDto? Patient { get; set; }
     }
 
     public class DuocCapNhatTrangThaiRequest
@@ -442,7 +472,7 @@ namespace HangChoKhamBenh.Web.Models
     }
 
     /// <summary>
-    /// Kết quả smart scan toa dịch vụ (3 bước: gọi ô 5 → gọi ô 3 → xác nhận đã phát)
+    /// Kết quả quét dịch vụ: tiếp nhận → gọi thu → chờ thu → gọi nhận → đã phát
     /// </summary>
     public class DuocSmartScanDvResponse
     {

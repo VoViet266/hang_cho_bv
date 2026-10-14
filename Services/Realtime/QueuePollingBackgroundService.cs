@@ -25,11 +25,8 @@ namespace HangChoKhamBenh.Web.Services
                     var activeRooms = _tracker.GetActiveRooms();
                     if (activeRooms.Count == 0) continue;
 
-                    foreach (var (roomType, roomId, _) in activeRooms)
-                    {
-                        if (stoppingToken.IsCancellationRequested) break;
-                        await _broadcaster.CheckAndBroadcastRoomAsync(roomType, roomId, force: false);
-                    }
+                    await _broadcaster.CheckAndBroadcastRoomsAsync(
+                        activeRooms.Select(r => (r.RoomType, r.RoomId)));
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {

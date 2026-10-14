@@ -27,6 +27,25 @@ namespace HangChoKhamBenh.Web.Controllers.Api
             _hubContext = hubContext;
         }
 
+        [HttpPost("xu-ly-ma-quet")]
+        public async Task<IActionResult> ProcessScan([FromBody] DuocProcessScanRequest req)
+        {
+            var result = await _duocNhapService.ProcessScanAsync(req.Code);
+            var patient = result.Patient;
+            if (patient?.Success == true)
+                NotifyDuocQueuesUpdated(patient.Makb, patient.Mabn);
+            if (result.Success && result.Action is "goi-thu-tien" or "goi-nhan-thuoc")
+            {
+                await _hubContext.Clients.All.SendAsync("duoc_trigger_speak", new
+                {
+                    hoTen = result.HoTen, namSinh = result.NamSinh, oCua = result.OCua,
+                    makb = patient?.Makb, mabn = patient?.Mabn, isBhyt = result.IsBhyt,
+                    trangThai = result.Action == "goi-thu-tien" ? "Chờ thu tiền" : "Nhận thuốc"
+                });
+            }
+            return Ok(result);
+        }
+
         /// <summary>
         /// Tra cứu thông tin bệnh nhân và chứng từ đơn thuốc theo mã quét
         /// </summary>
@@ -44,10 +63,7 @@ namespace HangChoKhamBenh.Web.Controllers.Api
         public async Task<IActionResult> ThemHangCho([FromBody] DuocNhapThemRequest req)
         {
             var result = await _duocNhapService.ThemHangChoAsync(req);
-            if (result.Success)
-            {
-                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
-            }
+            if (result.Success) NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
             return Ok(result);
         }
 
@@ -57,17 +73,28 @@ namespace HangChoKhamBenh.Web.Controllers.Api
             var result = await _duocNhapService.PhatTheoMaQuetAsync(req);
             if (result.Success)
             {
-                _logger.LogInformation("Phát thuốc bằng mã quét: makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
                 NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
+                if (result.Action is "goi-thu-tien" or "goi-nhan-thuoc")
+                {
+                    await _hubContext.Clients.All.SendAsync("duoc_trigger_speak", new
+                    {
+                        hoTen = result.HoTen,
+                        namSinh = result.NamSinh,
+                        oCua = result.OCua,
+                        makb = req.Makb,
+                        mabn = req.Mabn,
+                        isBhyt = result.IsBhyt,
+                        trangThai = result.Action == "goi-thu-tien" ? "Chờ thu tiền" : "Nhận thuốc"
+                    });
+                }
+                _logger.LogInformation("Xử lý mã quét: action={Action}, makb={Makb}, mabn={Mabn}", result.Action, req.Makb, req.Mabn);
             }
             return Ok(result);
         }
 
         /// <summary>
-        /// Smart scan toa dịch vụ (3 bước tự động):
-        ///   Quét 1 → Thêm hàng chờ + gọi ô 5
-        ///   Quét 2 → Đã thu tiền + gọi ô 3
-        ///   Quét 3 → Xác nhận đã phát
+        /// Quét dịch vụ theo luồng chung: tiếp nhận, gọi ô 5 khi chưa thu,
+        /// chờ phần mềm thu tiền cập nhật, gọi ô 3 rồi xác nhận đã phát.
         /// </summary>
         [HttpPost("smart-scan-dv")]
         public async Task<IActionResult> SmartScanDv([FromBody] DuocBarcodeDispenseRequest req)
@@ -83,7 +110,7 @@ namespace HangChoKhamBenh.Web.Controllers.Api
 
                 NotifyDuocQueuesUpdated(result.Makb, result.Mabn);
 
-                // Bước 1 (gọi ô 5) hoặc Bước 2 (gọi ô 3) → phát loa gọi bệnh nhân
+                // Chỉ phát loa khi kết quả xử lý là gọi thu tiền hoặc gọi nhận thuốc.
                 if (result.Step == 1 || result.Step == 2)
                 {
                     var trangThai = result.Step == 1 ? "Chờ thu tiền" : "Vào lấy thuốc";
@@ -285,11 +312,8 @@ namespace HangChoKhamBenh.Web.Controllers.Api
             {
                 try
                 {
-                    await Task.WhenAll(
-                        _broadcaster.CheckAndBroadcastRoomAsync("duoc", "all", true),
-                        _broadcaster.CheckAndBroadcastRoomAsync("duoc", "bhyt", true),
-                        _broadcaster.CheckAndBroadcastRoomAsync("duoc", "dichvu", true)
-                    );
+                    await _broadcaster.CheckAndBroadcastRoomsAsync(
+                        [("duoc", "all"), ("duoc", "bhyt"), ("duoc", "dichvu"), ("duoc-nhap", "all")], true);
                 }
                 catch (Exception ex)
                 {

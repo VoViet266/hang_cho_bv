@@ -6,16 +6,16 @@ using HangChoKhamBenh.Web.Models;
 namespace HangChoKhamBenh.Web.Services
 {
 
-    public class DuocNhapService(AppDbContext context, ILogger<DuocNhapService> logger) : IDuocNhapService
+    public class DuocNhapService(AppDbContext context, ILogger<DuocNhapService> logger, IDuocQueueSnapshotService snapshots) : IDuocNhapService
     {
         private readonly AppDbContext _context = context;
         private readonly ILogger<DuocNhapService> _logger = logger;
 
         // ===== Constants =====
-        private static readonly string[] KhoDv = ["13"];
-        private static readonly string[] KhoBhyt = ["14"];
-        private static readonly int[] HcBhyt = [14];
-        private static readonly int[] HcDv = [13];
+        private static readonly List<string> KhoDv = ["13"];
+        private static readonly List<string> KhoBhyt = ["14"];
+        private static readonly List<int> HcBhyt = [14];
+        private static readonly List<int> HcDv = [13];
         private static readonly List<int> HcAll = [14, 13];
 
         // ===== Inner types =====
@@ -87,10 +87,13 @@ namespace HangChoKhamBenh.Web.Services
                 if (string.IsNullOrEmpty(actualMakh))
                     return new() { Success = false, Message = "Chứng từ không có mã khám; không thể xác định lượt nhận thuốc." };
 
-                ctList = await TodayCt(today)
-                    .Where(c => c.Makh == actualMakh && (c.Khochan == "13" || c.Khochan == "14"))
-                    .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Ngaylap))
-                    .ToListAsync();
+                if (!string.Equals(code, actualMakh, StringComparison.Ordinal))
+                {
+                    ctList = await TodayCt(today)
+                        .Where(c => c.Makh == actualMakh && (c.Khochan == "13" || c.Khochan == "14"))
+                        .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Ngaylap))
+                        .ToListAsync();
+                }
                 ctList = [.. ctList.DistinctBy(c => $"{c.Makh}_{c.Sohd}_{c.Khochan}", StringComparer.OrdinalIgnoreCase)];
                 var mabn = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Mabn))?.Mabn ?? "";
 
@@ -122,8 +125,8 @@ namespace HangChoKhamBenh.Web.Services
                 if (string.IsNullOrEmpty(hoTen)) hoTen = actualMakh!;
                 ngayKcb ??= DateTime.Now;
 
-                var dvItems = ctList.Where(c => KhoDv.Contains(c.Khochan?.Trim())).ToList();
-                var bhytItems = ctList.Where(c => KhoBhyt.Contains(c.Khochan?.Trim())).ToList();
+                var dvItems = ctList.Where(c => KhoDv.Contains(c.Khochan?.Trim() ?? "")).ToList();
+                var bhytItems = ctList.Where(c => KhoBhyt.Contains(c.Khochan?.Trim() ?? "")).ToList();
                 ///để phân biệt xem có đơn BHYT không
                 var hasBhyt = bhytItems.Count > 0;
                 ///để phân biệt xem có đơn DV không
@@ -164,13 +167,123 @@ namespace HangChoKhamBenh.Web.Services
             }
         }
 
+        private Task LockExamAsync(string makb, string mabn)
+        {
+            var key = $"duoc:{makb.Length}:{makb}:{mabn}";
+            return _context.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))");
+        }
+
+        public async Task<DuocProcessScanResponse> ProcessScanAsync(string code)
+        {
+            return await ProcessFromScanAsync(await ScanAsync(code));
+        }
+
+        public async Task<DuocSmartScanDvResponse> SmartScanDvAsync(string code)
+        {
+            var scan = await ScanAsync(code);
+            if (!scan.Success || !scan.HasDichVu)
+                return new()
+                {
+                    Action = scan.Success ? "khong-co-dich-vu" : "khong-tim-thay",
+                    Message = scan.Success ? "Lượt khám này không có toa dịch vụ." : scan.Message ?? "Không tìm thấy toa."
+                };
+            var result = await ProcessFromScanAsync(scan);
+            return new()
+            {
+                Success = result.Success,
+                Step = result.Action switch { "goi-thu-tien" => 1, "goi-nhan-thuoc" => 2, "da-phat" => 3, _ => 0 },
+                Action = result.Action, Message = result.Message,
+                Makb = scan.Makb ?? "", Mabn = scan.Mabn ?? "", HoTen = scan.HoTen,
+                NamSinh = scan.NgaySinh.Length >= 4 ? scan.NgaySinh[^4..] : "", OCua = result.OCua ?? ""
+            };
+        }
+
+        private async Task<DuocProcessScanResponse> ProcessFromScanAsync(DuocNhapBarcodeResultDto scan)
+        {
+            if (!scan.Success)
+                return new() { Patient = scan, Action = "khong-tim-thay", Message = scan.Message ?? "Không tìm thấy toa." };
+            try
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                await LockExamAsync(scan.Makb ?? "", scan.Mabn ?? "");
+                var admitted = await ThemFromScanAsync(new()
+                {
+                    Makb = scan.Makb ?? "", Mabn = scan.Mabn ?? "", Maba = scan.Maba, NgayKcb = scan.NgayKcb
+                }, scan);
+                if (!admitted.Success)
+                {
+                    await transaction.RollbackAsync();
+                    return new() { Patient = scan, Action = admitted.Action, Message = admitted.Message ?? "Không thể tiếp nhận toa." };
+                }
+                DuocBarcodeDispenseResponse action;
+                if (admitted.Action == "da-co-trong-hang-cho")
+                    action = await DispenseCoreAsync(new() { Makb = scan.Makb ?? "", Mabn = scan.Mabn ?? "" }, scan, admitted.ServicePaid);
+                else
+                    action = new() { Success = true, Action = admitted.Action, Message = admitted.Message ?? "Đã tiếp nhận toa." };
+                if (action.Action == "loi") await transaction.RollbackAsync();
+                else await transaction.CommitAsync();
+                return new()
+                {
+                    Success = action.Success, Action = action.Action, Message = action.Message, Patient = scan,
+                    OCua = action.OCua, Khochan = action.Khochan, IsBhyt = action.IsBhyt,
+                    HoTen = action.HoTen, NamSinh = action.NamSinh
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi xử lý lượt quét makb={Makb}", scan.Makb);
+                return new() { Patient = scan, Action = "loi", Message = "Lỗi hệ thống khi xử lý lượt quét." };
+            }
+        }
+
+        public async Task<DuocNhapThemResponse> ThemHangChoAsync(DuocNhapThemRequest req)
+        {
+            var scan = await ScanAsync(req.Makb);
+            if (!scan.Success) return new() { Message = scan.Message };
+            try
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                await LockExamAsync(scan.Makb ?? req.Makb, scan.Mabn ?? req.Mabn);
+                var result = await ThemFromScanAsync(req, scan);
+                if (result.Success) await transaction.CommitAsync();
+                else await transaction.RollbackAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tiếp nhận toa makb={Makb}", req.Makb);
+                return new() { Message = "Lỗi hệ thống khi tiếp nhận toa." };
+            }
+        }
+
+        public async Task<DuocBarcodeDispenseResponse> PhatTheoMaQuetAsync(DuocBarcodeDispenseRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req.Makb) || string.IsNullOrWhiteSpace(req.Mabn))
+                return new() { Action = "thieu-ma", Message = "Thiếu mã khám hoặc mã bệnh nhân." };
+            try
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                await LockExamAsync(req.Makb.Trim(), req.Mabn.Trim());
+                var result = await DispenseCoreAsync(req);
+                if (result.Action == "loi") await transaction.RollbackAsync();
+                else await transaction.CommitAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi xử lý toa makb={Makb}", req.Makb);
+                return new() { Action = "loi", Message = "Lỗi hệ thống khi xử lý toa." };
+            }
+        }
+
         // ===== UpsertHangChoAsync =====
         private enum QueueUpsertResult { Added, Waiting, Completed }
 
         /// <summary>Tiếp nhận toa của đúng lượt khám và giữ nguyên lượt đã xử lý.</summary>
         private async Task<QueueUpsertResult> UpsertHangChoAsync(
             string makb, string mabn, DuocNhapThemRequest req, DateTime? ngayKcb,
-            int khoInsert, int[] khoMatch, bool dathu, bool updateDathu)
+            int khoInsert, List<int> khoMatch, bool dathu, bool updateDathu)
         {
             var today = DateTime.Today;
             var existing = await _context.HangChoDuocTmd.AsNoTracking()
@@ -179,11 +292,10 @@ namespace HangChoKhamBenh.Web.Services
                          && (h.Ngaynhap == null || h.Ngaynhap >= today))
                 .OrderBy(h => h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat ? 0 : 1)
                 .ThenByDescending(h => h.Ngaynhap)
-                .Select(h => new { h.Dagiao, h.Khochan })
+                .Select(h => new { h.Macho, h.Dagiao, h.Khochan, h.Dathu })
                 .FirstOrDefaultAsync();
 
             var now = DateTime.Now;
-            var oCuaStr = req.OCua?.Trim();
 
             if (existing == null)
             {
@@ -193,7 +305,7 @@ namespace HangChoKhamBenh.Web.Services
                     Makb = makb,
                     Ngaynhap = now,
                     Ngaygiao = now,
-                    Taikhoan = req.OCua,
+                    Taikhoan = null,
                     Khochan = khoInsert,
                     Xoa = 0,
                     Ngaykcb = ngayKcb,
@@ -209,19 +321,18 @@ namespace HangChoKhamBenh.Web.Services
             if (existing.Dagiao != (decimal)DuocTrangThaiGiao.ChoPhat)
                 return QueueUpsertResult.Completed;
 
-            var updateQuery = _context.HangChoDuocTmd
-                .Where(h => h.Makb == makb && h.Mabn == mabn && h.Khochan == existing.Khochan
-                         && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat);
-
-            await updateQuery.ExecuteUpdateAsync(setter => setter
-                .SetProperty(h => h.Taikhoan, h => !string.IsNullOrEmpty(oCuaStr) ? oCuaStr : h.Taikhoan)
-                .SetProperty(h => h.Dathu, h => updateDathu ? dathu : h.Dathu)
-            );
+            if (updateDathu && existing.Dathu != dathu)
+            {
+                await _context.HangChoDuocTmd
+                    .Where(h => h.Macho == existing.Macho && h.Xoa == 0 && h.An == 0
+                        && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat)
+                    .ExecuteUpdateAsync(setter => setter.SetProperty(h => h.Dathu, dathu));
+            }
             return QueueUpsertResult.Waiting;
         }
 
         // ===== ThemHangChoAsync =====
-        public async Task<DuocNhapThemResponse> ThemHangChoAsync(DuocNhapThemRequest req)
+        private async Task<DuocNhapThemResponse> ThemFromScanAsync(DuocNhapThemRequest req, DuocNhapBarcodeResultDto scan)
         {
             var makb = req.Makb?.Trim() ?? "";
             var mabn = req.Mabn?.Trim() ?? "";
@@ -231,8 +342,6 @@ namespace HangChoKhamBenh.Web.Services
             try
             {
                 var today = DateTime.Today;
-                // Xác nhận lại theo chứng từ thay vì tin các cờ từ trình duyệt.
-                var scan = await ScanAsync(makb);
                 if (!scan.Success || scan.Makb != makb || (mabn != "" && scan.Mabn != mabn))
                     return new() { Success = false, Message = scan.Success ? "Mã khám và mã bệnh nhân không khớp." : scan.Message };
                 mabn = scan.Mabn ?? "";
@@ -242,8 +351,8 @@ namespace HangChoKhamBenh.Web.Services
                 var ngayKcb = scan.NgayKcb ?? DateTime.Now;
                 bool addBhyt = scan.HasBhyt;
                 bool addDv = scan.HasDichVu;
+                bool? servicePaid = null;
                 var results = new List<QueueUpsertResult>();
-                await using var transaction = await _context.Database.BeginTransactionAsync();
 
                 if (addBhyt)
                 {
@@ -253,16 +362,8 @@ namespace HangChoKhamBenh.Web.Services
 
                 if (addDv)
                 {
-                    var khoDvList = KhoDv.ToList();
-                    var dvDocs = await _context.ChungTu.AsNoTracking()
-                        .Where(c => (c.Xoa == null || c.Xoa == 0)
-                                 && c.Khochan != null && khoDvList.Contains(c.Khochan) && c.Makh == makb
-                                 && c.Ngaylap >= today && c.Ngaylap < today.AddDays(1))
-                        .Select(c => new { c.Sohd, c.Dain, c.Dathu })
-                        .ToListAsync();
-                    bool isPaid = dvDocs.Count > 0 && dvDocs
-                        .GroupBy(c => string.IsNullOrWhiteSpace(c.Sohd) ? makb : c.Sohd.Trim())
-                        .All(g => g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0));
+                    bool isPaid = await IsServicePaidAsync(makb, today);
+                    servicePaid = isPaid;
 
                     results.Add(await UpsertHangChoAsync(makb, mabn, req, ngayKcb,
                         khoInsert: 13, khoMatch: [13, 3], dathu: isPaid, updateDathu: true));
@@ -273,7 +374,6 @@ namespace HangChoKhamBenh.Web.Services
 
                 var action = results.Contains(QueueUpsertResult.Added) ? "them"
                     : results.Contains(QueueUpsertResult.Waiting) ? "da-co-trong-hang-cho" : "da-xu-ly";
-                await transaction.CommitAsync();
 
                 return new DuocNhapThemResponse
                 {
@@ -281,7 +381,10 @@ namespace HangChoKhamBenh.Web.Services
                     Action = action,
                     Dagiao = 0,
                     Khochan = addBhyt && addDv ? 0 : addDv ? 13 : 14,
-                    OCua = req.OCua,
+                    OCua = null,
+                    ServicePaid = servicePaid,
+                    HoTen = scan.HoTen, NamSinh = scan.NgaySinh.Length >= 4 ? scan.NgaySinh[^4..] : "",
+                    Mabn = mabn, HasDichVu = addDv,
                     Message = action switch
                     {
                         "them" => "Đã tiếp nhận toa của lượt khám này vào hàng chờ.",
@@ -297,8 +400,8 @@ namespace HangChoKhamBenh.Web.Services
             }
         }
 
-        // Quét lại chỉ phát toa còn chờ của đúng lượt khám, đã chọn ô và đã thu tiền nếu là dịch vụ.
-        public async Task<DuocBarcodeDispenseResponse> PhatTheoMaQuetAsync(DuocBarcodeDispenseRequest req)
+        // Quét lại: gọi thu tiền nếu chưa thu, gọi nhận thuốc, rồi mới xác nhận phát.
+        private async Task<DuocBarcodeDispenseResponse> DispenseCoreAsync(DuocBarcodeDispenseRequest req, DuocNhapBarcodeResultDto? scannedPatient = null, bool? servicePaid = null)
         {
             var makb = req.Makb?.Trim() ?? "";
             var mabn = req.Mabn?.Trim() ?? "";
@@ -308,263 +411,91 @@ namespace HangChoKhamBenh.Web.Services
             try
             {
                 var today = DateTime.Today;
-                var windows = new[] { "1", "2", "3", "4", "5" };
-                var pending = await _context.HangChoDuocTmd.AsNoTracking()
+                var query = _context.HangChoDuocTmd
                     .Where(h => h.Makb == makb && h.Mabn == mabn && h.Xoa == 0 && h.An == 0
-                             && h.Ngaynhap >= today && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
-                             && (h.Khochan == 13 || h.Khochan == 14))
-                    .Select(h => new { h.Khochan, h.Taikhoan })
-                    .ToListAsync();
+                             && (h.Ngaynhap == null || h.Ngaynhap >= today)
+                             && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
+                             && HcAll.Contains(h.Khochan));
+                var pending = await query.AsNoTracking()
+                    .Select(h => new DuocScanState(h.Khochan, h.Taikhoan)).ToListAsync();
+                var hasDv = pending.Any(h => h.Khochan == DuocKhoConstant.DichVu);
+                var hasBhyt = pending.Any(h => h.Khochan == DuocKhoConstant.Bhyt);
+                var paid = hasDv && (servicePaid ?? await IsServicePaidAsync(makb, today));
+                var action = DuocScanWorkflow.NextAction(pending, paid);
 
-                if (pending.Count == 0)
+                if (action == DuocScanAction.NoPending)
                     return new() { Action = "khong-con-cho", Message = "Lượt khám này không còn toa chờ phát." };
+                if (action == DuocScanAction.WaitPayment)
+                    return new() { Action = "chua-thu-tien", Message = "Đã gọi thu tiền ở Ô 5; đang chờ phần mềm thu tiền cập nhật đã thu." };
 
-                var assigned = pending.Where(h => windows.Contains(h.Taikhoan?.Trim())).ToList();
-                if (assigned.Count == 0)
-                    return new() { Action = "chua-chon-o", Message = "Toa đang chờ; hãy chọn ô phát thuốc trước khi quét lại." };
-
-                var dvPaid = false;
-                if (assigned.Any(h => h.Khochan == 13))
+                if (action is DuocScanAction.CallPayment or DuocScanAction.CallPickup)
                 {
-                    var khoDvList2 = KhoDv.ToList();
-                    var dvDocs = await _context.ChungTu.AsNoTracking()
-                        .Where(c => (c.Xoa == null || c.Xoa == 0)
-                                 && c.Khochan != null && khoDvList2.Contains(c.Khochan) && c.Makh == makb
-                                 && c.Ngaylap >= today && c.Ngaylap < today.AddDays(1))
-                        .Select(c => new { c.Sohd, c.Dain, c.Dathu })
-                        .ToListAsync();
-                    dvPaid = dvDocs.Count > 0 && dvDocs
-                        .GroupBy(c => string.IsNullOrWhiteSpace(c.Sohd) ? makb : c.Sohd.Trim())
-                        .All(g => g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0));
+                    var collection = action == DuocScanAction.CallPayment;
+                    var window = collection ? DuocScanWorkflow.PaymentWindow : DuocScanWorkflow.PickupWindow;
+                    var callQuery = collection
+                        ? query.Where(h => h.Khochan == DuocKhoConstant.DichVu) : query;
+                    var called = await callQuery
+                        .Where(h => h.Taikhoan == null || h.Taikhoan.Trim() != window)
+                        .ExecuteUpdateAsync(setter => setter
+                            .SetProperty(h => h.Taikhoan, window)
+                            .SetProperty(h => h.Ngaygiao, DateTime.Now));
+                    if (called == 0)
+                        return new() { Action = "khong-con-cho", Message = "Toa vừa được xử lý ở nơi khác; vui lòng quét lại." };
+
+                    var name = scannedPatient?.HoTen;
+                    var birthYear = scannedPatient?.NgaySinh is { Length: >= 4 } birth ? birth[^4..] : "";
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        var patients = await LoadPatientInfoAsync([mabn]);
+                        patients.TryGetValue(mabn, out var patient);
+                        name = patient == null ? makb : $"{patient.Holot} {patient.Ten}".Trim();
+                        birthYear = patient?.Ngaysinh?.ToString("yyyy") ?? "";
+                    }
+                    return new()
+                    {
+                        Success = true,
+                        Action = collection ? "goi-thu-tien" : "goi-nhan-thuoc",
+                        Message = collection ? "Đã gọi Ô 5 thu tiền."
+                            : "Đã gọi Ô 3 nhận thuốc; quét lần tiếp theo để xác nhận đã phát.",
+                        OCua = window,
+                        Khochan = collection ? DuocKhoConstant.DichVu
+                            : hasBhyt && hasDv ? DuocKhoConstant.CaHai
+                            : hasDv ? DuocKhoConstant.DichVu : DuocKhoConstant.Bhyt,
+                        IsBhyt = !collection && hasBhyt,
+                        HoTen = name,
+                        NamSinh = birthYear
+                    };
                 }
 
-                var eligibleKho = assigned
-                    .Where(h => h.Khochan == 14 || (h.Khochan == 13 && dvPaid))
-                    .Select(h => h.Khochan).Distinct().ToArray();
-                if (eligibleKho.Length == 0)
-                    return new() { Action = "chua-thu-tien", Message = "Toa dịch vụ chưa thu đủ tiền; chưa thể xác nhận đã phát." };
-
-                var now = DateTime.Now;
-                var updated = await _context.HangChoDuocTmd
-                    .Where(h => h.Makb == makb && h.Mabn == mabn && h.Xoa == 0 && h.An == 0
-                             && h.Ngaynhap >= today && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
-                             && eligibleKho.Contains(h.Khochan) && h.Taikhoan != null
-                             && windows.Contains(h.Taikhoan.Trim()))
+                var updated = await query
+                    .Where(h => h.Taikhoan != null && h.Taikhoan.Trim() == DuocScanWorkflow.PickupWindow)
                     .ExecuteUpdateAsync(setter => setter
                         .SetProperty(h => h.Dagiao, (decimal)DuocTrangThaiGiao.DaPhat)
-                        .SetProperty(h => h.Ngaygiao, now));
-
-                if (updated == 0)
-                    return new() { Action = "khong-con-cho", Message = "Toa vừa được xử lý ở nơi khác; danh sách sẽ được cập nhật." };
-
+                        .SetProperty(h => h.Ngaygiao, DateTime.Now));
                 return new()
                 {
-                    Success = true,
-                    Action = "da-phat",
-                    Message = updated < pending.Count
-                        ? "Đã phát toa đủ điều kiện. Toa còn lại vẫn ở hàng chờ."
-                        : "Đã xác nhận phát thuốc bằng mã quét."
+                    Success = updated > 0,
+                    Action = updated > 0 ? "da-phat" : "khong-con-cho",
+                    Message = updated > 0 ? "Đã xác nhận phát thuốc bằng mã quét."
+                        : "Toa vừa được xử lý ở nơi khác; danh sách sẽ được cập nhật."
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi phát thuốc bằng mã quét makb={Makb}, mabn={Mabn}", makb, mabn);
-                return new() { Action = "loi", Message = "Lỗi hệ thống khi xác nhận phát thuốc." };
+                _logger.LogError(ex, "Lỗi xử lý mã quét makb={Makb}, mabn={Mabn}", makb, mabn);
+                return new() { Action = "loi", Message = "Lỗi hệ thống khi xử lý mã quét." };
             }
         }
 
-        /// <summary>
-        /// Smart scan toa dịch vụ theo 3 bước:
-        ///   Bước 1: Chưa có trong hàng chờ → thêm mới + gọi ô 5 (mặc định)
-        ///   Bước 2: Đang chờ, đã thu tiền → gọi ô 3 (chờ phát)
-        ///   Bước 3: Đang chờ, đã ở ô 3 → xác nhận đã phát
-        /// </summary>
-        public async Task<DuocSmartScanDvResponse> SmartScanDvAsync(string code)
+        private async Task<bool> IsServicePaidAsync(string makb, DateTime today)
         {
-            const string OCuaTiepNhan = "5"; // Ô tiếp nhận mặc định
-            const string OCuaPhat = "3";     // Ô phát thuốc
-
-            code = code?.Replace("\r", "").Replace("\n", "").Replace("\t", "").Trim() ?? "";
-            if (string.IsNullOrEmpty(code))
-                return new() { Action = "thieu-ma", Message = "Vui lòng nhập mã quét." };
-
-            try
-            {
-                var today = DateTime.Today;
-
-                // 1. Tra cứu chứng từ để lấy makb, mabn, thông tin bệnh nhân
-                var scan = await ScanAsync(code, null);
-                if (!scan.Success)
-                    return new() { Action = "khong-tim-thay", Message = scan.Message ?? "Không tìm thấy đơn thuốc." };
-
-                if (!scan.HasDichVu)
-                    return new() { Action = "khong-co-toa-dv", Message = "Mã quét này không có toa dịch vụ." };
-
-                var makb = scan.Makb?.Trim() ?? "";
-                var mabn = scan.Mabn?.Trim() ?? "";
-                var hoTen = scan.HoTen;
-                var namSinh = scan.NgaySinh;
-                if (string.IsNullOrEmpty(makb))
-                    return new() { Action = "thieu-makb", Message = "Chứng từ không có mã khám." };
-
-                // 2. Tìm bản ghi hàng chờ DV của lượt khám này hôm nay
-                var existing = await _context.HangChoDuocTmd.AsNoTracking()
-                    .Where(h => h.Makb == makb && h.Mabn == mabn
-                             && (h.Khochan == 13 || h.Khochan == 3)
-                             && h.Xoa == 0 && h.An == 0
-                             && (h.Ngaynhap == null || h.Ngaynhap >= today))
-                    .OrderBy(h => h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat ? 0 : 1)
-                    .ThenByDescending(h => h.Ngaynhap)
-                    .Select(h => new { h.Dagiao, h.Khochan, h.Taikhoan, h.Dathu })
-                    .FirstOrDefaultAsync();
-
-                // ── BƯỚC 1: Chưa có trong hàng chờ → thêm mới, gọi ô 5 ──
-                if (existing == null)
-                {
-                    var now = DateTime.Now;
-                    // Kiểm tra đã thu tiền chưa
-                    var khoDvList = KhoDv.ToList();
-                    var dvDocs = await _context.ChungTu.AsNoTracking()
-                        .Where(c => (c.Xoa == null || c.Xoa == 0)
-                                 && c.Khochan != null && khoDvList.Contains(c.Khochan) && c.Makh == makb
-                                 && c.Ngaylap >= today && c.Ngaylap < today.AddDays(1))
-                        .Select(c => new { c.Sohd, c.Dain, c.Dathu })
-                        .ToListAsync();
-                    bool isPaid = dvDocs.Count > 0 && dvDocs
-                        .GroupBy(c => string.IsNullOrWhiteSpace(c.Sohd) ? makb : c.Sohd.Trim())
-                        .All(g => g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0));
-
-                    await _context.HangChoDuocTmd.AddAsync(new HangChoDuocTmd
-                    {
-                        Mabn = mabn,
-                        Makb = makb,
-                        Ngaynhap = now,
-                        Ngaygiao = now,
-                        Taikhoan = OCuaTiepNhan,
-                        Khochan = 13,
-                        Xoa = 0,
-                        Ngaykcb = scan.NgayKcb ?? now,
-                        Dagiao = (decimal)DuocTrangThaiGiao.ChoPhat,
-                        Dathu = isPaid,
-                        An = 0
-                    });
-                    await _context.SaveChangesAsync();
-
-                    return new()
-                    {
-                        Success = true,
-                        Step = 1,
-                        Action = "goi-o-5",
-                        Message = $"Đã tiếp nhận. Gọi ô {OCuaTiepNhan} cho {hoTen}.",
-                        Makb = makb, Mabn = mabn, HoTen = hoTen, NamSinh = namSinh,
-                        OCua = OCuaTiepNhan
-                    };
-                }
-
-                // Đã phát rồi → không làm gì thêm
-                if (existing.Dagiao == (decimal)DuocTrangThaiGiao.DaPhat)
-                    return new()
-                    {
-                        Success = false,
-                        Step = 0,
-                        Action = "da-phat",
-                        Message = "Toa dịch vụ này đã được phát rồi.",
-                        Makb = makb, Mabn = mabn, HoTen = hoTen, NamSinh = namSinh,
-                        OCua = existing.Taikhoan ?? ""
-                    };
-
-                // ── BƯỚC 2: Đang chờ + đã thu tiền → gọi ô 3 ──
-                var currentOCua = existing.Taikhoan?.Trim() ?? "";
-                bool isDaThu = existing.Dathu == true;
-
-                // Kiểm tra lại trạng thái thu tiền từ chứng từ (live)
-                if (!isDaThu)
-                {
-                    var khoDvList2 = KhoDv.ToList();
-                    var dvDocs2 = await _context.ChungTu.AsNoTracking()
-                        .Where(c => (c.Xoa == null || c.Xoa == 0)
-                                 && c.Khochan != null && khoDvList2.Contains(c.Khochan) && c.Makh == makb
-                                 && c.Ngaylap >= today && c.Ngaylap < today.AddDays(1))
-                        .Select(c => new { c.Sohd, c.Dain, c.Dathu })
-                        .ToListAsync();
-                    isDaThu = dvDocs2.Count > 0 && dvDocs2
-                        .GroupBy(c => string.IsNullOrWhiteSpace(c.Sohd) ? makb : c.Sohd.Trim())
-                        .All(g => g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0));
-                }
-
-                if (!isDaThu)
-                    return new()
-                    {
-                        Success = false,
-                        Step = 0,
-                        Action = "chua-thu-tien",
-                        Message = "Toa dịch vụ chưa thu tiền. Vui lòng thu tiền trước.",
-                        Makb = makb, Mabn = mabn, HoTen = hoTen, NamSinh = namSinh,
-                        OCua = currentOCua
-                    };
-
-                // Nếu chưa ở ô 3 → chuyển sang ô 3 (Bước 2)
-                if (currentOCua != OCuaPhat)
-                {
-                    await _context.HangChoDuocTmd
-                        .Where(h => h.Makb == makb && h.Mabn == mabn
-                                 && (h.Khochan == 13 || h.Khochan == 3)
-                                 && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
-                                 && h.Xoa == 0 && h.An == 0
-                                 && (h.Ngaynhap == null || h.Ngaynhap >= today))
-                        .ExecuteUpdateAsync(s => s
-                            .SetProperty(h => h.Taikhoan, OCuaPhat)
-                            .SetProperty(h => h.Dathu, true)
-                            .SetProperty(h => h.Ngaygiao, DateTime.Now));
-
-                    return new()
-                    {
-                        Success = true,
-                        Step = 2,
-                        Action = "goi-o-3",
-                        Message = $"Đã thu tiền. Gọi ô {OCuaPhat} cho {hoTen}.",
-                        Makb = makb, Mabn = mabn, HoTen = hoTen, NamSinh = namSinh,
-                        OCua = OCuaPhat
-                    };
-                }
-
-                // ── BƯỚC 3: Đã ở ô 3, đã thu tiền → xác nhận đã phát ──
-                var updated = await _context.HangChoDuocTmd
-                    .Where(h => h.Makb == makb && h.Mabn == mabn
-                             && (h.Khochan == 13 || h.Khochan == 3)
-                             && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
-                             && h.Xoa == 0 && h.An == 0
-                             && (h.Ngaynhap == null || h.Ngaynhap >= today))
-                    .ExecuteUpdateAsync(s => s
-                        .SetProperty(h => h.Dagiao, (decimal)DuocTrangThaiGiao.DaPhat)
-                        .SetProperty(h => h.Ngaygiao, DateTime.Now));
-
-                if (updated == 0)
-                    return new()
-                    {
-                        Success = false,
-                        Step = 0,
-                        Action = "khong-cap-nhat-duoc",
-                        Message = "Không cập nhật được trạng thái. Toa có thể đã được xử lý.",
-                        Makb = makb, Mabn = mabn, HoTen = hoTen, NamSinh = namSinh,
-                        OCua = OCuaPhat
-                    };
-
-                return new()
-                {
-                    Success = true,
-                    Step = 3,
-                    Action = "da-phat",
-                    Message = $"Đã xác nhận phát thuốc cho {hoTen}.",
-                    Makb = makb, Mabn = mabn, HoTen = hoTen, NamSinh = namSinh,
-                    OCua = OCuaPhat
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi SmartScanDv code={Code}", code);
-                return new() { Action = "loi", Message = "Lỗi hệ thống: " + ex.Message };
-            }
+            var warehouses = KhoDv.ToList();
+            var documents = await TodayCt(today)
+                .Where(c => c.Makh == makb && c.Khochan != null && warehouses.Contains(c.Khochan))
+                .Select(c => new { c.Sohd, c.Dain, c.Dathu }).ToListAsync();
+            return documents.Count > 0 && documents
+                .GroupBy(c => string.IsNullOrWhiteSpace(c.Sohd) ? makb : c.Sohd.Trim())
+                .All(g => g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0));
         }
 
         private async Task<Dictionary<string, PatientInfo>> LoadPatientInfoAsync(IEnumerable<string?> mabns)
@@ -595,10 +526,9 @@ namespace HangChoKhamBenh.Web.Services
             if (makhs.Count == 0) return result;
 
             var today = DateTime.Today;
-            var khoDvList3 = KhoDv.ToList();
             var ctList = await _context.ChungTu.AsNoTracking()
                 .Where(c => (c.Xoa == null || c.Xoa == 0)
-                         && c.Khochan != null && khoDvList3.Contains(c.Khochan)
+                         && KhoDv.Contains(c.Khochan ?? "")
                          && c.Ngaylap >= today && c.Ngaylap < today.AddDays(1)
                          && c.Makh != null && makhs.Contains(c.Makh))
                 .Select(c => new { c.Makh, c.Mabn, c.Sohd, c.Thanhtien, c.Dain, c.Dathu })
@@ -666,73 +596,7 @@ namespace HangChoKhamBenh.Web.Services
         // ===== 1. Danh sách chưa giao =====
         public async Task<List<DuocChuaGiaoItemDto>> LayDanhSachChuaGiaoAsync()
         {
-            var today = DateTime.Today;
-            var rows = await ToRowsAsync(HangChoQuery()
-                .Where(h => (h.Ngaynhap == null || h.Ngaynhap >= today) && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat && HcAll.Contains(h.Khochan))
-                .OrderBy(h => h.Ngaynhap).ThenBy(h => h.Makb).ThenBy(h => h.Mabn));
-
-            var groups = (await BuildGroupsAsync(rows))
-                .OrderByDescending(x => !string.IsNullOrWhiteSpace(x.Taikhoan))
-                .ThenByDescending(x => !string.IsNullOrWhiteSpace(x.Taikhoan) ? x.Ngaygiao ?? DateTime.MinValue : DateTime.MinValue)
-                .ThenBy(x => x.Ngaynhap ?? DateTime.MaxValue)
-                .ThenBy(x => x.Makb).ThenBy(x => x.Mabn)
-                .ToList();
-
-            var infoMap = await LoadChungTuInfoAsync(groups.Where(g => g.HasDv));
-            var result = new List<DuocChuaGiaoItemDto>();
-
-            foreach (var g in groups)
-            {
-                var info = g.HasDv ? FindInfo(infoMap, g) : null;
-                var sohd = info?.Sohd ?? "";
-                var soTien = info?.TotalTien;
-                var soTienStr = g.HasDv ? Money(info?.TotalTien ?? 0, "—") : "";
-                var dvPaid = info?.DaThu ?? g.DvDathu;
-
-                DuocChuaGiaoItemDto Item(int kho, bool hasBhyt, bool hasDv, bool daThu, decimal? tien, string tienStr, string oCua)
-                    => new()
-                    {
-                        Makb = g.Makb ?? "",
-                        Mabn = g.Mabn ?? "",
-                        HoTen = g.HoTen,
-                        NamSinh = g.NamSinh,
-                        GioiTinh = g.GioiTinhStr,
-                        Khochan = kho,
-                        HasBhyt = hasBhyt,
-                        HasDichVu = hasDv,
-                        HasBoth = hasBhyt && hasDv,
-                        IsBhyt = kho != DuocKhoConstant.DichVu,
-                        Dagiao = g.Dagiao,
-                        DaThu = daThu,
-                        TrangThai = daThu ? DuocTrangThaiText.DangSoanThuoc : DuocTrangThaiText.ChoThuTien,
-                        SoTien = tien,
-                        SoTienStr = tienStr,
-                        Sohd = sohd,
-                        Maba = g.Maba,
-                        NgayNhapStr = g.Ngaynhap?.ToString("HH:mm") ?? "",
-                        OCua = oCua
-                    };
-
-                if (g.HasBoth)
-                {
-                    if (!dvPaid)
-                    {
-                        result.Add(Item(DuocKhoConstant.DichVu, true, true, false, soTien, soTienStr, g.OcuaDv));
-                        result.Add(Item(DuocKhoConstant.Bhyt, true, false, true, null, "", g.OcuaBhyt));
-                    }
-                    else
-                    {
-                        var oCua = g.OcuaBhyt != "" ? g.OcuaBhyt : g.OcuaDv;
-                        result.Add(Item(DuocKhoConstant.CaHai, true, true, true, soTien, soTienStr, oCua));
-                    }
-                }
-                else if (g.HasBhyt)
-                    result.Add(Item(DuocKhoConstant.Bhyt, true, false, true, null, "", g.OcuaBhyt));
-                else
-                    result.Add(Item(DuocKhoConstant.DichVu, false, true, dvPaid, soTien, soTienStr, g.OcuaDv));
-            }
-
-            return result;
+            return (await snapshots.LoadAsync()).Input;
         }
         public async Task<List<DuocDaGiaoItemDto>> LayDanhSachDaGiaoAsync()
         {
@@ -856,6 +720,18 @@ namespace HangChoKhamBenh.Web.Services
             if (req.Khochan is 13 or 14)
             {
                 query = query.Where(h => h.Khochan == req.Khochan.Value);
+            }
+
+            if (req.TargetDagiao == (decimal)DuocTrangThaiGiao.DaPhat)
+            {
+                var pending = await query.AsNoTracking()
+                    .Select(h => new DuocScanState(h.Khochan, h.Taikhoan)).ToListAsync();
+                var paid = pending.Any(h => h.Khochan == DuocKhoConstant.DichVu)
+                    && await IsServicePaidAsync(makb, today);
+                if (DuocScanWorkflow.NextAction(pending, paid) != DuocScanAction.Dispense)
+                    return false;
+                query = query.Where(h => h.Taikhoan != null
+                    && h.Taikhoan.Trim() == DuocScanWorkflow.PickupWindow);
             }
 
             var rows = await query.ExecuteUpdateAsync(setter => setter
