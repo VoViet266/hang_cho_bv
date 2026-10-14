@@ -309,6 +309,15 @@ namespace HangChoKhamBenh.Web.Models
         public string NamSinh { get; set; } = string.Empty;
     }
 
+    public class DuocRecallRequest : DuocBarcodeDispenseRequest
+    {
+        [JsonPropertyName("khochan")]
+        public int Khochan { get; set; }
+
+        [JsonPropertyName("oCua")]
+        public string OCua { get; set; } = string.Empty;
+    }
+
     public class DuocProcessScanRequest
     {
         [JsonPropertyName("code")]

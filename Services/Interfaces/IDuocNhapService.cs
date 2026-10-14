@@ -5,6 +5,7 @@ namespace HangChoKhamBenh.Web.Services
     public interface IDuocNhapService
     {
         Task<DuocProcessScanResponse> ProcessScanAsync(string code);
+        Task<DuocBarcodeDispenseResponse> RecallAsync(DuocRecallRequest req);
         Task<DuocNhapBarcodeResultDto> ScanAsync(string? makh, string? makb);
         Task<DuocNhapThemResponse> ThemHangChoAsync(DuocNhapThemRequest req);
         Task<DuocBarcodeDispenseResponse> PhatTheoMaQuetAsync(DuocBarcodeDispenseRequest req);

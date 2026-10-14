@@ -968,6 +968,54 @@
             // ========================================================
             // RENDER DANH SÁCH THẺ BỆNH NHÂN (CLEAN, ELEGANT UX/UI)
             // ========================================================
+            const pendingRecalls = new Set();
+            async function recallFromList(event, card) {
+                const control = event.target.closest('button, a, input, select, textarea');
+                if (control && !control.hasAttribute('data-recall-name')) return;
+                const { recallMakb: makb, recallMabn: mabn, recallKhochan, recallWindow: oCua } = card.dataset;
+                if (!oCua || isScanning) return;
+                const key = `${makb}:${mabn}`;
+                if (pendingRecalls.has(key)) return;
+                pendingRecalls.add(key);
+                card.setAttribute('aria-busy', 'true');
+                try {
+                    const response = await fetch('/api/duoc-nhap/goi-lai', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ makb, mabn, khochan: Number(recallKhochan), oCua })
+                    });
+                    if (!response.ok) throw new Error('Không thể gọi lại');
+                    const result = await response.json();
+                    if (result.success) {
+                        showUndoToast(result.message, null);
+                        triggerHighlight(makb || mabn);
+                    } else {
+                        showError(result.message || 'Không thể gọi lại bệnh nhân.');
+                        refreshAllColumns(true);
+                    }
+                } catch (error) {
+                    showError('Lỗi kết nối máy chủ khi gọi lại bệnh nhân.');
+                } finally {
+                    pendingRecalls.delete(key);
+                    card.removeAttribute('aria-busy');
+                    if (scanInput) scanInput.focus({ preventScroll: true });
+                }
+            }
+
+            function recallCardAttributes(item, canRecall) {
+                return `onclick="recallFromList(event, this)"
+                    data-recall-makb="${escapeHtml(item.makb)}" data-recall-mabn="${escapeHtml(item.mabn)}"
+                    data-recall-khochan="${Number(item.khochan) || 0}"
+                    data-recall-window="${canRecall ? escapeHtml(item.oCua) : ''}"`;
+            }
+
+            function recallNameButton(item, canRecall) {
+                const title = canRecall ? `Gọi lại đến Ô ${item.oCua}` : 'Quét mã để gọi ô trước';
+                return `<button type="button" data-recall-name ${canRecall ? '' : 'disabled'}
+                    class="duoc-card-name uppercase tracking-tight text-left w-full rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 ${canRecall ? 'cursor-pointer hover:underline' : 'cursor-default'}"
+                    title="${escapeHtml(title)}">${escapeHtml(item.hoTen)}</button>`;
+            }
+
             function renderChoThuList() {
                 const container = $id('cho-thu-list');
                 const countEl = $id('cho-thu-count');
@@ -997,6 +1045,7 @@
                 let html = '';
                 for (const item of filtered) {
                     const curOcua = String(item.oCua || '').trim();
+                    const canRecall = curOcua === '5';
                     const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
                     const sohdVal = item.sohd || item.maba || '';
                     const typeTag = item.hasBoth
@@ -1010,13 +1059,11 @@
                         : 'border border-slate-200 hover:border-amber-300 bg-white hover:shadow-xs';
 
                     html += `
-                                                                            <div class="patient-card-item duoc-card-active ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
+                                                                            <div ${recallCardAttributes(item, canRecall)} class="patient-card-item duoc-card-active ${cardCls} ${canRecall ? 'cursor-pointer' : ''} rounded-lg p-2.5 flex flex-col gap-2 transition">
                                                                                 <!-- Top: Họ tên & Tiền -->
                                                                                 <div class="duoc-card-top flex items-start justify-between gap-2">
                                                                                     <div class="duoc-card-info min-w-0">
-                                                                                        <div class="duoc-card-name uppercase tracking-tight" title="${escapeHtml(item.hoTen)}">
-                                                                                            ${escapeHtml(item.hoTen)}
-                                                                                        </div>
+                                                                                        ${recallNameButton(item, canRecall)}
                                                                                         <div class="duoc-card-meta flex items-center gap-2 mt-1 flex-wrap">
                                                                                             ${typeTag}
                                                                                             <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
@@ -1147,6 +1194,7 @@
 
                     const sohdVal = item.sohd || item.maba || '';
                     const curOcua = String(item.oCua || '').trim();
+                    const canRecall = curOcua === '3';
                     const hasBeenCalled = curOcua === '3';
                     const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
                     const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
@@ -1168,13 +1216,11 @@
                         </button>`;
 
                     html += `
-                                                                            <div class="patient-card-item duoc-card-active ${cardCls} rounded-lg p-2.5 flex flex-col gap-2 transition">
+                                                                            <div ${recallCardAttributes(item, canRecall)} class="patient-card-item duoc-card-active ${cardCls} ${canRecall ? 'cursor-pointer' : ''} rounded-lg p-2.5 flex flex-col gap-2 transition">
                                                                                 <!-- Top: Họ tên & Tiền / Ô cửa -->
                                                                                 <div class="duoc-card-top flex items-start justify-between gap-2">
                                                                                     <div class="duoc-card-info min-w-0">
-                                                                                        <div class="duoc-card-name uppercase tracking-tight" title="${escapeHtml(item.hoTen)}">
-                                                                                            ${escapeHtml(item.hoTen)}
-                                                                                        </div>
+                                                                                        ${recallNameButton(item, canRecall)}
                                                                                         <div class="duoc-card-meta flex items-center gap-2 mt-1 flex-wrap">
                                                                                             ${typeTag}
                                                                                   

@@ -701,6 +701,59 @@ namespace HangChoKhamBenh.Web.Services
             }
         }
 
+        // Gọi lại chỉ đọc trạng thái hiện tại, không chuyển bước quét hoặc cập nhật toa.
+        public async Task<DuocBarcodeDispenseResponse> RecallAsync(DuocRecallRequest req)
+        {
+            var makb = req.Makb?.Trim() ?? "";
+            var mabn = req.Mabn?.Trim() ?? "";
+            var expectedWindow = req.OCua?.Trim() ?? "";
+            if (makb == "" || mabn == "" || req.Khochan is not (0 or 13 or 14))
+                return new() { Action = "thieu-ma", Message = "Thiếu thông tin toa để gọi lại." };
+            if (expectedWindow is not (DuocScanWorkflow.PaymentWindow or DuocScanWorkflow.PickupWindow))
+                return new() { Action = "chua-goi-o", Message = "Toa chưa được gọi ô. Vui lòng quét mã để gọi trước." };
+
+            try
+            {
+                var today = DateTime.Today;
+                var pending = await _context.HangChoDuocTmd.AsNoTracking()
+                    .Where(h => h.Makb == makb && h.Mabn == mabn && h.Xoa == 0 && h.An == 0
+                        && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
+                        && (h.Ngaynhap == null || h.Ngaynhap >= today) && HcAll.Contains(h.Khochan))
+                    .Select(h => new DuocScanState(h.Khochan, h.Taikhoan)).ToListAsync();
+                var selected = pending.Where(h => req.Khochan == 0 || h.Khochan == req.Khochan).ToList();
+                if (selected.Count == 0)
+                    return new() { Action = "khong-con-cho", Message = "Toa này không còn trong danh sách chờ." };
+
+                var hasService = pending.Any(h => h.Khochan == DuocKhoConstant.DichVu);
+                var collecting = hasService && !await IsServicePaidAsync(makb, today);
+                var window = collecting ? DuocScanWorkflow.PaymentWindow : DuocScanWorkflow.PickupWindow;
+                if (expectedWindow != window || selected.Any(h => h.OCua?.Trim() != window)
+                    || collecting && selected.Any(h => h.Khochan != DuocKhoConstant.DichVu))
+                    return new()
+                    {
+                        Action = "trang-thai-da-doi",
+                        Message = "Trạng thái toa đã thay đổi hoặc chưa gọi ô. Vui lòng quét mã để gọi ô theo trạng thái hiện tại."
+                    };
+
+                var patients = await LoadPatientInfoAsync([mabn]);
+                patients.TryGetValue(mabn, out var patient);
+                var name = patient == null ? makb : $"{patient.Holot} {patient.Ten}".Trim();
+                return new()
+                {
+                    Success = true, Action = "goi-lai", OCua = window,
+                    Khochan = req.Khochan, IsBhyt = selected.Any(h => h.Khochan == DuocKhoConstant.Bhyt),
+                    HoTen = string.IsNullOrWhiteSpace(name) ? makb : name,
+                    NamSinh = patient?.Ngaysinh?.ToString("yyyy") ?? "",
+                    Message = $"Đã gọi lại {name} đến Ô {window}."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi gọi lại toa makb={Makb}, mabn={Mabn}", makb, mabn);
+                return new() { Action = "loi", Message = "Lỗi hệ thống khi gọi lại bệnh nhân." };
+            }
+        }
+
         // ===== CapNhatTrangThaiAsync =====
         public async Task<bool> CapNhatTrangThaiAsync(DuocCapNhatTrangThaiRequest req)
         {

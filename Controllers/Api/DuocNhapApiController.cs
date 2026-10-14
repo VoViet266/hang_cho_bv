@@ -27,6 +27,22 @@ namespace HangChoKhamBenh.Web.Controllers.Api
             _hubContext = hubContext;
         }
 
+        [HttpPost("goi-lai")]
+        public async Task<IActionResult> Recall([FromBody] DuocRecallRequest req)
+        {
+            var result = await _duocNhapService.RecallAsync(req);
+            if (result.Success)
+            {
+                await _hubContext.Clients.All.SendAsync("duoc_trigger_speak", new
+                {
+                    hoTen = result.HoTen, namSinh = result.NamSinh, oCua = result.OCua,
+                    makb = req.Makb, mabn = req.Mabn, isBhyt = result.IsBhyt,
+                    trangThai = result.OCua == DuocScanWorkflow.PaymentWindow ? "Chờ thu tiền" : "Nhận thuốc"
+                });
+            }
+            return Ok(result);
+        }
+
         [HttpPost("xu-ly-ma-quet")]
         public async Task<IActionResult> ProcessScan([FromBody] DuocProcessScanRequest req)
         {
