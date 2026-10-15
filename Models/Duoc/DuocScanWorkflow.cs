@@ -16,8 +16,7 @@ public static class DuocScanWorkflow
         var service = pending.Where(p => p.Khochan == DuocKhoConstant.DichVu).ToList();
         if (service.Count > 0 && !servicePaid)
         {
-            return service.Any(p => p.OCua?.Trim() != PaymentWindow)
-                ? DuocScanAction.CallPayment : DuocScanAction.WaitPayment;
+            return DuocScanAction.CallPayment;
         }
 
         return pending.Any(p => p.OCua?.Trim() != PickupWindow)
@@ -25,5 +24,5 @@ public static class DuocScanWorkflow
     }
 
     public static bool IsVisibleOnDisplay(bool hasService, bool servicePaid, string? window)
-        => window?.Trim() == (hasService && !servicePaid ? PaymentWindow : PickupWindow);
+        => hasService && !servicePaid || window?.Trim() == PickupWindow;
 }

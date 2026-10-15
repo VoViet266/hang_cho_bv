@@ -435,7 +435,7 @@ namespace HangChoKhamBenh.Web.Services
                     var callQuery = collection
                         ? query.Where(h => h.Khochan == DuocKhoConstant.DichVu) : query;
                     var called = await callQuery
-                        .Where(h => h.Taikhoan == null || h.Taikhoan.Trim() != window)
+                        .Where(h => collection || h.Taikhoan == null || h.Taikhoan.Trim() != window)
                         .ExecuteUpdateAsync(setter => setter
                             .SetProperty(h => h.Taikhoan, window)
                             .SetProperty(h => h.Ngaygiao, DateTime.Now));

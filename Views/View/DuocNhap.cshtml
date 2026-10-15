@@ -1158,10 +1158,10 @@
                 const countEl = $id('cho-giao-count');
                 const query = ($id('search-giao-input')?.value || '').trim().toLowerCase();
 
-                // Chờ phát = BHYT hoặc Dịch vụ đã thu (daThu === true)
+                // Toa dịch vụ chưa thu vẫn chờ phát; toa kèm BHYT đã có dòng BHYT đại diện.
                 const choGiaoItems = rawChuaGiaoData.filter(item => {
                     if (Number(item.dagiao) !== 0) return false;
-                    return item.daThu;
+                    return item.daThu || !item.hasBhyt;
                 });
 
                 if (countEl) countEl.textContent = choGiaoItems.length;

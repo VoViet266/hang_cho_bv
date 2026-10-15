@@ -81,7 +81,10 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
                 var first = group.OrderBy(h => h.Ngaynhap).ThenBy(h => h.Macho).First();
                 payments.TryGetValue(group.Key, out var payment);
                 var paid = payment?.Paid ?? dv.Any(h => h.Dathu == true);
-                var window = LatestWindow(dv.Count > 0 ? dv : bhyt);
+                // Unpaid service prescriptions appear at window 5 immediately on admission.
+                // Keep the stored call state separate so displaying a window does not advance a scan.
+                var window = dv.Count > 0 && !paid
+                    ? DuocScanWorkflow.PaymentWindow : LatestWindow(dv.Count > 0 ? dv : bhyt);
                 if (!DuocScanWorkflow.IsVisibleOnDisplay(dv.Count > 0, paid, window)) continue;
                 patientMap.TryGetValue(first.Mabn, out var patient);
                 var collecting = dv.Count > 0 && !paid;
