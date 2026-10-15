@@ -2,6 +2,15 @@ namespace HangChoKhamBenh.Web.Helpers
 {
     public static class DateTimeHelper
     {
+        public const string VietnamTimeZoneId = "Asia/Ho_Chi_Minh";
+
+        public static void ConfigureTimeZone()
+        {
+            // Set before logging, DateTime.Now/Today and Npgsql initialize their local zone.
+            Environment.SetEnvironmentVariable("TZ", VietnamTimeZoneId);
+            TimeZoneInfo.ClearCachedData();
+        }
+
         public static DateTime? ToDateTimeNullable(object? val)
         {
             if (val == null || val is DBNull) return null;
