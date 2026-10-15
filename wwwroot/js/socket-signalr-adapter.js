@@ -27,7 +27,7 @@
     const pageLoadedAt = Date.now();
     setInterval(() => {
         const now = new Date();
-        if (now.toLocaleTimeString('en-GB', { timeZone: "Asia/Ho_Chi_Minh", hour: '2-digit', minute: '2-digit', hour12: false }) === '04:30' && (Date.now() - pageLoadedAt > 6 * 3600 * 1000)) {
+        if (now.getHours() === 4 && now.getMinutes() === 30 && (Date.now() - pageLoadedAt > 6 * 3600 * 1000)) {
             safeFallbackReload("Làm mới bộ nhớ định kỳ 04:30 sáng cho TV Kiosk");
         }
     }, 60000);

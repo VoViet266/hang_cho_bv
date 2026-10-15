@@ -1,5 +1,4 @@
 using System.Data;
-using HangChoKhamBenh.Web.Helpers;
 using Npgsql;
 
 namespace HangChoKhamBenh.Web.Data
@@ -56,7 +55,6 @@ namespace HangChoKhamBenh.Web.Data
                     Username = username,
                     Password = password,
                     SearchPath = schema,
-                    Timezone = DateTimeHelper.VietnamTimeZoneId,
                     Pooling = true,
                     MinPoolSize = 5,
                     MaxPoolSize = 50,
@@ -66,12 +64,7 @@ namespace HangChoKhamBenh.Web.Data
                 return builder.ConnectionString;
             }
 
-            // EF's DateTime.Now/Today translations run in the database session's zone,
-            // independently of the application/container's TZ environment variable.
-            return new NpgsqlConnectionStringBuilder(input)
-            {
-                Timezone = DateTimeHelper.VietnamTimeZoneId
-            }.ConnectionString;
+            return input;
         }
     }
 }

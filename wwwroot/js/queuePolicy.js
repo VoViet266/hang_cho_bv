@@ -7,11 +7,8 @@
   const STORAGE_DATE_KEY = "queue_hidden_patients_date";
 
   function getTodayString() {
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit"
-    }).formatToParts(new Date());
-    const part = (type) => parts.find((p) => p.type === type).value;
-    return `${part("year")}-${part("month")}-${part("day")}`;
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
   function checkDateRollover() {
@@ -96,9 +93,7 @@
     );
 
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-GB", {
-      timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", hour12: false
-    });
+    const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
     hiddenPatientsList.unshift({
       key,

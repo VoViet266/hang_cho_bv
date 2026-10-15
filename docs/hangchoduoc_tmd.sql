@@ -1,7 +1,6 @@
--- Thời gian nghiệp vụ theo giờ Việt Nam (UTC+7).
+-- Thời gian theo cấu hình môi trường và phiên kết nối ban đầu.
 -- Bảng đã tồn tại: giữ dữ liệu và các index hiện có, chỉ bỏ default của ngaytao.
 BEGIN;
-SET LOCAL TIME ZONE 'Asia/Ho_Chi_Minh';
 
 CREATE TABLE IF NOT EXISTS current.hangchoduoc_tmd
 (
@@ -19,7 +18,7 @@ CREATE TABLE IF NOT EXISTS current.hangchoduoc_tmd
     an            integer DEFAULT 0 NOT NULL,               -- 0: hiện; 1: ẩn, không thay đổi trạng thái phát.
     macho         integer GENERATED ALWAYS AS IDENTITY
         CONSTRAINT hangchoduoc_tmd_pk PRIMARY KEY,         -- Khóa riêng cho từng dòng/kho.
-    ngaytao       timestamp without time zone,             -- Giờ Việt Nam của lần gọi/gọi lại gần nhất; chưa gọi: NULL.
+    ngaytao       timestamp without time zone,             -- Giờ địa phương của lần gọi/gọi lại gần nhất; chưa gọi: NULL.
     ngaythu       timestamp with time zone,                -- Lần đầu phát hiện dịch vụ đã thu tiền.
     ngayhoanthanh timestamp with time zone                 -- Kết thúc xử lý: đã phát hoặc không mua.
 );
@@ -40,7 +39,7 @@ COMMENT ON COLUMN current.hangchoduoc_tmd.dagiao IS '0 chờ phát, 1 đã phát
 COMMENT ON COLUMN current.hangchoduoc_tmd.dathu IS 'Dịch vụ đồng bộ trạng thái đã thu; BHYT true để bỏ qua bước thu dịch vụ';
 COMMENT ON COLUMN current.hangchoduoc_tmd.an IS '0 hiển thị, 1 ẩn; độc lập với trạng thái phát và các mốc thời gian';
 COMMENT ON COLUMN current.hangchoduoc_tmd.macho IS 'Khóa chính tự tăng cho từng dòng hàng chờ';
-COMMENT ON COLUMN current.hangchoduoc_tmd.ngaytao IS 'Giờ gọi tên/gọi lại gần nhất theo UTC+7; dùng xếp màn hình; chưa gọi NULL';
+COMMENT ON COLUMN current.hangchoduoc_tmd.ngaytao IS 'Giờ gọi tên/gọi lại gần nhất; dùng xếp màn hình; chưa gọi NULL';
 COMMENT ON COLUMN current.hangchoduoc_tmd.ngaythu IS 'Lần đầu ứng dụng phát hiện dịch vụ đã thu tiền; BHYT thuần NULL';
 COMMENT ON COLUMN current.hangchoduoc_tmd.ngayhoanthanh IS 'Thời điểm kết thúc xử lý đã phát/không mua; hoàn tác thì xóa mốc này';
 COMMIT;

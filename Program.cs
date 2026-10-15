@@ -1,14 +1,12 @@
 using System.Diagnostics;
 using HangChoKhamBenh.Web;
 using HangChoKhamBenh.Web.Data;
-using HangChoKhamBenh.Web.Helpers;
 using HangChoKhamBenh.Web.Hubs;
 using HangChoKhamBenh.Web.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
-DateTimeHelper.ConfigureTimeZone();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
@@ -138,12 +136,7 @@ app.Use(async (context, next) =>
 app.UseRouting();
 
 // Health check endpoint
-app.MapMethods("/health", ["GET", "HEAD"], () => Results.Ok(new
-{
-    status = "healthy",
-    timestamp = DateTimeOffset.Now,
-    timeZone = DateTimeHelper.VietnamTimeZoneId
-}));
+app.MapMethods("/health", ["GET", "HEAD"], () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 // Map SignalR Hub
 app.MapHub<QueueHub>("/queueHub");

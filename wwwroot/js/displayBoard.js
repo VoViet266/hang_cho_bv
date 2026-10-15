@@ -1087,7 +1087,7 @@ function initSocket() {
 
     if (connected) {
       const timeText = lastSyncTime
-        ? lastSyncTime.toLocaleTimeString("en-GB", { timeZone: "Asia/Ho_Chi_Minh",
+        ? lastSyncTime.toLocaleTimeString("en-GB", {
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
@@ -1282,8 +1282,8 @@ document.addEventListener("change", (e) => {
 // Đồng hồ
 function updateTime() {
   const now = new Date();
-  const dateOpts = { timeZone: "Asia/Ho_Chi_Minh", day: "2-digit", month: "2-digit", year: "numeric" };
-  const timeOpts = { timeZone: "Asia/Ho_Chi_Minh",
+  const dateOpts = { day: "2-digit", month: "2-digit", year: "numeric" };
+  const timeOpts = {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",

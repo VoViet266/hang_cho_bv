@@ -15,7 +15,7 @@ namespace HangChoKhamBenh.Web.Services
 
         private const long MaxCacheSizeBytes = 300 * 1024 * 1024; // 300 MB
         private const long TargetCacheSizeBytes = 250 * 1024 * 1024; // 250 MB
-        private static DateTimeOffset _lastCleanupCheck = DateTimeOffset.MinValue;
+        private static DateTime _lastCleanupCheck = DateTime.MinValue;
         private static readonly SemaphoreSlim _cleanupLock = new(1, 1);
 
         public TtsService(
@@ -209,7 +209,7 @@ namespace HangChoKhamBenh.Web.Services
             // 4. Ghi file nguyên tử (Atomic write)
             if (audioBytes.Length > 0)
             {
-                var tempPath = $"{filePath}.tmp.{DateTimeOffset.Now.ToUnixTimeMilliseconds()}";
+                var tempPath = $"{filePath}.tmp.{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
                 try
                 {
                     await File.WriteAllBytesAsync(tempPath, audioBytes);
@@ -238,7 +238,7 @@ namespace HangChoKhamBenh.Web.Services
 
         public async Task CleanCacheIfNeededAsync(bool force = false)
         {
-            if (!force && (DateTimeOffset.Now - _lastCleanupCheck).TotalMinutes < 10)
+            if (!force && (DateTime.UtcNow - _lastCleanupCheck).TotalMinutes < 10)
             {
                 return;
             }
@@ -247,11 +247,11 @@ namespace HangChoKhamBenh.Web.Services
 
             try
             {
-                _lastCleanupCheck = DateTimeOffset.Now;
+                _lastCleanupCheck = DateTime.UtcNow;
                 if (!Directory.Exists(_cacheDir)) return;
 
                 var dirInfo = new DirectoryInfo(_cacheDir);
-                var files = dirInfo.GetFiles("*.mp3").OrderBy(f => f.LastWriteTime).ToList();
+                var files = dirInfo.GetFiles("*.mp3").OrderBy(f => f.LastWriteTimeUtc).ToList();
                 var totalSize = files.Sum(f => f.Length);
 
                 if (totalSize > MaxCacheSizeBytes)

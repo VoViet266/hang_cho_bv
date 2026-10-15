@@ -46,7 +46,7 @@ internal static class QueueChecks
 
         var commands = new FakeCommands();
         using var context = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql("Host=localhost;Database=unused;Username=unused;Timezone=Asia/Ho_Chi_Minh")
+            .UseNpgsql("Host=localhost;Database=unused;Username=unused")
             .AddInterceptors(new SuppressConnection(), commands).Options);
         var service = new DuocNhapService(context, NullLogger<DuocNhapService>.Instance,
             new DuocQueueSnapshotService(context));
@@ -75,7 +75,7 @@ internal static class QueueChecks
 
         var admissionCommands = new FakeCommands { NoExisting = true };
         using var admissionContext = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql("Host=localhost;Database=unused;Username=unused;Timezone=Asia/Ho_Chi_Minh")
+            .UseNpgsql("Host=localhost;Database=unused;Username=unused")
             .AddInterceptors(new SuppressConnection(), admissionCommands, new SuppressSave()).Options);
         var admissionService = new DuocNhapService(admissionContext, NullLogger<DuocNhapService>.Instance,
             new DuocQueueSnapshotService(admissionContext));

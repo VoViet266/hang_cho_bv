@@ -1,8 +1,8 @@
 # Phân bổ dữ liệu hàng chờ dược
 
-Tất cả giờ nghiệp vụ, phiên kết nối database và đồng hồ trình duyệt dùng `Asia/Ho_Chi_Minh` (UTC+7).
-`timestamptz` lưu một thời điểm; khi xem trong công cụ database cần đặt phiên làm việc sang múi giờ Việt Nam.
-`ngaytao` giữ kiểu `timestamp` theo bảng hiện có và chứa giờ Việt Nam, không cộng thêm 7 giờ khi hiển thị.
+Thời gian trở về cơ chế ban đầu: ứng dụng dùng múi giờ môi trường chạy, database dùng múi giờ phiên kết nối,
+đồng hồ trình duyệt dùng múi giờ thiết bị. Code không ép UTC+7.
+`ngaytao` giữ kiểu `timestamp` theo bảng hiện có và lưu giờ địa phương lúc gọi tên.
 
 | Cột | Vai trò |
 | --- | --- |

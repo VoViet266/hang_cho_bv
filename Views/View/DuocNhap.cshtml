@@ -521,8 +521,8 @@
                 const now = new Date();
                 const dateEl = $id('date-str');
                 const timeEl = $id('time-str');
-                if (dateEl) dateEl.textContent = now.toLocaleDateString('vi-VN', { timeZone: "Asia/Ho_Chi_Minh", weekday: 'short', day: '2-digit', month: '2-digit' });
-                if (timeEl) timeEl.textContent = now.toLocaleTimeString('vi-VN', { timeZone: "Asia/Ho_Chi_Minh", hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                if (dateEl) dateEl.textContent = now.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                if (timeEl) timeEl.textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
             }
             setInterval(updateTime, 1000);
             updateTime();
@@ -1442,7 +1442,7 @@
                                 rawKhongMuaData.unshift({
                                     ...removed,
                                     dagiao: 3,
-                                    ngayNhapStr: new Date().toLocaleTimeString('vi-VN', { timeZone: "Asia/Ho_Chi_Minh", hour: '2-digit', minute: '2-digit' })
+                                    ngayNhapStr: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
                                 });
                                 if (currentThuTab === 'khong-mua') renderKhongMuaList();
                             }
@@ -1615,7 +1615,7 @@
                                 rawDaGiaoData.unshift({
                                     ...removed,
                                     dagiao: 1,
-                                    ngayGiaoStr: new Date().toLocaleTimeString('vi-VN', { timeZone: "Asia/Ho_Chi_Minh", hour: '2-digit', minute: '2-digit' })
+                                    ngayGiaoStr: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
                                 });
                                 if (currentGiaoTab === 'da-giao') renderDaGiaoList();
                             }
