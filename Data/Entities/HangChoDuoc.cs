@@ -18,6 +18,10 @@ namespace HangChoKhamBenh.Web.Data.Entities
         [Column("ngaynhap")]
         public DateTime? Ngaynhap { get; set; }
 
+        // Thời điểm tiếp nhận hoặc quét gọi gần nhất, dùng sắp xếp màn hình.
+        [Column("ngaytao", TypeName = "timestamp without time zone")]
+        public DateTime? Ngaytao { get; set; }
+
         [Column("ngaygiao")]
         public DateTime? Ngaygiao { get; set; }
 
@@ -41,6 +45,12 @@ namespace HangChoKhamBenh.Web.Data.Entities
 
         [Column("dagiao")]
         public decimal Dagiao { get; set; } = 0;
+
+        [Column("ngaythu", TypeName = "timestamp with time zone")]
+        public DateTime? Ngaythu { get; set; }
+
+        [Column("ngayhoanthanh", TypeName = "timestamp with time zone")]
+        public DateTime? Ngayhoanthanh { get; set; }
 
         [Column("dathu")]
         public bool? Dathu { get; set; } = false;

@@ -292,7 +292,7 @@ namespace HangChoKhamBenh.Web.Services
                          && (h.Ngaynhap == null || h.Ngaynhap >= today))
                 .OrderBy(h => h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat ? 0 : 1)
                 .ThenByDescending(h => h.Ngaynhap)
-                .Select(h => new { h.Macho, h.Dagiao, h.Khochan, h.Dathu })
+                .Select(h => new { h.Macho, h.Dagiao, h.Khochan, h.Dathu, h.Ngaythu })
                 .FirstOrDefaultAsync();
 
             var now = DateTime.Now;
@@ -304,6 +304,7 @@ namespace HangChoKhamBenh.Web.Services
                     Mabn = mabn,
                     Makb = makb,
                     Ngaynhap = now,
+                    Ngaytao = now,
                     Ngaygiao = now,
                     Taikhoan = null,
                     Khochan = khoInsert,
@@ -312,6 +313,7 @@ namespace HangChoKhamBenh.Web.Services
                     Maba = req.Maba,
                     Dagiao = (decimal)DuocTrangThaiGiao.ChoPhat,
                     Dathu = dathu,
+                    Ngaythu = khoInsert == DuocKhoConstant.DichVu && dathu ? now : null,
                     An = 0
                 });
                 await _context.SaveChangesAsync();
@@ -321,12 +323,15 @@ namespace HangChoKhamBenh.Web.Services
             if (existing.Dagiao != (decimal)DuocTrangThaiGiao.ChoPhat)
                 return QueueUpsertResult.Completed;
 
-            if (updateDathu && existing.Dathu != dathu)
+            if (updateDathu && (existing.Dathu != dathu || dathu && existing.Ngaythu == null
+                || !dathu && existing.Ngaythu != null))
             {
                 await _context.HangChoDuocTmd
                     .Where(h => h.Macho == existing.Macho && h.Xoa == 0 && h.An == 0
                         && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat)
-                    .ExecuteUpdateAsync(setter => setter.SetProperty(h => h.Dathu, dathu));
+                    .ExecuteUpdateAsync(setter => setter
+                        .SetProperty(h => h.Dathu, dathu)
+                        .SetProperty(h => h.Ngaythu, h => dathu ? h.Ngaythu ?? now : (DateTime?)null));
             }
             return QueueUpsertResult.Waiting;
         }
@@ -437,6 +442,7 @@ namespace HangChoKhamBenh.Web.Services
                     var called = await callQuery
                         .Where(h => collection || h.Taikhoan == null || h.Taikhoan.Trim() != window)
                         .ExecuteUpdateAsync(setter => setter
+                            .SetProperty(h => h.Ngaytao, DateTime.Now)
                             .SetProperty(h => h.Taikhoan, window)
                             .SetProperty(h => h.Ngaygiao, DateTime.Now));
                     if (called == 0)
@@ -470,6 +476,9 @@ namespace HangChoKhamBenh.Web.Services
                 var updated = await query
                     .Where(h => h.Taikhoan != null && h.Taikhoan.Trim() == DuocScanWorkflow.PickupWindow)
                     .ExecuteUpdateAsync(setter => setter
+                        .SetProperty(h => h.Ngaythu, h => h.Khochan == DuocKhoConstant.DichVu && paid
+                            ? h.Ngaythu ?? DateTime.Now : h.Ngaythu)
+                        .SetProperty(h => h.Ngayhoanthanh, DateTime.Now)
                         .SetProperty(h => h.Dagiao, (decimal)DuocTrangThaiGiao.DaPhat)
                         .SetProperty(h => h.Ngaygiao, DateTime.Now));
                 return new()
@@ -788,6 +797,10 @@ namespace HangChoKhamBenh.Web.Services
             }
 
             var rows = await query.ExecuteUpdateAsync(setter => setter
+                .SetProperty(h => h.Ngaythu, h => req.TargetDagiao == (decimal)DuocTrangThaiGiao.DaPhat
+                    && h.Khochan == DuocKhoConstant.DichVu ? h.Ngaythu ?? DateTime.Now : h.Ngaythu)
+                .SetProperty(h => h.Ngayhoanthanh, h => req.TargetDagiao == (decimal)DuocTrangThaiGiao.DaPhat
+                    ? (DateTime?)DateTime.Now : null)
                 .SetProperty(h => h.Dagiao, req.TargetDagiao)
                 .SetProperty(h => h.Ngaygiao, DateTime.Now)
                 .SetProperty(h => h.Taikhoan, h => !string.IsNullOrEmpty(oCuaStr) ? oCuaStr : h.Taikhoan)
@@ -818,6 +831,7 @@ namespace HangChoKhamBenh.Web.Services
             }
 
             var rows = await query.ExecuteUpdateAsync(setter => setter
+                .SetProperty(h => h.Ngaytao, DateTime.Now)
                 .SetProperty(h => h.Taikhoan, oCua)
                 .SetProperty(h => h.Ngaygiao, DateTime.Now)
             );
@@ -857,6 +871,7 @@ namespace HangChoKhamBenh.Web.Services
 
             var now = DateTime.Now;
             var rows = await query.ExecuteUpdateAsync(setter => setter
+                .SetProperty(h => h.Ngayhoanthanh, (DateTime?)null)
                 .SetProperty(h => h.Dagiao, (decimal)DuocTrangThaiGiao.ChoPhat)
                 .SetProperty(h => h.An, 0)
                 .SetProperty(h => h.Ngaygiao, now)

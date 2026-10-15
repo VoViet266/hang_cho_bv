@@ -44,6 +44,7 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
             .Where(c => (c.Xoa == null || c.Xoa == 0) && c.Ngaylap >= today && c.Ngaylap < today.AddDays(1)
                 && (c.Khochan == "13" || c.Khochan == "3") && c.Makh != null && examIds.Contains(c.Makh))
             .Select(c => new Document(c.Makh, c.Sohd, c.Thanhtien, c.Dain, c.Dathu)).ToListAsync();
+        await SyncPaymentTimesAsync(pending, documents);
         var daily = await _context.HangChoDuocTmd.AsNoTracking()
             .Where(h => h.Xoa == 0 && h.An == 0 && h.Ngaynhap >= today && h.Ngaynhap < today.AddDays(1)
                 && Warehouses.Contains(h.Khochan))
@@ -56,19 +57,10 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
         List<Document> documents, List<DailyEntry> daily)
     {
         var patientMap = patients.ToDictionary(p => p.Mabn, StringComparer.OrdinalIgnoreCase);
-        var payments = documents.GroupBy(d => d.Makh ?? "", StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g =>
-            {
-                var invoices = g.GroupBy(d => string.IsNullOrWhiteSpace(d.Sohd) ? g.Key : d.Sohd.Trim()).ToList();
-                return new Payment(invoices.Sum(i => i.First().Amount ?? 0),
-                    g.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.Sohd))?.Sohd ?? "",
-                    invoices.All(i => i.Any(d => (d.Printed ?? 0) != 0 || (d.Paid ?? 0) != 0)));
-            }, StringComparer.OrdinalIgnoreCase);
+        var payments = BuildPayments(documents);
         var groups = pending.GroupBy(h => string.IsNullOrWhiteSpace(h.Makb) ? h.Mabn.Trim() : h.Makb.Trim())
-            .OrderByDescending(g => g.Any(h => !string.IsNullOrWhiteSpace(h.Taikhoan)))
-            .ThenByDescending(g => g.Any(h => !string.IsNullOrWhiteSpace(h.Taikhoan))
-                ? g.Max(h => h.Ngaygiao) : DateTime.MinValue)
-            .ThenBy(g => g.Min(h => h.Ngaynhap)).ThenBy(g => g.Key).ToList();
+            .OrderByDescending(g => g.Max(h => h.Ngaytao ?? h.Ngaynhap))
+            .ThenByDescending(g => g.Max(h => h.Macho)).ThenBy(g => g.Key).ToList();
 
         DuocQueuePageDto Page(string type)
         {
@@ -151,8 +143,39 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
         return new() { All = Page("all"), Bhyt = Page("bhyt"), DichVu = Page("dichvu"), Input = input };
     }
 
+    private async Task SyncPaymentTimesAsync(List<HangChoDuocTmd> pending, List<Document> documents)
+    {
+        var payments = BuildPayments(documents);
+        // Only service rows with a known source document can change payment state.
+        var service = pending.Where(h => h.Khochan is 3 or 13 && payments.ContainsKey(h.Makb.Trim())).ToList();
+        var paidIds = service.Where(h => payments[h.Makb.Trim()].Paid
+            && (h.Dathu != true || h.Ngaythu == null)).Select(h => h.Macho).ToList();
+        var unpaidIds = service.Where(h => !payments[h.Makb.Trim()].Paid
+            && (h.Dathu == true || h.Ngaythu != null)).Select(h => h.Macho).ToList();
+        var now = DateTime.Now;
+        var active = _context.HangChoDuocTmd.Where(h => h.Xoa == 0 && h.An == 0 && h.Dagiao == 0);
+        if (paidIds.Count > 0)
+            await active.Where(h => paidIds.Contains(h.Macho)).ExecuteUpdateAsync(setter => setter
+                .SetProperty(h => h.Dathu, true)
+                .SetProperty(h => h.Ngaythu, h => h.Ngaythu ?? now));
+        if (unpaidIds.Count > 0)
+            await active.Where(h => unpaidIds.Contains(h.Macho)).ExecuteUpdateAsync(setter => setter
+                .SetProperty(h => h.Dathu, false)
+                .SetProperty(h => h.Ngaythu, (DateTime?)null));
+    }
+
+    private static Dictionary<string, Payment> BuildPayments(List<Document> documents)
+        => documents.GroupBy(d => d.Makh?.Trim() ?? "", StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g =>
+            {
+                var invoices = g.GroupBy(d => string.IsNullOrWhiteSpace(d.Sohd) ? g.Key : d.Sohd.Trim()).ToList();
+                return new Payment(invoices.Sum(i => i.First().Amount ?? 0),
+                    g.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.Sohd))?.Sohd ?? "",
+                    invoices.All(i => i.Any(d => (d.Printed ?? 0) != 0 || (d.Paid ?? 0) != 0)));
+            }, StringComparer.OrdinalIgnoreCase);
+
     private static string LatestWindow(List<HangChoDuocTmd> rows)
-        => rows.OrderByDescending(h => h.Ngaygiao).ThenByDescending(h => h.Macho)
+        => rows.OrderByDescending(h => h.Ngaytao ?? h.Ngaynhap).ThenByDescending(h => h.Macho)
             .FirstOrDefault()?.Taikhoan?.Trim() ?? "";
     private static string PatientName(Patient? patient, string fallback)
         => string.IsNullOrWhiteSpace(patient?.Name) ? fallback : patient.Name.Trim();
