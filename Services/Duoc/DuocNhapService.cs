@@ -21,13 +21,13 @@ namespace HangChoKhamBenh.Web.Services
         // ===== Inner types =====
         private record CtRow(string? Makh, string? Mabn, string? Sohd, string? Khochan, decimal? Thanhtien, DateTime? Ngaylap);
         private record HangChoRow(string? Makb, string? Mabn, int Khochan, decimal Dagiao, bool? Dathu,
-                                  string? Maba, DateTime? Ngaynhap, DateTime? Ngaygiao, string? Taikhoan);
+                                  string? Maba, DateTime? Ngaynhap, DateTime? Ngaygiao, DateTime? Ngayhoanthanh, string? Taikhoan);
         private record PatientInfo(string Mabn, string Holot, string Ten, DateTime? Ngaysinh, decimal? Gioitinh);
         private record CtInfo(decimal TotalTien, string Sohd, bool DaThu);
         private record PatientGroup(
             string? Makb, string? Mabn, bool HasBhyt, bool HasDv, decimal Dagiao, bool DvDathu,
             string Taikhoan, string OcuaBhyt, string OcuaDv, string Maba,
-            DateTime? Ngaynhap, DateTime? Ngaygiao, string HoTen, DateTime? Ngaysinh, decimal? Gioitinh)
+            DateTime? Ngaynhap, DateTime? Ngaygiao, DateTime? Ngayhoanthanh, string HoTen, DateTime? Ngaysinh, decimal? Gioitinh)
         {
             public bool HasBoth => HasBhyt && HasDv;
             public int Khochan => HasBoth ? 0 : HasDv ? 13 : 14;
@@ -51,7 +51,7 @@ namespace HangChoKhamBenh.Web.Services
 
         private static Task<List<HangChoRow>> ToRowsAsync(IQueryable<HangChoDuocTmd> q)
             => q.Select(h => new HangChoRow(h.Makb, h.Mabn, h.Khochan, h.Dagiao, h.Dathu,
-                                            h.Maba, h.Ngaynhap, h.Ngaygiao, h.Taikhoan))
+                                            h.Maba, h.Ngaynhap, h.Ngaygiao, h.Ngayhoanthanh, h.Taikhoan))
                 .ToListAsync();
 
         public async Task<DuocNhapBarcodeResultDto> ScanAsync(string? makh, string? makb = null)
@@ -304,8 +304,8 @@ namespace HangChoKhamBenh.Web.Services
                     Mabn = mabn,
                     Makb = makb,
                     Ngaynhap = now,
-                    Ngaytao = now,
-                    Ngaygiao = now,
+                    Ngaytao = null,
+                    Ngaygiao = null,
                     Taikhoan = null,
                     Khochan = khoInsert,
                     Xoa = 0,
@@ -443,8 +443,7 @@ namespace HangChoKhamBenh.Web.Services
                         .Where(h => collection || h.Taikhoan == null || h.Taikhoan.Trim() != window)
                         .ExecuteUpdateAsync(setter => setter
                             .SetProperty(h => h.Ngaytao, DateTime.Now)
-                            .SetProperty(h => h.Taikhoan, window)
-                            .SetProperty(h => h.Ngaygiao, DateTime.Now));
+                            .SetProperty(h => h.Taikhoan, window));
                     if (called == 0)
                         return new() { Action = "khong-con-cho", Message = "Toa vừa được xử lý ở nơi khác; vui lòng quét lại." };
 
@@ -596,6 +595,7 @@ namespace HangChoKhamBenh.Web.Services
                         Maba: FirstNonEmpty(g.Select(x => x.Maba)),
                         Ngaynhap: first.Ngaynhap,
                         Ngaygiao: g.Max(x => x.Ngaygiao),
+                        Ngayhoanthanh: g.Max(x => x.Ngayhoanthanh),
                         HoTen: name != "" ? name : (first.Makb ?? first.Mabn ?? ""),
                         Ngaysinh: bn?.Ngaysinh, Gioitinh: bn?.Gioitinh);
                 })
@@ -648,10 +648,10 @@ namespace HangChoKhamBenh.Web.Services
         {
             var today = DateTime.Today;
             var rows = await ToRowsAsync(HangChoQuery()
-                .Where(h => (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today) && h.Dagiao == (decimal)DuocTrangThaiGiao.KhongMua)
-                .OrderByDescending(h => h.Ngaygiao).Take(80));
+                .Where(h => (h.Ngaynhap == null || h.Ngaynhap >= today || (h.Ngayhoanthanh ?? h.Ngaygiao) >= today) && h.Dagiao == (decimal)DuocTrangThaiGiao.KhongMua)
+                .OrderByDescending(h => h.Ngayhoanthanh ?? h.Ngaygiao).Take(80));
 
-            var groups = (await BuildGroupsAsync(rows)).OrderByDescending(x => x.Ngaygiao).ToList();
+            var groups = (await BuildGroupsAsync(rows)).OrderByDescending(x => x.Ngayhoanthanh ?? x.Ngaygiao).ToList();
             var infoMap = await LoadChungTuInfoAsync(groups);
 
             return [.. groups.Select(g =>
@@ -667,7 +667,7 @@ namespace HangChoKhamBenh.Web.Services
                     SoTien = info?.TotalTien,
                     SoTienStr = info != null ? Money(info.TotalTien, "—") : "—",
                     Sohd = info?.Sohd ?? "", Maba = "",
-                    NgayNhapStr = g.Ngaygiao?.ToString("HH:mm") ?? "", OCua = g.Taikhoan
+                    NgayNhapStr = (g.Ngayhoanthanh ?? g.Ngaygiao)?.ToString("HH:mm") ?? "", OCua = g.Taikhoan
                 };
             })];
         }
@@ -698,7 +698,7 @@ namespace HangChoKhamBenh.Web.Services
                         SoTien = info?.TotalTien,
                         SoTienStr = info != null ? Money(info.TotalTien, "—") : "—",
                         Sohd = info?.Sohd ?? "", Maba = "",
-                        NgayNhapStr = g.Ngaygiao?.ToString("HH:mm") ?? (g.Ngaynhap?.ToString("HH:mm") ?? ""),
+                        NgayNhapStr = g.Ngaynhap?.ToString("HH:mm") ?? "",
                         OCua = g.Taikhoan
                     };
                 })];
@@ -710,7 +710,7 @@ namespace HangChoKhamBenh.Web.Services
             }
         }
 
-        // Gọi lại chỉ đọc trạng thái hiện tại, không chuyển bước quét hoặc cập nhật toa.
+        // Gọi lại cập nhật giờ gọi để xếp hàng, giữ nguyên bước quét và trạng thái toa.
         public async Task<DuocBarcodeDispenseResponse> RecallAsync(DuocRecallRequest req)
         {
             var makb = req.Makb?.Trim() ?? "";
@@ -747,6 +747,16 @@ namespace HangChoKhamBenh.Web.Services
                 var patients = await LoadPatientInfoAsync([mabn]);
                 patients.TryGetValue(mabn, out var patient);
                 var name = patient == null ? makb : $"{patient.Holot} {patient.Ten}".Trim();
+                var calledAt = DateTime.Now;
+                var recalled = await _context.HangChoDuocTmd
+                    .Where(h => h.Makb == makb && h.Mabn == mabn && h.Xoa == 0 && h.An == 0
+                        && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
+                        && (h.Ngaynhap == null || h.Ngaynhap >= today) && HcAll.Contains(h.Khochan)
+                        && (req.Khochan == 0 || h.Khochan == req.Khochan)
+                        && h.Taikhoan != null && h.Taikhoan.Trim() == window)
+                    .ExecuteUpdateAsync(setter => setter.SetProperty(h => h.Ngaytao, calledAt));
+                if (recalled == 0)
+                    return new() { Action = "khong-con-cho", Message = "Toa vừa thay đổi trạng thái; vui lòng tải lại danh sách." };
                 return new()
                 {
                     Success = true, Action = "goi-lai", OCua = window,
@@ -800,9 +810,10 @@ namespace HangChoKhamBenh.Web.Services
                 .SetProperty(h => h.Ngaythu, h => req.TargetDagiao == (decimal)DuocTrangThaiGiao.DaPhat
                     && h.Khochan == DuocKhoConstant.DichVu ? h.Ngaythu ?? DateTime.Now : h.Ngaythu)
                 .SetProperty(h => h.Ngayhoanthanh, h => req.TargetDagiao == (decimal)DuocTrangThaiGiao.DaPhat
-                    ? (DateTime?)DateTime.Now : null)
+                    || req.TargetDagiao == (decimal)DuocTrangThaiGiao.KhongMua ? (DateTime?)DateTime.Now : null)
                 .SetProperty(h => h.Dagiao, req.TargetDagiao)
-                .SetProperty(h => h.Ngaygiao, DateTime.Now)
+                .SetProperty(h => h.Ngaygiao, h => req.TargetDagiao == (decimal)DuocTrangThaiGiao.DaPhat
+                    ? (DateTime?)DateTime.Now : null)
                 .SetProperty(h => h.Taikhoan, h => !string.IsNullOrEmpty(oCuaStr) ? oCuaStr : h.Taikhoan)
             );
 
@@ -833,7 +844,6 @@ namespace HangChoKhamBenh.Web.Services
             var rows = await query.ExecuteUpdateAsync(setter => setter
                 .SetProperty(h => h.Ngaytao, DateTime.Now)
                 .SetProperty(h => h.Taikhoan, oCua)
-                .SetProperty(h => h.Ngaygiao, DateTime.Now)
             );
 
             var hoTen = req.HoTen?.Trim() ?? "";
@@ -869,13 +879,13 @@ namespace HangChoKhamBenh.Web.Services
             query = query.Where(h => h.Makb == cleanMakb && (cleanMabn == "" || h.Mabn == cleanMabn)
                                 && h.Dagiao != (decimal)DuocTrangThaiGiao.ChoPhat);
 
-            var now = DateTime.Now;
             var rows = await query.ExecuteUpdateAsync(setter => setter
                 .SetProperty(h => h.Ngayhoanthanh, (DateTime?)null)
                 .SetProperty(h => h.Dagiao, (decimal)DuocTrangThaiGiao.ChoPhat)
                 .SetProperty(h => h.An, 0)
-                .SetProperty(h => h.Ngaygiao, now)
-                .SetProperty(h => h.Ngaynhap, now)
+                .SetProperty(h => h.Ngaygiao, (DateTime?)null)
+                .SetProperty(h => h.Ngaytao, (DateTime?)null)
+                .SetProperty(h => h.Taikhoan, (string?)null)
             );
 
             return rows > 0;
@@ -900,7 +910,8 @@ namespace HangChoKhamBenh.Web.Services
             var rows = await targetQuery.ExecuteUpdateAsync(setter => setter
                 .SetProperty(h => h.Dagiao, (decimal)DuocTrangThaiGiao.KhongMua)
                 .SetProperty(h => h.An, 0)
-                .SetProperty(h => h.Ngaygiao, DateTime.Now)
+                .SetProperty(h => h.Ngaygiao, (DateTime?)null)
+                .SetProperty(h => h.Ngayhoanthanh, DateTime.Now)
             );
 
             return rows > 0;
@@ -920,7 +931,6 @@ namespace HangChoKhamBenh.Web.Services
 
             var rows = await query.ExecuteUpdateAsync(setter => setter
                 .SetProperty(h => h.An, 1)
-                .SetProperty(h => h.Ngaygiao, DateTime.Now)
             );
 
             return rows > 0;
@@ -940,7 +950,6 @@ namespace HangChoKhamBenh.Web.Services
 
             var rows = await query.ExecuteUpdateAsync(setter => setter
                 .SetProperty(h => h.An, 0)
-                .SetProperty(h => h.Ngaygiao, DateTime.Now)
             );
 
             return rows > 0;

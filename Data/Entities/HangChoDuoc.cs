@@ -18,7 +18,7 @@ namespace HangChoKhamBenh.Web.Data.Entities
         [Column("ngaynhap")]
         public DateTime? Ngaynhap { get; set; }
 
-        // Thời điểm tiếp nhận hoặc quét gọi gần nhất, dùng sắp xếp màn hình.
+      
         [Column("ngaytao", TypeName = "timestamp without time zone")]
         public DateTime? Ngaytao { get; set; }
 

@@ -118,8 +118,8 @@
         <script>
                 function updateTime() {
                     const now = new Date();
-                    const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
-                    const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                    const dateOpts = { timeZone: "Asia/Ho_Chi_Minh", day: '2-digit', month: '2-digit', year: 'numeric' };
+                    const timeOpts = { timeZone: "Asia/Ho_Chi_Minh", hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
                     const dateStrEl = document.getElementById('date-str');
                     const timeStrEl = document.getElementById('time-str');
 

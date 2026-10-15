@@ -59,8 +59,10 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
         var patientMap = patients.ToDictionary(p => p.Mabn, StringComparer.OrdinalIgnoreCase);
         var payments = BuildPayments(documents);
         var groups = pending.GroupBy(h => string.IsNullOrWhiteSpace(h.Makb) ? h.Mabn.Trim() : h.Makb.Trim())
-            .OrderByDescending(g => g.Max(h => h.Ngaytao ?? h.Ngaynhap))
-            .ThenByDescending(g => g.Max(h => h.Macho)).ThenBy(g => g.Key).ToList();
+            .OrderByDescending(g => g.Max(CallTime).HasValue)
+            .ThenBy(g => g.Max(CallTime))
+            .ThenBy(g => g.Min(h => h.Ngaynhap))
+            .ThenBy(g => g.Min(h => h.Macho)).ThenBy(g => g.Key).ToList();
 
         DuocQueuePageDto Page(string type)
         {
@@ -174,8 +176,13 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
                     invoices.All(i => i.Any(d => (d.Printed ?? 0) != 0 || (d.Paid ?? 0) != 0)));
             }, StringComparer.OrdinalIgnoreCase);
 
+    // Admission and payment timestamps must not move an uncalled prescription above a call.
+    private static DateTime? CallTime(HangChoDuocTmd row)
+        => row.Taikhoan?.Trim() is DuocScanWorkflow.PaymentWindow or DuocScanWorkflow.PickupWindow
+            ? row.Ngaytao ?? row.Ngaygiao ?? row.Ngaynhap : null;
+
     private static string LatestWindow(List<HangChoDuocTmd> rows)
-        => rows.OrderByDescending(h => h.Ngaytao ?? h.Ngaynhap).ThenByDescending(h => h.Macho)
+        => rows.OrderByDescending(CallTime).ThenByDescending(h => h.Macho)
             .FirstOrDefault()?.Taikhoan?.Trim() ?? "";
     private static string PatientName(Patient? patient, string fallback)
         => string.IsNullOrWhiteSpace(patient?.Name) ? fallback : patient.Name.Trim();

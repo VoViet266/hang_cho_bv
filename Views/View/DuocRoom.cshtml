@@ -470,8 +470,8 @@
     </footer>
 
     <!-- SCRIPTS -->
-        <script src="/js/signalr.min.js?v=@DateTime.UtcNow.Ticks"></script>
-        <script src="/js/audioQueue.js?v=@DateTime.UtcNow.Ticks"></script>
+        <script src="/js/signalr.min.js?v=@DateTime.Now.Ticks"></script>
+        <script src="/js/audioQueue.js?v=@DateTime.Now.Ticks"></script>
         <script>
                 let DUOC_TYPE = '@Model.DuocType'; // "bhyt", "dichvu", or "all"
 
@@ -552,8 +552,8 @@
                 // Đồng hồ Header
                 function updateTime() {
                     const now = new Date();
-                    const dateOpts = { day: '2-digit', month: '2-digit', year: 'numeric' };
-                    const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                    const dateOpts = { timeZone: "Asia/Ho_Chi_Minh", day: '2-digit', month: '2-digit', year: 'numeric' };
+                    const timeOpts = { timeZone: "Asia/Ho_Chi_Minh", hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
                     const dateStrEl = document.getElementById('date-str');
                     const timeStrEl = document.getElementById('time-str');
                     if (dateStrEl) dateStrEl.textContent = now.toLocaleDateString('vi-VN', dateOpts);
@@ -846,7 +846,7 @@
                 const duocPageLoadedAt = Date.now();
                 setInterval(() => {
                     const now = new Date();
-                    if (now.getHours() === 4 && now.getMinutes() === 30 && (Date.now() - duocPageLoadedAt > 6 * 3600 * 1000)) {
+                    if (now.toLocaleTimeString('en-GB', { timeZone: "Asia/Ho_Chi_Minh", hour: '2-digit', minute: '2-digit', hour12: false }) === '04:30' && (Date.now() - duocPageLoadedAt > 6 * 3600 * 1000)) {
                         triggerDuocFallbackReload("Làm mới bộ nhớ định kỳ 04:30 sáng");
                     }
                 }, 60000);

@@ -33,6 +33,7 @@ namespace HangChoKhamBenh.Web.Controllers.Api
             var result = await _duocNhapService.RecallAsync(req);
             if (result.Success)
             {
+                NotifyDuocQueuesUpdated(req.Makb, req.Mabn);
                 await _hubContext.Clients.All.SendAsync("duoc_trigger_speak", new
                 {
                     hoTen = result.HoTen, namSinh = result.NamSinh, oCua = result.OCua,

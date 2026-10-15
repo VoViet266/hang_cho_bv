@@ -53,7 +53,7 @@ namespace HangChoKhamBenh.Web.Services
                     if (!force && currentHash == previousHash) continue;
                     await hubContext.Clients.Group(channel).SendAsync("room_data_updated", new
                     {
-                        roomType, roomId, data, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                        roomType, roomId, data, timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds()
                     });
                     _roomDataCache[channel] = currentHash;
                     logger.LogInformation("[SignalR] Broadcast: Group={Channel} | Type={RoomType}:{RoomId} | Hash={Hash} | Force={Force}",

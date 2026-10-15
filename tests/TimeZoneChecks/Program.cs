@@ -63,6 +63,7 @@ try
     }).ToQueryString();
     Check(sql.Contains("now()") && sql.Contains("date_trunc('day'"),
         "EF timestamps and day boundaries execute using the configured database session");
+    await QueueChecks.RunAsync();
 }
 finally
 {

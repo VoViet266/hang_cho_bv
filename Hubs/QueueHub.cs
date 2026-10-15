@@ -92,7 +92,7 @@ namespace HangChoKhamBenh.Web.Hubs
                         roomType,
                         roomId,
                         data,
-                        timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                        timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds()
                     });
                     _logger.LogInformation("[SignalR] InitialDataSent: ConnId={ConnectionId} -> Group={Channel}",
                         Context.ConnectionId, channel);
@@ -133,7 +133,7 @@ namespace HangChoKhamBenh.Web.Hubs
                 patientName,
                 roomName = roomName ?? string.Empty,
                 dobYear = dobYear ?? string.Empty,
-                timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds()
             });
         }
 
