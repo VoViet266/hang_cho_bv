@@ -544,7 +544,7 @@
                 else if (val === '3') cls = 'bg-purple-50 text-purple-800 border-purple-200';
                 else if (val === '4') cls = 'bg-amber-50 text-amber-800 border-amber-200';
                 else if (val === '5') cls = 'bg-rose-50 text-rose-800 border-rose-200';
-                return `<span class="px-2 py-0.5 rounded-md text-[11px] font-black uppercase border ${cls}"><i class="fa-solid fa-door-open mr-0.5"></i> Ô ${escapeHtml(val)}</span>`;
+                return `<span class="px-2 py-0.5 rounded-md text-[11px] font-black uppercase border ${cls}"><i class="fa-solid fa-door-open mr-0.5"></i> ${escapeHtml(val)}</span>`;
             }
 
             let nhapAudioCtx = null;
