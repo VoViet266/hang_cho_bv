@@ -336,7 +336,7 @@
                 </span>
             </div>
 
-         
+
             <!-- Nút quay lại -->
             <a href="/duoc"
                class="remote-item icon-button bg-slate-50 hover:bg-red-50 hover:border-red-300 border-2 border-slate-300 text-slate-500 hover:text-danger px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-colors inline-flex items-center gap-1"
@@ -794,7 +794,7 @@
                     const windowBadge = windowLabel ? `<span class="duoc-status-window">${windowLabel.trim()}</span>` : '';
                     const col5Badge = isChoThu
                         ? `<span title="Chờ thu tiền${windowLabel}" class="badge-status inline-block bg-amber-100 text-amber-900 border-2 border-amber-300 font-black uppercase whitespace-nowrap rounded-lg shadow-2xs"><span class="duoc-status-label">${isSplit ? 'Chờ thu' : 'Chờ thu tiền'}</span>${windowBadge}</span>`
-                        : `<span title="Nhận thuốc${windowLabel}" class="badge-status badge-pickup border-2 font-black uppercase whitespace-nowrap rounded-lg"><span class="duoc-status-window">${windowLabel.trim() || '→ Ô 3'}</span></span>`;
+                        : `<span title="Nhận thuốc${windowLabel}" class="badge-status badge-pickup border-2 font-black uppercase whitespace-nowrap rounded-lg"><span class="duoc-status-window">${windowLabel.trim() || '→ 3'}</span></span>`;
 
                     const heightStyle = rowHeightPx ? `style="height: ${rowHeightPx}px;"` : '';
 
@@ -802,7 +802,7 @@
                                 data-room-type="duoc"
                                 ${heightStyle}
                                 class="${rowClass}">
-                            
+
                                 <td class="${pyClass} px-3 text-blue-900 overflow-hidden">
                                     <div class="patient-name-container select-none flex items-center min-w-0">
                                         <span title="${escapedName}" class="patient-name-text uppercase whitespace-normal break-words leading-tight max-w-full font-black text-blue-900">
