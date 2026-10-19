@@ -38,6 +38,7 @@
       networkTimeoutMs = 3500,
       playbackRate = 1.1,
       volume = 1,
+      gain = 2.0, // Khuếch đại âm lượng gấp đôi (200%) qua Web Audio API GainNode
       onStart = null,
       onEnd = null,
       onPlaybackStateChange = null,
@@ -52,6 +53,7 @@
         networkTimeoutMs,
         playbackRate,
         volume,
+        gain,
         onStart,
         onEnd,
         onPlaybackStateChange,
@@ -59,6 +61,10 @@
       this.audio = new global.Audio();
       this.audio.preload = "auto";
       this.audio.setAttribute("playsinline", "");
+      this.audioCtx = null;
+      this.gainNode = null;
+      this.audioSourceNode = null;
+      this.setupAudioBooster();
       this.queue = [];
       this.isPlaying = false;
       this.currentText = "";
@@ -79,6 +85,59 @@
       managers.add(this);
       // Tự thử ngay khi mở trang, không phụ thuộc click hay localStorage.
       this.startupTimer = setTimeout(() => this.unlock(), 0);
+    }
+
+    setupAudioBooster() {
+      if (this.audioSourceNode) return;
+      const AudioCtxClass = global.AudioContext || global.webkitAudioContext;
+      if (!AudioCtxClass) return;
+      try {
+        if (!this.audioCtx) {
+          this.audioCtx = new AudioCtxClass();
+        }
+        if (this.audio && !this.audioSourceNode) {
+          this.audioSourceNode = this.audioCtx.createMediaElementSource(this.audio);
+          this.gainNode = this.audioCtx.createGain();
+          this.gainNode.gain.value = typeof this.gain === "number" ? this.gain : 2.0;
+
+          // Bộ nén âm DynamicsCompressor chống rè/vỡ tiếng khi khuếch đại biên độ cao
+          try {
+            const compressor = this.audioCtx.createDynamicsCompressor();
+            compressor.threshold.setValueAtTime(-3, this.audioCtx.currentTime);
+            compressor.knee.setValueAtTime(10, this.audioCtx.currentTime);
+            compressor.ratio.setValueAtTime(12, this.audioCtx.currentTime);
+            compressor.attack.setValueAtTime(0.003, this.audioCtx.currentTime);
+            compressor.release.setValueAtTime(0.25, this.audioCtx.currentTime);
+
+            this.audioSourceNode.connect(this.gainNode);
+            this.gainNode.connect(compressor);
+            compressor.connect(this.audioCtx.destination);
+          } catch (compErr) {
+            this.audioSourceNode.connect(this.gainNode);
+            this.gainNode.connect(this.audioCtx.destination);
+          }
+        }
+      } catch (err) {
+        console.warn("[AudioQueue] Không thể kết nối Web Audio GainNode:", err);
+      }
+    }
+
+    resumeAudioContext() {
+      this.setupAudioBooster();
+      if (this.audioCtx && this.audioCtx.state === "suspended") {
+        this.audioCtx.resume().catch(() => {});
+      }
+    }
+
+    setGain(gainValue) {
+      this.gain = gainValue;
+      if (this.gainNode && this.audioCtx) {
+        try {
+          this.gainNode.gain.setValueAtTime(gainValue, this.audioCtx.currentTime);
+        } catch (e) {
+          this.gainNode.gain.value = gainValue;
+        }
+      }
     }
 
     notify(callback, value) {
@@ -130,6 +189,7 @@
 
     unlock() {
       clearTimeout(this.startupTimer);
+      this.resumeAudioContext();
       if (
         !this.isEnabled() ||
         this.isPlaying ||
@@ -214,6 +274,7 @@
     playNext() {
       clearTimeout(this.startupTimer);
       if (this.isPlaying || this.waitingForActivation || this.gapTimer) return;
+      this.resumeAudioContext();
       if (!this.isEnabled()) {
         this.clear();
         return;
@@ -406,8 +467,12 @@
     }
   }
 
+  function setGain(value) {
+    managers.forEach((manager) => manager.setGain(value));
+  }
+
   global.AudioQueueManager = AudioQueueManager;
-  global.QueueAudio = { unlock, updateSoundControl };
+  global.QueueAudio = { unlock, updateSoundControl, setGain };
 
   if (typeof document !== "undefined") {
     // Capture: gọi play() bên trong thao tác thật của remote trước các handler khác.
