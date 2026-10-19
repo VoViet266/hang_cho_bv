@@ -134,7 +134,7 @@ namespace HangChoKhamBenh.Web.Services
                     {
                         input = new { text = normalizedText },
                         voice = new { languageCode = "vi-VN", name = voiceName },
-                        audioConfig = new { audioEncoding = "MP3", speakingRate }
+                        audioConfig = new { audioEncoding = "MP3", speakingRate, volumeGainDb = 6.0 }
                     };
 
                     var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
