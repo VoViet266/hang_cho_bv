@@ -25,6 +25,12 @@ Thời gian trở về cơ chế ban đầu: ứng dụng dùng múi giờ môi 
 
 ## Các bước xử lý
 
+Mỗi `makb` cần chờ ít nhất 5 giây sau khi tiếp nhận, gọi ô hoặc xác nhận phát trước khi quét lại.
+Máy chủ kiểm tra sau khi khóa lượt khám, dùng mốc nhập/gọi/giao mới nhất của các dòng cùng `makb`;
+Quét trùng trong thời gian chờ bị bỏ qua; ô nhập giữ focus và viền đỏ, không hiện thông báo hay phát âm báo.
+Lượt quét bị chặn không tự chuyển bước hay xếp lượt quét để chạy sau.
+Mã bệnh nhân và mã hóa đơn được tra về `makb` trước khi kiểm tra; mã khám khác vẫn quét bình thường.
+
 | Thao tác | Các cột được ghi |
 | --- | --- |
 | Quét tiếp nhận | `ngaynhap = hiện tại`; `dagiao = 0`; ô gọi, giờ gọi, giờ giao và giờ hoàn thành trống. Dịch vụ đã thu trước đó ghi giờ phát hiện vào `ngaythu`. |

@@ -17,6 +17,7 @@ namespace HangChoKhamBenh.Web.Services
         private static readonly List<int> HcBhyt = [14];
         private static readonly List<int> HcDv = [13];
         private static readonly List<int> HcAll = [14, 13];
+        private static readonly TimeSpan ScanCooldown = TimeSpan.FromSeconds(5);
 
         // ===== Inner types =====
         private record CtRow(string? Makh, string? Mabn, string? Sohd, string? Khochan, decimal? Thanhtien, DateTime? Ngaylap);
@@ -174,6 +175,24 @@ namespace HangChoKhamBenh.Web.Services
                 $"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))");
         }
 
+        // Check after taking the exam lock so concurrent scans cannot advance two steps.
+        private async Task<DuocBarcodeDispenseResponse?> CheckScanCooldownAsync(string makb)
+        {
+            var today = DateTime.Today;
+            var times = await _context.HangChoDuocTmd.AsNoTracking()
+                .Where(h => h.Makb == makb && h.Xoa == 0
+                         && (h.Ngaynhap == null || h.Ngaynhap >= today))
+                .Select(h => new { h.Ngaynhap, h.Ngaytao, h.Ngaygiao })
+                .ToListAsync();
+            var lastScan = times.SelectMany(h => new[] { h.Ngaynhap, h.Ngaytao, h.Ngaygiao }).Max();
+            if (lastScan == null) return null;
+
+            var remaining = lastScan.Value + ScanCooldown - DateTime.Now;
+            if (remaining <= TimeSpan.Zero) return null;
+
+            return new() { Action = "cho-quet-lai" };
+        }
+
         public async Task<DuocProcessScanResponse> ProcessScanAsync(string code)
         {
             return await ProcessFromScanAsync(await ScanAsync(code));
@@ -207,6 +226,9 @@ namespace HangChoKhamBenh.Web.Services
             {
                 await using var transaction = await _context.Database.BeginTransactionAsync();
                 await LockExamAsync(scan.Makb ?? "", scan.Mabn ?? "");
+                var cooldown = await CheckScanCooldownAsync(scan.Makb ?? "");
+                if (cooldown != null)
+                    return new() { Patient = scan, Action = cooldown.Action, Message = cooldown.Message };
                 var admitted = await ThemFromScanAsync(new()
                 {
                     Makb = scan.Makb ?? "", Mabn = scan.Mabn ?? "", Maba = scan.Maba, NgayKcb = scan.NgayKcb
@@ -265,6 +287,8 @@ namespace HangChoKhamBenh.Web.Services
             {
                 await using var transaction = await _context.Database.BeginTransactionAsync();
                 await LockExamAsync(req.Makb.Trim(), req.Mabn.Trim());
+                var cooldown = await CheckScanCooldownAsync(req.Makb.Trim());
+                if (cooldown != null) return cooldown;
                 var result = await DispenseCoreAsync(req);
                 if (result.Action == "loi") await transaction.RollbackAsync();
                 else await transaction.CommitAsync();

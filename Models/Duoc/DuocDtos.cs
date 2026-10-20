@@ -123,6 +123,9 @@ namespace HangChoKhamBenh.Web.Models
 
     public class DuocQueuePageDto
     {
+        [JsonPropertyName("snapshotVersion")]
+        public long SnapshotVersion { get; set; }
+
         [JsonPropertyName("duocType")]
         public string DuocType { get; set; } = "all"; // "bhyt", "dichvu", "all"
 

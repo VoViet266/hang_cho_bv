@@ -16,6 +16,17 @@ namespace HangChoKhamBenh.Web.Services
     {
         private readonly ConcurrentDictionary<string, string> _roomDataCache = new();
 
+        private static string ContentHash(object data)
+        {
+            // A new read version alone is not a change in queue contents.
+            object hashData = data is DuocQueuePageDto page ? new
+            {
+                page.DuocType, page.Title, page.TotalWaiting, page.TotalToday,
+                page.WaitingList, page.NextPatientName
+            } : data;
+            return Convert.ToHexString(MD5.HashData(JsonSerializer.SerializeToUtf8Bytes(hashData)));
+        }
+
         public Task CheckAndBroadcastRoomAsync(string roomType, string roomId, bool force = false)
             => CheckAndBroadcastRoomsAsync([(roomType, roomId)], force);
 
@@ -48,7 +59,7 @@ namespace HangChoKhamBenh.Web.Services
                         };
                     }
                     if (data == null) continue;
-                    var currentHash = Convert.ToHexString(MD5.HashData(JsonSerializer.SerializeToUtf8Bytes(data)));
+                    var currentHash = ContentHash(data);
                     var previousHash = _roomDataCache.GetValueOrDefault(channel);
                     if (!force && currentHash == previousHash) continue;
                     await hubContext.Clients.Group(channel).SendAsync("room_data_updated", new

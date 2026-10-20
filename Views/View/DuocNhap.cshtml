@@ -718,6 +718,9 @@
                 } else if (type === 'success') {
                     if (box) box.classList.add('border-emerald-500', 'bg-emerald-50/40');
                     if (icon) icon.className = 'fa-solid fa-circle-check text-emerald-600 text-base';
+                } else if (type === 'cooldown') {
+                    if (box) box.classList.add('border-rose-500', 'focus-within:border-rose-500');
+                    if (icon) icon.className = 'fa-solid fa-barcode text-slate-500 text-base';
                 } else if (type === 'error') {
                     if (box) {
                         box.classList.add('border-rose-500', 'bg-rose-50/40');
@@ -843,6 +846,18 @@
                     });
                     if (!response.ok) throw new Error('Không thể xử lý lượt quét.');
                     const result = await response.json();
+                    if (result.action === 'cho-quet-lai') {
+                        setScanState('cooldown');
+                        if (scanInput) {
+                            scanInput.value = '';
+                            scanInput.focus({ preventScroll: true });
+                        }
+                        autoResetTimer = setTimeout(() => {
+                            setScanState('');
+                            autoResetTimer = null;
+                        }, 3000);
+                        return;
+                    }
                     const patient = result.patient;
                     if (patient?.success) {
                         if (scanInput) scanInput.value = '';

@@ -11,6 +11,7 @@ namespace HangChoKhamBenh.Web.Services;
 public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
 {
     private static readonly List<int> Warehouses = [1, 2, 3, 13, 14];
+    private static long _lastSnapshotVersion;
     private readonly AppDbContext _context;
     private readonly Lazy<Task<DuocQueueSnapshot>> _snapshot;
 
@@ -29,6 +30,8 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
 
     private async Task<DuocQueueSnapshot> LoadCoreAsync()
     {
+        // Stamp before the first read: a slow older query must not replace a newer snapshot.
+        var version = NextSnapshotVersion();
         var today = DateTime.Today;
         var pending = await _context.HangChoDuocTmd.AsNoTracking()
             .Where(h => h.Xoa == 0 && h.An == 0 && h.Dagiao == 0
@@ -50,7 +53,23 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
                 && Warehouses.Contains(h.Khochan))
             .Select(h => new DailyEntry(h.Makb != "" ? h.Makb : h.Mabn, h.Khochan))
             .Distinct().ToListAsync();
-        return Build(pending, patients, documents, daily);
+        var snapshot = Build(pending, patients, documents, daily);
+        snapshot.All.SnapshotVersion = version;
+        snapshot.Bhyt.SnapshotVersion = version;
+        snapshot.DichVu.SnapshotVersion = version;
+        return snapshot;
+    }
+
+    private static long NextSnapshotVersion()
+    {
+        // Unix microseconds remain exactly representable as a JavaScript number.
+        long previous, next;
+        do
+        {
+            previous = Volatile.Read(ref _lastSnapshotVersion);
+            next = Math.Max(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, previous + 1);
+        } while (Interlocked.CompareExchange(ref _lastSnapshotVersion, next, previous) != previous);
+        return next;
     }
 
     internal static DuocQueueSnapshot Build(List<HangChoDuocTmd> pending, List<Patient> patients,
