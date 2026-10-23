@@ -42,7 +42,7 @@ namespace HangChoKhamBenh.Web.Services
                 query = query.Where(h => h.Khochan == 13 || h.Khochan == 3);
             }
 
-            // Đếm số lượng bệnh nhân khác nhau trong ngày
+    
             return await query
                 .Select(h => !string.IsNullOrEmpty(h.Makb) ? h.Makb : h.Mabn)
                 .Distinct()

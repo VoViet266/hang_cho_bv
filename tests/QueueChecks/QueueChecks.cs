@@ -37,6 +37,11 @@ internal static class QueueChecks
         var waitingEarly = Entry("EARLY", null, 7);
         Check(Snapshot(uncalled, waitingEarly).All.WaitingList[0].Makb == "EARLY",
             "Uncalled service prescriptions retain admission order");
+        var payable = SnapshotWithDocuments([Entry("PAYABLE", null, 8)],
+            CreateDocument("PAYABLE", "PRINTED", 50000m, 1m, 0m),
+            CreateDocument("PAYABLE", "UNPAID", 25000m, 0m, 0m));
+        Check(payable.Input.Single().SoTien == 25000m,
+            "The amount due excludes invoices with Dain set and includes unprinted invoices");
         var tiedFirst = Entry("TIED-FIRST", "3", 11);
         var tiedSecond = Entry("TIED-SECOND", "3", 11);
         tiedFirst.Macho = 1;
@@ -98,12 +103,25 @@ internal static class QueueChecks
     };
 
     private static DuocQueueSnapshot Snapshot(params HangChoDuocTmd[] entries)
+        => SnapshotWithDocuments(entries);
+
+    private static DuocQueueSnapshot SnapshotWithDocuments(HangChoDuocTmd[] entries, params object[] documents)
     {
         var type = typeof(DuocQueueSnapshotService);
         object EmptyRows(string name) => Activator.CreateInstance(typeof(List<>)
             .MakeGenericType(type.GetNestedType(name, BindingFlags.NonPublic)!))!;
+        var documentList = (System.Collections.IList)EmptyRows("Document");
+        foreach (var document in documents) documentList.Add(document);
         return (DuocQueueSnapshot)type.GetMethod("Build", BindingFlags.Static | BindingFlags.NonPublic)!
-            .Invoke(null, [entries.ToList(), EmptyRows("Patient"), EmptyRows("Document"), EmptyRows("DailyEntry")])!;
+            .Invoke(null, [entries.ToList(), EmptyRows("Patient"), documentList, EmptyRows("DailyEntry")])!;
+    }
+
+    private static object CreateDocument(string makh, string sohd, decimal amount, decimal printed, decimal paid)
+    {
+        var documentType = typeof(DuocQueueSnapshotService).GetNestedType("Document", BindingFlags.NonPublic)!;
+        var constructor = documentType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .Single();
+        return constructor.Invoke([makh, sohd, amount, printed, paid]);
     }
 
     // Exercise EF's real SQL translation without a network connection or database writes.

@@ -20,7 +20,7 @@ namespace HangChoKhamBenh.Web.Services
         private static readonly TimeSpan ScanCooldown = TimeSpan.FromSeconds(5);
 
         // ===== Inner types =====
-        private record CtRow(string? Makh, string? Mabn, string? Sohd, string? Khochan, decimal? Thanhtien, DateTime? Ngaylap);
+        private record CtRow(string? Makh, string? Mabn, string? Sohd, string? Khochan, decimal? Thanhtien, decimal? Dain, DateTime? Ngaylap);
         private record HangChoRow(string? Makb, string? Mabn, int Khochan, decimal Dagiao, bool? Dathu,
                                   string? Maba, DateTime? Ngaynhap, DateTime? Ngaygiao, DateTime? Ngayhoanthanh, string? Taikhoan);
         private record PatientInfo(string Mabn, string Holot, string Ten, DateTime? Ngaysinh, decimal? Gioitinh);
@@ -70,7 +70,7 @@ namespace HangChoKhamBenh.Web.Services
                 var ctList = await TodayCt(today)
                     .Where(c => (c.Makh == code || c.Mabn == code || c.Sohd == code)
                              && (c.Khochan == "13" || c.Khochan == "14"))
-                    .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Ngaylap))
+                    .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Dain, c.Ngaylap))
                     .ToListAsync();
 
                 if (ctList.Count == 0)
@@ -92,7 +92,7 @@ namespace HangChoKhamBenh.Web.Services
                 {
                     ctList = await TodayCt(today)
                         .Where(c => c.Makh == actualMakh && (c.Khochan == "13" || c.Khochan == "14"))
-                        .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Ngaylap))
+                        .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Dain, c.Ngaylap))
                         .ToListAsync();
                 }
                 ctList = [.. ctList.DistinctBy(c => $"{c.Makh}_{c.Sohd}_{c.Khochan}", StringComparer.OrdinalIgnoreCase)];
@@ -140,6 +140,7 @@ namespace HangChoKhamBenh.Web.Services
                 var sohdDv = First(dvItems, c => c.Sohd);
                 var tongTien = dvItems
                     .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? ""))
+                    .Where(g => g.All(c => (c.Dain ?? 0) == 0))
                     .Sum(g => g.First().Thanhtien ?? 0);
 
                 return new DuocNhapBarcodeResultDto
@@ -579,7 +580,8 @@ namespace HangChoKhamBenh.Web.Services
                     .ToList();
 
                 result[key] = new CtInfo(
-                    TotalTien: documents.Sum(g => g.First().Thanhtien ?? 0),
+                    TotalTien: documents.Where(g => g.All(c => (c.Dain ?? 0) == 0))
+                        .Sum(g => g.First().Thanhtien ?? 0),
                     Sohd: FirstNonEmpty(matched.Select(c => c.Sohd)) is { Length: > 0 } s ? s : matched[0].Sohd ?? "",
                     DaThu: documents.All(g => g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0)));
             }

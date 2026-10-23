@@ -190,7 +190,8 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
             .ToDictionary(g => g.Key, g =>
             {
                 var invoices = g.GroupBy(d => string.IsNullOrWhiteSpace(d.Sohd) ? g.Key : d.Sohd.Trim()).ToList();
-                return new Payment(invoices.Sum(i => i.First().Amount ?? 0),
+                return new Payment(invoices.Where(i => i.All(d => (d.Printed ?? 0) == 0))
+                        .Sum(i => i.First().Amount ?? 0),
                     g.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.Sohd))?.Sohd ?? "",
                     invoices.All(i => i.Any(d => (d.Printed ?? 0) != 0 || (d.Paid ?? 0) != 0)));
             }, StringComparer.OrdinalIgnoreCase);
