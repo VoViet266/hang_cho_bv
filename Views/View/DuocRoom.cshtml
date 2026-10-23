@@ -169,8 +169,32 @@
             }
 
             /* Kích thước hàng và chữ được tính theo phần màn hình thực có. */
-            #mainContent, #paginationContainer {
+            #mainContent, #duocBoardContainer {
+                display: flex;
+                flex: 1 1 0;
+                flex-direction: column;
                 min-height: 0;
+            }
+
+            .duoc-columns {
+                display: flex;
+                flex: 1 1 0;
+                flex-direction: row;
+                gap: 8px;
+                width: 100%;
+                min-height: 0;
+                overflow: hidden;
+            }
+
+            .duoc-panel {
+                flex: 1 1 0;
+                min-width: 0;
+                min-height: 0;
+                overflow: hidden;
+            }
+
+            .duoc-columns[hidden], .duoc-panel[hidden], [data-duoc-empty][hidden] {
+                display: none !important;
             }
 
             .duoc-patient-table thead tr,
@@ -190,12 +214,12 @@
             }
 
             .duoc-patient-table tbody td {
-                padding: 2px 6px !important;
+                padding: var(--duoc-cell-padding-y, 2px) var(--duoc-cell-padding-x, 6px) !important;
                 line-height: 1.1 !important;
             }
 
             .duoc-patient-table .patient-name-container {
-                height: calc(var(--duoc-row-height, 74px) - 6px);
+                height: var(--duoc-name-height, 68px);
                 width: 100%;
                 align-items: center;
             }
@@ -211,7 +235,7 @@
                 word-break: normal !important;
                 overflow-wrap: anywhere;
                 overflow: hidden !important;
-                max-height: calc(var(--duoc-row-height, 74px) - 6px);
+                max-height: var(--duoc-name-height, 68px);
             }
 
             .duoc-patient-table td.cell-namsinh {
@@ -221,7 +245,9 @@
 
             .duoc-patient-table .badge-money {
                 font-size: var(--duoc-money-font, 18px) !important;
-                padding: 3px 5px !important;
+                padding: var(--duoc-badge-padding-y, 3px) var(--duoc-badge-padding-x, 5px) !important;
+                border-width: var(--duoc-badge-border-width, 1px) !important;
+                line-height: 1.1 !important;
                 max-width: 100% !important;
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
@@ -232,9 +258,18 @@
             .duoc-patient-table .badge-status {
                 display: inline-flex !important;
                 align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                width: 100%;
+                height: var(--duoc-status-height, 44px);
                 min-width: 0;
+                border-radius: 8px !important;
+                font-weight: 900 !important;
+                box-shadow: none !important;
                 font-size: var(--duoc-status-font, 16px) !important;
-                padding: 3px 6px !important;
+                padding: var(--duoc-badge-padding-y, 3px) var(--duoc-badge-padding-x, 5px) !important;
+                border-width: var(--duoc-badge-border-width, 1px) !important;
+                line-height: 1.1 !important;
                 max-width: 100% !important;
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
@@ -242,13 +277,9 @@
             }
 
             .duoc-patient-table .badge-pickup {
-                font-size: clamp(20px, 2vw, 34px) !important;
-                font-weight: 900 !important;
-                padding: 5px 12px !important;
                 background: #1d4ed8 !important;
                 color: #fff !important;
                 border-color: #1e3a8a !important;
-                box-shadow: 0 2px 6px rgba(30, 64, 175, 0.25);
             }
 
             .badge-pickup .duoc-status-window {
@@ -263,7 +294,7 @@
 
             .duoc-status-window {
                 flex-shrink: 0;
-                margin-left: 4px;
+                margin-left: 0;
             }
 
             .duoc-notice {
@@ -347,7 +378,7 @@
     </header>
 
     <main id="mainContent" class="flex-grow overflow-hidden flex flex-col">
-        <div id="paginationContainer" class="flex-grow overflow-hidden flex flex-col">
+        <div id="duocBoardContainer" class="flex-grow overflow-hidden flex flex-col">
             <div id="ssrTableWrapper" class="room-container flex-grow overflow-hidden flex flex-col bg-white ">
                 <table
                     class="w-full h-full border-collapse table-fixed select-none duoc-patient-table duoc-table-single">
@@ -565,63 +596,41 @@
                 // Biến toàn cục lưu danh sách bệnh nhân đang hiển thị
                 let currentActiveList = [];
 
-                const PAGE_ROTATION_INTERVAL = 12000;
-                let currentPageIndex = 0;
-                let paginationTimer = null;
-                let splitLayoutActive = false;
                 let duocShell = null;
                 const patientRows = new Map();
 
-                function calculateRowsPerColumn(isSplit = false) {
-                    const container = document.getElementById('paginationContainer');
-                    const totalHeight = container?.clientHeight || Math.max(180, window.innerHeight - 110);
-                    const availableBodyHeight = Math.max(60, totalHeight - 46);
-                    const targetHeight = isSplit ? 68 : 82;
-                    return Math.max(1, Math.min(18, Math.floor(availableBodyHeight / targetHeight)));
-                }
-
-                function getRowHeightPx(rowsCount) {
-                    const container = document.getElementById('paginationContainer');
-                    const totalHeight = container?.clientHeight || Math.max(180, window.innerHeight - 110);
-                    return Math.floor(Math.max(60, totalHeight - 46) / Math.max(1, rowsCount));
-                }
-
                 function getDuocLayout(patientCount) {
-                    const singleRowsCapacity = calculateRowsPerColumn(false);
-                    const leftColumnCapacity = calculateRowsPerColumn(true);
-                    const canSplit = window.innerWidth >= 1180;
-                    // Sau khi chia cột, giữ bố cục đến khi hết hàng chờ hoặc màn hình hẹp lại.
-                    // Số hàng cố định giúp thêm/bớt một người không làm đổi cỡ chữ cả bảng.
-                    splitLayoutActive = canSplit && patientCount > 0
-                        && (splitLayoutActive || patientCount > leftColumnCapacity);
-                    const isSplit = splitLayoutActive;
-                    const rowsPerCol = canSplit ? leftColumnCapacity : singleRowsCapacity;
-                    return { isSplit, rowsPerCol, pageCapacity: isSplit ? rowsPerCol * 2 : rowsPerCol };
-                }
-
-                function updatePageIndicator(current, total) {
-                    const badge = document.getElementById('pageBadge');
-                    const badgeText = document.getElementById('pageBadgeText');
-                    if (!badge || !badgeText) return;
-                    if (total > 1) {
-                        const text = `${current}/${total}`;
-                        if (badgeText.textContent !== text) badgeText.textContent = text;
-                    }
-                    badge.classList.toggle('hidden', total <= 1);
+                    const container = document.getElementById('duocBoardContainer');
+                    const width = container?.clientWidth || window.innerWidth;
+                    const height = container?.clientHeight || Math.max(180, window.innerHeight - 110);
+                    // Chừa tiêu đề bảng, viền và khoảng đệm; mỗi tên có chỗ cho hai dòng.
+                    const bodyHeight = Math.max(1, height - 48);
+                    const singleColumnCapacity = Math.max(1, Math.min(18, Math.floor(bodyHeight / 82)));
+                    const isSplit = width >= 720 && patientCount > singleColumnCapacity;
+                    const columnCount = isSplit ? 2 : 1;
+                    const columnWidth = (width - (isSplit ? 8 : 0)) / columnCount;
+                    // Giữ kích thước hàng trước khi phóng lớn; không thu nhỏ khi thêm bệnh nhân.
+                    const targetRowHeight = isSplit ? 68 : 82;
+                    const maxRowsPerCol = Math.max(1, Math.min(18, Math.floor(bodyHeight / targetRowHeight)));
+                    const visibleCapacity = maxRowsPerCol * columnCount;
+                    // Lấp đầy cột trái trước, sau đó mới chuyển sang cột phải.
+                    const rowsPerCol = maxRowsPerCol;
+                    const rowHeightPx = Math.max(1, Math.floor(bodyHeight / maxRowsPerCol));
+                    return { isSplit, rowsPerCol, visibleCapacity, columnWidth, rowHeightPx };
                 }
 
                 function ensureDuocShell(container) {
                     if (duocShell) return duocShell;
                     // Tạo khung bảng một lần; các bản cập nhật chỉ sửa những dòng thay đổi.
                     container.innerHTML = `
-                        <div data-duoc-empty class="hidden room-container flex-grow bg-white border-2 border-slate-300 rounded-lg flex items-center justify-center shadow-sm h-full">
+                        <div data-duoc-empty hidden class="room-container flex-grow bg-white border-2 border-slate-300 rounded-lg flex items-center justify-center shadow-sm h-full">
                             <p class="text-center text-slate-400 text-2xl md:text-4xl font-bold italic">Không có bệnh nhân chờ lĩnh thuốc.</p>
                         </div>
-                        <div data-duoc-columns class="flex-grow flex flex-row gap-3 h-full overflow-hidden w-full min-w-0">
-                            <div class="room-container flex-1 min-w-0 bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm overflow-hidden h-full">
+                        <div data-duoc-columns class="duoc-columns">
+                            <div class="duoc-panel room-container bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm">
                                 ${buildTableHtml([], false, 74)}
                             </div>
-                            <div class="hidden room-container flex-1 min-w-0 bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm overflow-hidden h-full">
+                            <div hidden class="duoc-panel room-container bg-white border-2 border-slate-300 rounded-lg flex flex-col shadow-sm">
                                 ${buildTableHtml([], false, 74)}
                             </div>
                         </div>`;
@@ -688,16 +697,18 @@
                     });
                 }
 
-                function renderDuocView(list = currentActiveList, preservePage = false) {
-                    const container = document.getElementById('paginationContainer');
+                function renderDuocView(list = currentActiveList) {
+                    const container = document.getElementById('duocBoardContainer');
                     if (!container) return;
 
                     if (!list) list = [];
                     currentActiveList = list;
                     const shell = ensureDuocShell(container);
-                    shell.empty.classList.toggle('hidden', list.length > 0);
-                    shell.columns.classList.toggle('hidden', list.length === 0);
-                    const activeKeys = new Set(list.map(getPatientRowKey));
+                    shell.empty.hidden = list.length > 0;
+                    shell.columns.hidden = list.length === 0;
+                    const { isSplit, rowsPerCol, visibleCapacity, columnWidth, rowHeightPx } = getDuocLayout(list.length);
+                    const visibleList = list.slice(0, visibleCapacity);
+                    const activeKeys = new Set(visibleList.map(getPatientRowKey));
                     patientRows.forEach((cached, key) => {
                         if (!activeKeys.has(key)) {
                             cached.row.remove();
@@ -705,79 +716,48 @@
                         }
                     });
 
-                    if (list.length === 0) {
-                        if (paginationTimer) { clearInterval(paginationTimer); paginationTimer = null; }
-                        splitLayoutActive = false;
-                        currentPageIndex = 0;
-                        updatePageIndicator(0, 0);
-                        return;
-                    }
+                    if (list.length === 0) return;
 
-                    const { isSplit, rowsPerCol, pageCapacity } = getDuocLayout(list.length);
-                    const rowHeightPx = getRowHeightPx(rowsPerCol);
-
-                    // 3. Tính số trang
-                    const totalPages = Math.max(1, Math.ceil(list.length / pageCapacity));
-                    currentPageIndex = preservePage ? Math.min(currentPageIndex, totalPages - 1) : 0;
-
-                    updatePageIndicator(currentPageIndex + 1, totalPages);
-
-                    // Lấy danh sách bệnh nhân thuộc trang hiện tại
-                    const startIdx = currentPageIndex * pageCapacity;
-                    const pageItems = list.slice(startIdx, startIdx + pageCapacity);
-                    const layout = `${isSplit}:${rowHeightPx}:${window.innerWidth}`;
+                    const layout = `${isSplit}:${rowHeightPx}:${columnWidth}`;
                     if (shell.layout !== layout) {
-                        shell.panels[1].classList.toggle('hidden', !isSplit);
+                        shell.panels[1].hidden = !isSplit;
                         shell.tables.forEach(table => {
                             table.classList.toggle('duoc-table-split', isSplit);
                             table.classList.toggle('duoc-table-single', !isSplit);
-                            table.setAttribute('style', `table-layout:fixed;${getTableSizeVars(isSplit, rowHeightPx)}`);
-                            const widths = isSplit ? [52, 9, 16, 23] : [52, 8, 18, 22];
+                            table.setAttribute('style', `table-layout:fixed;${getTableSizeVars(isSplit, rowHeightPx, columnWidth)}`);
+                            const widths = isSplit ? [48, 10, 20, 22] : [52, 8, 18, 22];
                             table.querySelectorAll('col').forEach((col, index) => col.style.width = `${widths[index]}%`);
                             table.querySelectorAll('th')[1].textContent = isSplit ? 'Năm' : 'Năm Sinh';
                         });
                         shell.layout = layout;
                     }
-                    // Trang cuối vẫn giữ hai cột và cùng cỡ chữ như các trang trước.
-                    updatePatientRows(shell.bodies[0], pageItems.slice(0, rowsPerCol), isSplit, rowHeightPx);
-                    updatePatientRows(shell.bodies[1], isSplit ? pageItems.slice(rowsPerCol) : [], isSplit, rowHeightPx);
-
-                    // Tự động xoay trang nếu có hơn 1 trang
-                    if (totalPages > 1) {
-                        if (!paginationTimer) {
-                            paginationTimer = setInterval(() => {
-                                const { pageCapacity: curCapacity } = getDuocLayout(currentActiveList.length);
-                                const curTotalPages = Math.max(1, Math.ceil(currentActiveList.length / curCapacity));
-                                if (curTotalPages > 1) {
-                                    currentPageIndex = (currentPageIndex + 1) % curTotalPages;
-                                    renderDuocView(currentActiveList, true);
-                                } else {
-                                    clearInterval(paginationTimer);
-                                    paginationTimer = null;
-                                    updatePageIndicator(1, 1);
-                                }
-                            }, PAGE_ROTATION_INTERVAL);
-                        }
-                    } else {
-                        if (paginationTimer) { clearInterval(paginationTimer); paginationTimer = null; }
-                    }
+                    // Giữ chữ lớn và thứ tự hàng chờ; chỉ hiện những người đầu vừa màn hình.
+                    // Người phía sau tự lên khi những người trước rời danh sách, không xoay trang.
+                    updatePatientRows(shell.bodies[0], visibleList.slice(0, rowsPerCol), isSplit, rowHeightPx);
+                    updatePatientRows(shell.bodies[1], isSplit ? visibleList.slice(rowsPerCol) : [], isSplit, rowHeightPx);
                 }
 
-                function getTableSizeVars(isSplit, rowHeightPx) {
-                    // Cùng cỡ chữ cho mọi tên; tối đa hai dòng với line-height 1.3.
+                function getTableSizeVars(isSplit, rowHeightPx, columnWidth = window.innerWidth) {
+                    const cellPaddingY = 2;
+                    const cellPaddingX = Math.max(0, Math.min(6, Math.floor(columnWidth / 140)));
+                    const badgePaddingY = 3;
+                    const badgePaddingX = Math.min(5, Math.floor(columnWidth / 150));
+                    const badgeBorder = 2;
+                    const nameHeight = Math.max(1, rowHeightPx - cellPaddingY * 2 - 2);
                     const nameFont = Math.max(18, Math.min(isSplit ? 40 : 52,
-                        Math.floor((rowHeightPx - 6) / 2.6),
+                        Math.floor(nameHeight / 2.6),
                         Math.floor(window.innerWidth * (isSplit ? 0.024 : 0.032))));
-
-                    const yearFont = Math.max(15, Math.min(isSplit ? 26 : 32,
-                        Math.floor(rowHeightPx * 0.36), Math.floor(window.innerWidth * (isSplit ? 0.015 : 0.02))));
-                    const moneyFont = Math.max(12, Math.min(isSplit ? 20 : 27,
-                        Math.floor(rowHeightPx * 0.28), Math.floor(window.innerWidth * (isSplit ? 0.012 : 0.016))));
+                    const yearWidth = columnWidth * (isSplit ? 0.10 : 0.08) - cellPaddingX * 2;
+                    const yearFont = Math.max(14, Math.min(isSplit ? 26 : 32, Math.floor(yearWidth / 2.6)));
+                    const moneyWidth = columnWidth * (isSplit ? 0.20 : 0.18)
+                        - cellPaddingX * 2 - badgePaddingX * 2 - badgeBorder * 2;
+                    const moneyFont = Math.max(12, Math.min(isSplit ? 20 : 27, Math.floor(moneyWidth / 7)));
                     const statusFont = Math.max(11, Math.min(isSplit ? 17 : 23,
-                        Math.floor(rowHeightPx * 0.26), Math.floor(window.innerWidth * (isSplit ? 0.011 : 0.013))));
-                    const headerFont = Math.max(12, Math.min(isSplit ? 18 : 22,
-                        Math.floor(window.innerWidth * (isSplit ? 0.011 : 0.014))));
-                    return `--duoc-row-height:${rowHeightPx}px;--duoc-name-font:${nameFont}px;--duoc-year-font:${yearFont}px;--duoc-money-font:${moneyFont}px;--duoc-status-font:${statusFont}px;--duoc-header-font:${headerFont}px`;
+                        Math.floor(rowHeightPx * 0.26),
+                        Math.floor(window.innerWidth * (isSplit ? 0.011 : 0.013))));
+                    const statusHeight = Math.ceil(statusFont * 2.2) + badgePaddingY * 2 + badgeBorder * 2;
+                    const headerFont = Math.max(12, Math.min(isSplit ? 18 : 22, Math.floor(columnWidth * 0.032)));
+                    return `--duoc-row-height:${rowHeightPx}px;--duoc-name-height:${nameHeight}px;--duoc-name-font:${nameFont}px;--duoc-year-font:${yearFont}px;--duoc-money-font:${moneyFont}px;--duoc-status-font:${statusFont}px;--duoc-status-height:${statusHeight}px;--duoc-header-font:${headerFont}px;--duoc-cell-padding-y:${cellPaddingY}px;--duoc-cell-padding-x:${cellPaddingX}px;--duoc-badge-padding-y:${badgePaddingY}px;--duoc-badge-padding-x:${badgePaddingX}px;--duoc-badge-border-width:${badgeBorder}px`;
                 }
 
                 function buildTableHtml(rows, isSplit, rowHeightPx) {
@@ -786,10 +766,10 @@
                     const sizeVars = getTableSizeVars(isSplit, rowHeightPx);
 
                     const colWidths = isSplit
-                        ? `<col style="width: 52%;">
-                           <col style="width: 9%;">
-                           <col style="width: 16%;">
-                           <col style="width: 23%;">`
+                        ? `<col style="width: 48%;">
+                           <col style="width: 10%;">
+                           <col style="width: 20%;">
+                           <col style="width: 22%;">`
                         : `<col style="width: 52%;">
                            <col style="width: 8%;">
                            <col style="width: 18%;">
@@ -1091,8 +1071,8 @@
                     const titleEl = document.querySelector('.tv-room-title');
                     if (titleEl && data.title && titleEl.textContent !== data.title) titleEl.textContent = data.title;
 
-                    // Render danh sách (bảo lưu trang đang xem nếu hợp lệ)
-                    renderDuocView(list, true);
+                    // Cập nhật phần đầu danh sách vừa màn hình, giữ nguyên khung bảng.
+                    renderDuocView(list);
                     return true;
                 }
 
@@ -1108,7 +1088,7 @@
                 // ═══════════════ KHỞI ĐỘNG ═══════════════
                 updateSoundIcon();
 
-                // Khởi tạo bảng phân trang từ dữ liệu SSR
+                // Khởi tạo bảng từ dữ liệu SSR
                 (function initFromSSR() {
                     const initialList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(queueList));
                     renderQueue({ waitingList: initialList });
@@ -1119,7 +1099,7 @@
                 window.addEventListener('resize', () => {
                     clearTimeout(resizeDebounce);
                     resizeDebounce = setTimeout(() => {
-                        renderDuocView(currentActiveList, true);
+                        renderDuocView(currentActiveList);
                     }, 150);
                 });
 
