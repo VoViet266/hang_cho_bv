@@ -20,13 +20,14 @@ namespace HangChoKhamBenh.Web.Services
         private static readonly TimeSpan ScanCooldown = TimeSpan.FromSeconds(5);
 
         // ===== Inner types =====
-        private record CtRow(string? Makh, string? Mabn, string? Sohd, string? Khochan, decimal? Thanhtien, decimal? Dain, DateTime? Ngaylap);
-        private record HangChoRow(string? Makb, string? Mabn, int Khochan, decimal Dagiao, bool? Dathu,
+        private record CtRow(string? Makh, string? Mabn, string? Sohd, string? Khochan, decimal? Thanhtien,
+                             decimal? Dain, decimal? Dathu, DateTime? Ngaylap);
+        private record HangChoRow(string? Makb, string? Mabn, string? Sohd, int Khochan, decimal Dagiao, bool? Dathu,
                                   string? Maba, DateTime? Ngaynhap, DateTime? Ngaygiao, DateTime? Ngayhoanthanh, string? Taikhoan);
         private record PatientInfo(string Mabn, string Holot, string Ten, DateTime? Ngaysinh, decimal? Gioitinh);
         private record CtInfo(decimal TotalTien, string Sohd, bool DaThu);
         private record PatientGroup(
-            string? Makb, string? Mabn, bool HasBhyt, bool HasDv, decimal Dagiao, bool DvDathu,
+            string? Makb, string? Mabn, string? Sohd, bool HasBhyt, bool HasDv, decimal Dagiao, bool DvDathu,
             string Taikhoan, string OcuaBhyt, string OcuaDv, string Maba,
             DateTime? Ngaynhap, DateTime? Ngaygiao, DateTime? Ngayhoanthanh, string HoTen, DateTime? Ngaysinh, decimal? Gioitinh)
         {
@@ -51,7 +52,7 @@ namespace HangChoKhamBenh.Web.Services
             => _context.HangChoDuocTmd.AsNoTracking().Where(h => h.Xoa == 0 && h.An == 0);
 
         private static Task<List<HangChoRow>> ToRowsAsync(IQueryable<HangChoDuocTmd> q)
-            => q.Select(h => new HangChoRow(h.Makb, h.Mabn, h.Khochan, h.Dagiao, h.Dathu,
+            => q.Select(h => new HangChoRow(h.Makb, h.Mabn, h.Sohd, h.Khochan, h.Dagiao, h.Dathu,
                                             h.Maba, h.Ngaynhap, h.Ngaygiao, h.Ngayhoanthanh, h.Taikhoan))
                 .ToListAsync();
 
@@ -70,7 +71,7 @@ namespace HangChoKhamBenh.Web.Services
                 var ctList = await TodayCt(today)
                     .Where(c => (c.Makh == code || c.Mabn == code || c.Sohd == code)
                              && (c.Khochan == "13" || c.Khochan == "14"))
-                    .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Dain, c.Ngaylap))
+                    .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Dain, c.Dathu, c.Ngaylap))
                     .ToListAsync();
 
                 if (ctList.Count == 0)
@@ -88,14 +89,16 @@ namespace HangChoKhamBenh.Web.Services
                 if (string.IsNullOrEmpty(actualMakh))
                     return new() { Success = false, Message = "Chứng từ không có mã khám; không thể xác định lượt nhận thuốc." };
 
-                if (!string.Equals(code, actualMakh, StringComparison.Ordinal))
+                var selectedInvoice = string.Equals(code, selected.Sohd?.Trim(), StringComparison.OrdinalIgnoreCase)
+                    ? selected.Sohd?.Trim() : null;
+                if (!string.Equals(code, actualMakh, StringComparison.Ordinal) || selectedInvoice != null)
                 {
                     ctList = await TodayCt(today)
-                        .Where(c => c.Makh == actualMakh && (c.Khochan == "13" || c.Khochan == "14"))
-                        .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Dain, c.Ngaylap))
+                        .Where(c => c.Makh == actualMakh && (c.Khochan == "13" || c.Khochan == "14")
+                            && (selectedInvoice == null || c.Sohd == selectedInvoice))
+                        .Select(c => new CtRow(c.Makh, c.Mabn, c.Sohd, c.Khochan, c.Thanhtien, c.Dain, c.Dathu, c.Ngaylap))
                         .ToListAsync();
                 }
-                ctList = [.. ctList.DistinctBy(c => $"{c.Makh}_{c.Sohd}_{c.Khochan}", StringComparer.OrdinalIgnoreCase)];
                 var mabn = ctList.FirstOrDefault(c => !string.IsNullOrEmpty(c.Mabn))?.Mabn ?? "";
 
                 // Thông tin bệnh nhân
@@ -140,8 +143,18 @@ namespace HangChoKhamBenh.Web.Services
                 var sohdDv = First(dvItems, c => c.Sohd);
                 var tongTien = dvItems
                     .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? ""))
-                    .Where(g => g.All(c => (c.Dain ?? 0) == 0))
+                    .Where(g => g.All(c => (c.Dain ?? 0) == 0 && (c.Dathu ?? 0) == 0))
                     .Sum(g => g.First().Thanhtien ?? 0);
+                var toaList = ctList
+                    .GroupBy(c => (Warehouse: c.Khochan?.Trim() ?? "", Invoice: c.Sohd?.Trim() ?? ""))
+                    .OrderBy(g => g.Min(c => c.Ngaylap))
+                    .Select(g => new DuocToaHoaDonDto
+                    {
+                        Sohd = string.IsNullOrWhiteSpace(g.Key.Invoice) ? null : g.Key.Invoice,
+                        Khochan = int.TryParse(g.Key.Warehouse, out var warehouse) ? warehouse : 0,
+                        Thanhtien = g.First().Thanhtien ?? 0,
+                        DaThu = g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0)
+                    }).ToList();
 
                 return new DuocNhapBarcodeResultDto
                 {
@@ -157,9 +170,11 @@ namespace HangChoKhamBenh.Web.Services
                     GioiTinh = gioiTinh,
                     NgayKcb = ngayKcb,
                     Sohd = sohdBhyt != "" ? sohdBhyt : sohdDv,
+                    SelectedSohd = selectedInvoice,
                     SohdBhyt = sohdBhyt,
                     SohdDv = sohdDv,
-                    Thanhtien = tongTien
+                    Thanhtien = tongTien,
+                    ToaList = toaList
                 };
             }
             catch (Exception ex)
@@ -241,7 +256,10 @@ namespace HangChoKhamBenh.Web.Services
                 }
                 DuocBarcodeDispenseResponse action;
                 if (admitted.Action == "da-co-trong-hang-cho")
-                    action = await DispenseCoreAsync(new() { Makb = scan.Makb ?? "", Mabn = scan.Mabn ?? "" }, scan, admitted.ServicePaid);
+                    action = await DispenseCoreAsync(new()
+                    {
+                        Makb = scan.Makb ?? "", Mabn = scan.Mabn ?? "", Sohd = scan.SelectedSohd
+                    }, scan);
                 else
                     action = new() { Success = true, Action = admitted.Action, Message = admitted.Message ?? "Đã tiếp nhận toa." };
                 if (action.Action == "loi") await transaction.RollbackAsync();
@@ -307,18 +325,34 @@ namespace HangChoKhamBenh.Web.Services
 
         /// <summary>Tiếp nhận toa của đúng lượt khám và giữ nguyên lượt đã xử lý.</summary>
         private async Task<QueueUpsertResult> UpsertHangChoAsync(
-            string makb, string mabn, DuocNhapThemRequest req, DateTime? ngayKcb,
+            string makb, string mabn, string? sohd, DuocNhapThemRequest req, DateTime? ngayKcb,
             int khoInsert, List<int> khoMatch, bool dathu, bool updateDathu)
         {
             var today = DateTime.Today;
-            var existing = await _context.HangChoDuocTmd.AsNoTracking()
-                .Where(h => h.Makb == makb && h.Mabn == mabn && khoMatch.Contains(h.Khochan)
+            var matchingRows = _context.HangChoDuocTmd.AsNoTracking()
+                .Where(h => h.Makb == makb && h.Mabn == mabn && h.Sohd == sohd && khoMatch.Contains(h.Khochan)
                          && h.Xoa == 0 && h.An == 0
-                         && (h.Ngaynhap == null || h.Ngaynhap >= today))
+                         && (h.Ngaynhap == null || h.Ngaynhap >= today));
+            var existing = await matchingRows
                 .OrderBy(h => h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat ? 0 : 1)
                 .ThenByDescending(h => h.Ngaynhap)
                 .Select(h => new { h.Macho, h.Dagiao, h.Khochan, h.Dathu, h.Ngaythu })
                 .FirstOrDefaultAsync();
+            if (existing == null && !string.IsNullOrWhiteSpace(sohd))
+            {
+                var legacy = await _context.HangChoDuocTmd.AsNoTracking()
+                    .Where(h => h.Makb == makb && h.Mabn == mabn && h.Sohd == null && khoMatch.Contains(h.Khochan)
+                             && h.Xoa == 0 && h.An == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today))
+                    .OrderBy(h => h.Ngaynhap).ThenBy(h => h.Macho)
+                    .Select(h => new { h.Macho, h.Dagiao, h.Khochan, h.Dathu, h.Ngaythu })
+                    .FirstOrDefaultAsync();
+                if (legacy != null)
+                {
+                    await _context.HangChoDuocTmd.Where(h => h.Macho == legacy.Macho && h.Sohd == null)
+                        .ExecuteUpdateAsync(setter => setter.SetProperty(h => h.Sohd, sohd));
+                    existing = legacy;
+                }
+            }
 
             var now = DateTime.Now;
 
@@ -328,6 +362,7 @@ namespace HangChoKhamBenh.Web.Services
                 {
                     Mabn = mabn,
                     Makb = makb,
+                    Sohd = sohd,
                     Ngaynhap = now,
                     Ngaytao = null,
                     Ngaygiao = null,
@@ -375,27 +410,40 @@ namespace HangChoKhamBenh.Web.Services
                 if (!scan.Success || scan.Makb != makb || (mabn != "" && scan.Mabn != mabn))
                     return new() { Success = false, Message = scan.Success ? "Mã khám và mã bệnh nhân không khớp." : scan.Message };
                 mabn = scan.Mabn ?? "";
+                if (!string.IsNullOrWhiteSpace(req.Sohd))
+                {
+                    scan.ToaList = scan.ToaList.Where(t => string.Equals(t.Sohd?.Trim(), req.Sohd.Trim(),
+                        StringComparison.OrdinalIgnoreCase)).ToList();
+                    if (scan.ToaList.Count == 0)
+                        return new() { Success = false, Message = "Không tìm thấy toa thuốc theo số hóa đơn đã chọn." };
+                }
                 if (mabn == "")
                     return new() { Success = false, Message = "Chứng từ không có mã bệnh nhân." };
 
                 var ngayKcb = scan.NgayKcb ?? DateTime.Now;
-                bool addBhyt = scan.HasBhyt;
-                bool addDv = scan.HasDichVu;
-                bool? servicePaid = null;
+                var toas = scan.ToaList;
+                if (toas.Count == 0)
+                {
+                    toas = [];
+                    if (scan.HasBhyt)
+                        toas.Add(new DuocToaHoaDonDto { Sohd = scan.SohdBhyt, Khochan = 14, DaThu = true });
+                    if (scan.HasDichVu)
+                        toas.Add(new DuocToaHoaDonDto { Sohd = scan.SohdDv, Khochan = 13 });
+                }
+                bool addBhyt = toas.Any(t => t.Khochan == 14);
+                bool addDv = toas.Any(t => t.Khochan == 13);
                 var results = new List<QueueUpsertResult>();
 
-                if (addBhyt)
+                foreach (var toa in toas.Where(t => t.Khochan == 14))
                 {
-                    results.Add(await UpsertHangChoAsync(makb, mabn, req, ngayKcb,
+                    results.Add(await UpsertHangChoAsync(makb, mabn, toa.Sohd, req, ngayKcb,
                         khoInsert: 14, khoMatch: [14], dathu: true, updateDathu: false));
                 }
 
-                if (addDv)
+                foreach (var toa in toas.Where(t => t.Khochan == 13))
                 {
-                    bool isPaid = await IsServicePaidAsync(makb, today);
-                    servicePaid = isPaid;
-
-                    results.Add(await UpsertHangChoAsync(makb, mabn, req, ngayKcb,
+                    bool isPaid = await IsServicePaidAsync(makb, today, toa.Sohd);
+                    results.Add(await UpsertHangChoAsync(makb, mabn, toa.Sohd, req, ngayKcb,
                         khoInsert: 13, khoMatch: [13, 3], dathu: isPaid, updateDathu: true));
                 }
 
@@ -412,7 +460,6 @@ namespace HangChoKhamBenh.Web.Services
                     Dagiao = 0,
                     Khochan = addBhyt && addDv ? 0 : addDv ? 13 : 14,
                     OCua = null,
-                    ServicePaid = servicePaid,
                     HoTen = scan.HoTen, NamSinh = scan.NgaySinh.Length >= 4 ? scan.NgaySinh[^4..] : "",
                     Mabn = mabn, HasDichVu = addDv,
                     Message = action switch
@@ -431,7 +478,7 @@ namespace HangChoKhamBenh.Web.Services
         }
 
         // Quét lại: gọi thu tiền nếu chưa thu, gọi nhận thuốc, rồi mới xác nhận phát.
-        private async Task<DuocBarcodeDispenseResponse> DispenseCoreAsync(DuocBarcodeDispenseRequest req, DuocNhapBarcodeResultDto? scannedPatient = null, bool? servicePaid = null)
+        private async Task<DuocBarcodeDispenseResponse> DispenseCoreAsync(DuocBarcodeDispenseRequest req, DuocNhapBarcodeResultDto? scannedPatient = null)
         {
             var makb = req.Makb?.Trim() ?? "";
             var mabn = req.Mabn?.Trim() ?? "";
@@ -446,11 +493,17 @@ namespace HangChoKhamBenh.Web.Services
                              && (h.Ngaynhap == null || h.Ngaynhap >= today)
                              && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
                              && HcAll.Contains(h.Khochan));
-                var pending = await query.AsNoTracking()
-                    .Select(h => new DuocScanState(h.Khochan, h.Taikhoan)).ToListAsync();
+                var queued = await query.AsNoTracking().OrderBy(h => h.Ngaynhap).ThenBy(h => h.Macho)
+                    .Select(h => new { h.Sohd, h.Khochan, h.Taikhoan }).ToListAsync();
+                if (queued.Count == 0)
+                    return new() { Action = "khong-con-cho", Message = "Lượt khám này không còn toa chờ phát." };
+                var invoice = req.Sohd?.Trim() ?? queued[0].Sohd?.Trim();
+                query = query.Where(h => h.Sohd == invoice);
+                var pending = queued.Where(h => string.Equals(h.Sohd?.Trim(), invoice, StringComparison.OrdinalIgnoreCase))
+                    .Select(h => new DuocScanState(h.Khochan, h.Taikhoan)).ToList();
                 var hasDv = pending.Any(h => h.Khochan == DuocKhoConstant.DichVu);
                 var hasBhyt = pending.Any(h => h.Khochan == DuocKhoConstant.Bhyt);
-                var paid = hasDv && (servicePaid ?? await IsServicePaidAsync(makb, today));
+                var paid = hasDv && await IsServicePaidAsync(makb, today, invoice);
                 var action = DuocScanWorkflow.NextAction(pending, paid);
 
                 if (action == DuocScanAction.NoPending)
@@ -520,15 +573,19 @@ namespace HangChoKhamBenh.Web.Services
             }
         }
 
-        private async Task<bool> IsServicePaidAsync(string makb, DateTime today)
+        private async Task<bool> IsServicePaidAsync(string makb, DateTime today, string? sohd = null)
         {
             var warehouses = KhoDv.ToList();
             var documents = await TodayCt(today)
                 .Where(c => c.Makh == makb && c.Khochan != null && warehouses.Contains(c.Khochan))
                 .Select(c => new { c.Sohd, c.Dain, c.Dathu }).ToListAsync();
-            return documents.Count > 0 && documents
-                .GroupBy(c => string.IsNullOrWhiteSpace(c.Sohd) ? makb : c.Sohd.Trim())
-                .All(g => g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0));
+            if (string.IsNullOrWhiteSpace(sohd))
+                return documents.Count > 0 && documents
+                    .GroupBy(c => c.Sohd?.Trim() ?? "", StringComparer.OrdinalIgnoreCase)
+                    .All(g => g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0));
+            var invoice = documents.Where(c =>
+                string.Equals(c.Sohd?.Trim(), sohd.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+            return invoice.Count > 0 && invoice.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0);
         }
 
         private async Task<Dictionary<string, PatientInfo>> LoadPatientInfoAsync(IEnumerable<string?> mabns)
@@ -579,21 +636,28 @@ namespace HangChoKhamBenh.Web.Services
                     .GroupBy(c => !string.IsNullOrEmpty(c.Sohd) ? c.Sohd.Trim() : (c.Makh ?? ""))
                     .ToList();
 
-                result[key] = new CtInfo(
-                    TotalTien: documents.Where(g => g.All(c => (c.Dain ?? 0) == 0))
-                        .Sum(g => g.First().Thanhtien ?? 0),
-                    Sohd: FirstNonEmpty(matched.Select(c => c.Sohd)) is { Length: > 0 } s ? s : matched[0].Sohd ?? "",
-                    DaThu: documents.All(g => g.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0)));
+                foreach (var invoice in documents)
+                {
+                    var invoiceNo = string.IsNullOrWhiteSpace(invoice.Key) ? null : invoice.Key;
+                    result[PaymentKey(key, invoiceNo)] = new CtInfo(
+                        TotalTien: invoice.Any(c => (c.Dain ?? 0) != 0 || (c.Dathu ?? 0) != 0)
+                            ? 0 : invoice.First().Thanhtien ?? 0,
+                        Sohd: invoiceNo ?? "",
+                        DaThu: invoice.Any(c => (c.Dathu ?? 0) != 0));
+                }
             }
             return result;
         }
 
         private static CtInfo? FindInfo(Dictionary<string, CtInfo> map, PatientGroup g)
         {
-            var key = g.Makb?.Trim();
+            var key = PaymentKey(g.Makb, g.Sohd);
             if (!string.IsNullOrEmpty(key) && map.TryGetValue(key, out var info)) return info;
             return null;
         }
+
+        private static string PaymentKey(string? makb, string? sohd)
+            => $"{makb?.Trim() ?? ""}\u001f{sohd?.Trim() ?? ""}";
 
         /// <summary>Gom các dòng hàng chờ theo bệnh nhân và gắn thông tin</summary>
         private async Task<List<PatientGroup>> BuildGroupsAsync(List<HangChoRow> rows)
@@ -601,7 +665,9 @@ namespace HangChoKhamBenh.Web.Services
             var bnDict = await LoadPatientInfoAsync(rows.Select(r => r.Mabn));
 
             return rows
-                .GroupBy(r => !string.IsNullOrWhiteSpace(r.Makb) ? r.Makb.Trim() : r.Mabn?.Trim() ?? "")
+                .GroupBy(r => (
+                    Makb: !string.IsNullOrWhiteSpace(r.Makb) ? r.Makb.Trim() : r.Mabn?.Trim() ?? "",
+                    Sohd: r.Sohd?.Trim() ?? ""))
                 .Select(g =>
                 {
                     var first = g.First();
@@ -611,7 +677,7 @@ namespace HangChoKhamBenh.Web.Services
                     var dv = g.Where(x => HcDv.Contains(x.Khochan)).ToList();
 
                     return new PatientGroup(
-                        Makb: first.Makb, Mabn: first.Mabn,
+                        Makb: first.Makb, Mabn: first.Mabn, Sohd: first.Sohd,
                         HasBhyt: bhyt.Count > 0, HasDv: dv.Count > 0,
                         Dagiao: g.Max(x => x.Dagiao),
                         DvDathu: dv.Any(x => x.Dathu == true),
@@ -661,7 +727,7 @@ namespace HangChoKhamBenh.Web.Services
                     IsBhyt = g.Khochan == 14,
                     Dagiao = g.Dagiao,
                     SoTienStr = info != null ? Money(info.TotalTien, "") : "",
-                    Sohd = info?.Sohd ?? "",
+                    Sohd = g.Sohd ?? info?.Sohd ?? "",
                     Maba = "",
                     NgayGiaoStr = g.Ngaygiao?.ToString("HH:mm") ?? "",
                     OCua = g.Taikhoan
@@ -692,7 +758,7 @@ namespace HangChoKhamBenh.Web.Services
                     TrangThai = DuocTrangThaiText.KhongMua,
                     SoTien = info?.TotalTien,
                     SoTienStr = info != null ? Money(info.TotalTien, "—") : "—",
-                    Sohd = info?.Sohd ?? "", Maba = "",
+                    Sohd = g.Sohd ?? info?.Sohd ?? "", Maba = "",
                     NgayNhapStr = (g.Ngayhoanthanh ?? g.Ngaygiao)?.ToString("HH:mm") ?? "", OCua = g.Taikhoan
                 };
             })];
@@ -723,7 +789,7 @@ namespace HangChoKhamBenh.Web.Services
                         TrangThai = DuocTrangThaiText.DaAn,
                         SoTien = info?.TotalTien,
                         SoTienStr = info != null ? Money(info.TotalTien, "—") : "—",
-                        Sohd = info?.Sohd ?? "", Maba = "",
+                        Sohd = g.Sohd ?? info?.Sohd ?? "", Maba = "",
                         NgayNhapStr = g.Ngaynhap?.ToString("HH:mm") ?? "",
                         OCua = g.Taikhoan
                     };
@@ -754,13 +820,14 @@ namespace HangChoKhamBenh.Web.Services
                     .Where(h => h.Makb == makb && h.Mabn == mabn && h.Xoa == 0 && h.An == 0
                         && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat
                         && (h.Ngaynhap == null || h.Ngaynhap >= today) && HcAll.Contains(h.Khochan))
+                    .Where(h => string.IsNullOrWhiteSpace(req.Sohd) || h.Sohd == req.Sohd.Trim())
                     .Select(h => new DuocScanState(h.Khochan, h.Taikhoan)).ToListAsync();
                 var selected = pending.Where(h => req.Khochan == 0 || h.Khochan == req.Khochan).ToList();
                 if (selected.Count == 0)
                     return new() { Action = "khong-con-cho", Message = "Toa này không còn trong danh sách chờ." };
 
                 var hasService = pending.Any(h => h.Khochan == DuocKhoConstant.DichVu);
-                var collecting = hasService && !await IsServicePaidAsync(makb, today);
+                var collecting = hasService && !await IsServicePaidAsync(makb, today, req.Sohd);
                 var window = collecting ? DuocScanWorkflow.PaymentWindow : DuocScanWorkflow.PickupWindow;
                 if (expectedWindow != window || selected.Any(h => h.OCua?.Trim() != window)
                     || collecting && selected.Any(h => h.Khochan != DuocKhoConstant.DichVu))
@@ -780,6 +847,7 @@ namespace HangChoKhamBenh.Web.Services
                         && (h.Ngaynhap == null || h.Ngaynhap >= today) && HcAll.Contains(h.Khochan)
                         && (req.Khochan == 0 || h.Khochan == req.Khochan)
                         && h.Taikhoan != null && h.Taikhoan.Trim() == window)
+                    .Where(h => string.IsNullOrWhiteSpace(req.Sohd) || h.Sohd == req.Sohd.Trim())
                     .ExecuteUpdateAsync(setter => setter.SetProperty(h => h.Ngaytao, calledAt));
                 if (recalled == 0)
                     return new() { Action = "khong-con-cho", Message = "Toa vừa thay đổi trạng thái; vui lòng tải lại danh sách." };
@@ -814,6 +882,8 @@ namespace HangChoKhamBenh.Web.Services
 
             query = query.Where(h => h.Makb == makb && (mabn == "" || h.Mabn == mabn)
                                 && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat);
+            if (!string.IsNullOrWhiteSpace(req.Sohd))
+                query = query.Where(h => h.Sohd == req.Sohd.Trim());
 
             if (req.Khochan is 13 or 14)
             {
@@ -825,7 +895,7 @@ namespace HangChoKhamBenh.Web.Services
                 var pending = await query.AsNoTracking()
                     .Select(h => new DuocScanState(h.Khochan, h.Taikhoan)).ToListAsync();
                 var paid = pending.Any(h => h.Khochan == DuocKhoConstant.DichVu)
-                    && await IsServicePaidAsync(makb, today);
+                    && await IsServicePaidAsync(makb, today, req.Sohd);
                 if (DuocScanWorkflow.NextAction(pending, paid) != DuocScanAction.Dispense)
                     return false;
                 query = query.Where(h => h.Taikhoan != null
@@ -862,6 +932,9 @@ namespace HangChoKhamBenh.Web.Services
             query = query.Where(h => h.Makb == makb && (mabn == "" || h.Mabn == mabn)
                                 && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat);
 
+            if (!string.IsNullOrWhiteSpace(req.Sohd))
+                query = query.Where(h => h.Sohd == req.Sohd.Trim());
+
             if (req.Khochan is 13 or 14)
             {
                 query = query.Where(h => h.Khochan == req.Khochan.Value);
@@ -892,7 +965,7 @@ namespace HangChoKhamBenh.Web.Services
         }
 
         // ===== HoanTacAsync =====
-        public async Task<bool> HoanTacAsync(string makb, string mabn)
+        public async Task<bool> HoanTacAsync(string makb, string mabn, string? sohd = null)
         {
             var cleanMakb = makb.Trim();
             var cleanMabn = mabn.Trim();
@@ -904,6 +977,8 @@ namespace HangChoKhamBenh.Web.Services
 
             query = query.Where(h => h.Makb == cleanMakb && (cleanMabn == "" || h.Mabn == cleanMabn)
                                 && h.Dagiao != (decimal)DuocTrangThaiGiao.ChoPhat);
+            if (!string.IsNullOrWhiteSpace(sohd))
+                query = query.Where(h => h.Sohd == sohd.Trim());
 
             var rows = await query.ExecuteUpdateAsync(setter => setter
                 .SetProperty(h => h.Ngayhoanthanh, (DateTime?)null)
@@ -918,7 +993,7 @@ namespace HangChoKhamBenh.Web.Services
         }
 
         // ===== KhongMuaAsync =====
-        public async Task<bool> KhongMuaAsync(string makb, string mabn)
+        public async Task<bool> KhongMuaAsync(string makb, string mabn, string? sohd = null)
         {
             var cleanMakb = makb.Trim();
             var cleanMabn = mabn.Trim();
@@ -930,6 +1005,8 @@ namespace HangChoKhamBenh.Web.Services
 
             baseQuery = baseQuery.Where(h => h.Makb == cleanMakb && (cleanMabn == "" || h.Mabn == cleanMabn)
                                             && h.Dagiao == (decimal)DuocTrangThaiGiao.ChoPhat);
+            if (!string.IsNullOrWhiteSpace(sohd))
+                baseQuery = baseQuery.Where(h => h.Sohd == sohd.Trim());
 
             var targetQuery = baseQuery.Where(h => h.Khochan == 13 || h.Khochan == 3);
 
@@ -943,7 +1020,7 @@ namespace HangChoKhamBenh.Web.Services
             return rows > 0;
         }
 
-        public async Task<bool> AnAsync(string makb, string mabn)
+        public async Task<bool> AnAsync(string makb, string mabn, string? sohd = null)
         {
             var cleanMakb = makb.Trim();
             var cleanMabn = mabn.Trim();
@@ -954,6 +1031,8 @@ namespace HangChoKhamBenh.Web.Services
                 .Where(h => h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today || h.Ngaykcb >= today));
 
             query = query.Where(h => h.Makb == cleanMakb && (cleanMabn == "" || h.Mabn == cleanMabn));
+            if (!string.IsNullOrWhiteSpace(sohd))
+                query = query.Where(h => h.Sohd == sohd.Trim());
 
             var rows = await query.ExecuteUpdateAsync(setter => setter
                 .SetProperty(h => h.An, 1)
@@ -962,7 +1041,7 @@ namespace HangChoKhamBenh.Web.Services
             return rows > 0;
         }
 
-        public async Task<bool> BoAnAsync(string makb, string mabn)
+        public async Task<bool> BoAnAsync(string makb, string mabn, string? sohd = null)
         {
             var cleanMakb = makb.Trim();
             var cleanMabn = mabn.Trim();
@@ -973,6 +1052,8 @@ namespace HangChoKhamBenh.Web.Services
                 .Where(h => h.Xoa == 0 && (h.Ngaynhap == null || h.Ngaynhap >= today || h.Ngaygiao >= today || h.Ngaykcb >= today));
 
             query = query.Where(h => h.Makb == cleanMakb && (cleanMabn == "" || h.Mabn == cleanMabn));
+            if (!string.IsNullOrWhiteSpace(sohd))
+                query = query.Where(h => h.Sohd == sohd.Trim());
 
             var rows = await query.ExecuteUpdateAsync(setter => setter
                 .SetProperty(h => h.An, 0)

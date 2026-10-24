@@ -635,7 +635,7 @@
 
             async function triggerToastUndo() {
                 if (!lastActionData) return;
-                const { makb, mabn, hoTen, actionType } = lastActionData;
+                const { makb, mabn, sohd, hoTen, actionType } = lastActionData;
 
                 const toast = $id('undo-toast');
                 if (toast) {
@@ -645,11 +645,11 @@
                 lastActionData = null;
 
                 if (actionType === 'khong_mua') {
-                    await actionHoanTacKhongMua(makb, mabn, hoTen);
+                    await actionHoanTacKhongMua(makb, mabn, hoTen, sohd);
                 } else if (actionType === 'an') {
-                    await actionBoAn(makb, mabn, hoTen);
+                    await actionBoAn(makb, mabn, hoTen, sohd);
                 } else {
-                    await actionHoanTac(makb, mabn, hoTen);
+                    await actionHoanTac(makb, mabn, hoTen, sohd);
                 }
             }
 
@@ -987,9 +987,9 @@
             async function recallFromList(event, card) {
                 const control = event.target.closest('button, a, input, select, textarea');
                 if (control && !control.hasAttribute('data-recall-name')) return;
-                const { recallMakb: makb, recallMabn: mabn, recallKhochan, recallWindow: oCua } = card.dataset;
+                const { recallMakb: makb, recallMabn: mabn, recallSohd: sohd, recallKhochan, recallWindow: oCua } = card.dataset;
                 if (!oCua || isScanning) return;
-                const key = `${makb}:${mabn}`;
+                const key = `${makb}:${mabn}:${sohd}`;
                 if (pendingRecalls.has(key)) return;
                 pendingRecalls.add(key);
                 card.setAttribute('aria-busy', 'true');
@@ -997,7 +997,7 @@
                     const response = await fetch('/api/duoc-nhap/goi-lai', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ makb, mabn, khochan: Number(recallKhochan), oCua })
+                        body: JSON.stringify({ makb, mabn, sohd, khochan: Number(recallKhochan), oCua })
                     });
                     if (!response.ok) throw new Error('Không thể gọi lại');
                     const result = await response.json();
@@ -1020,6 +1020,7 @@
             function recallCardAttributes(item, canRecall) {
                 return `onclick="recallFromList(event, this)"
                     data-recall-makb="${escapeHtml(item.makb)}" data-recall-mabn="${escapeHtml(item.mabn)}"
+                    data-recall-sohd="${escapeHtml(item.sohd || '')}"
                     data-recall-khochan="${Number(item.khochan) || 0}"
                     data-recall-window="${canRecall ? escapeHtml(item.oCua) : ''}"`;
             }
@@ -1062,6 +1063,7 @@
                     const curOcua = String(item.oCua || '').trim();
                     const canRecall = curOcua === '5';
                     const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const safeSohd = escapeHtml(item.sohd || '').replace(/'/g, "\\'");
                     const sohdVal = item.sohd || item.maba || '';
                     const typeTag = item.hasBoth
                         ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Toa DV</span>`
@@ -1081,6 +1083,7 @@
                                                                                         ${recallNameButton(item, canRecall)}
                                                                                         <div class="duoc-card-meta flex items-center gap-2 mt-1 flex-wrap">
                                                                                             ${typeTag}
+                                                                                            ${sohdVal ? `<span class="text-slate-500 font-mono text-[10px]">Toa: ${escapeHtml(sohdVal)}</span>` : ''}
                                                                                             <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
                                                                                                     title="Sao chép mã khám"
                                                                                                     class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
@@ -1101,7 +1104,7 @@
                                                                                         ${getOcuaBadge(curOcua)}
                                                                                     </div>
                                                                                     <div class="flex items-center gap-1.5 shrink-0">
-                                                                                        <button type="button" onclick="actionKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                        <button type="button" onclick="actionKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${safeSohd}')"
                                                                                                 title="Khách không mua thuốc"
                                                                                                 class="px-2.5 py-1 text-xs rounded-lg border border-rose-200 bg-rose-50/60 hover:bg-rose-600 hover:text-white text-rose-700 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
                                                                                             <i class="fa-solid fa-ban text-[11px]"></i> Không mua
@@ -1139,6 +1142,7 @@
                 let html = '';
                 for (const item of filtered) {
                     const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const safeSohd = escapeHtml(item.sohd || '').replace(/'/g, "\\'");
                     const sohdVal = item.sohd || item.maba || '';
 
                     html += `<div class="patient-card-item bg-white border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-2 hover:shadow-xs transition">
@@ -1156,7 +1160,7 @@
                                                                                         </button>
                                                                                     </div>
                                                                                 </div>
-                                                                                <button onclick="actionHoanTacKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                <button onclick="actionHoanTacKhongMua('${item.makb}', '${item.mabn}', '${safeHoTen}', '${safeSohd}')"
                                                                                         title="Khách muốn mua lại"
                                                                                         class="px-3 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-800 border border-amber-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
                                                                                     <i class="fa-solid fa-rotate-left text-[11px]"></i> Mua lại
@@ -1212,6 +1216,7 @@
                     const canRecall = curOcua === '3';
                     const hasBeenCalled = curOcua === '3';
                     const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const safeSohd = escapeHtml(item.sohd || '').replace(/'/g, "\\'");
                     const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
 
@@ -1223,7 +1228,7 @@
                             : 'border border-slate-200 hover:border-slate-300 bg-white hover:shadow-xs');
 
                     const phatBtnHtml = `<button type="button"
-                            onclick="actionPhatThuoc('${item.makb}', '${item.mabn}', '${safeHoTen}', ${item.khochan || 0})"
+                            onclick="actionPhatThuoc('${item.makb}', '${item.mabn}', '${safeHoTen}', ${item.khochan || 0}, '${safeSohd}')"
                             ${hasBeenCalled ? '' : 'disabled'}
                             title="${hasBeenCalled ? 'Xác nhận đã phát thuốc' : 'Chưa gọi nhận thuốc'}"
                             class="duoc-dispense-button px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 whitespace-nowrap cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-default disabled:pointer-events-none">
@@ -1238,7 +1243,8 @@
                                                                                         ${recallNameButton(item, canRecall)}
                                                                                         <div class="duoc-card-meta flex items-center gap-2 mt-1 flex-wrap">
                                                                                             ${typeTag}
-                                                                                  
+                                                                                            ${sohdVal ? `<span class="text-slate-500 font-mono text-[10px]">Toa: ${escapeHtml(sohdVal)}</span>` : ''}
+                                                                                  	  
                                                                                             <button type="button" onclick="copyToClipboard('${escapeHtml(item.makb || item.mabn)}', this, event)"
                                                                                                     title="Sao chép mã khám"
                                                                                                     class="inline-flex items-center gap-1 text-slate-500 hover:text-brand font-mono font-bold transition cursor-pointer">
@@ -1253,7 +1259,7 @@
                                                                                 <!-- Ô được gọi tự động và thao tác -->
                                                                                 <div class="duoc-card-actions flex items-center justify-end border-t border-slate-100 pt-2 gap-2 flex-wrap">
                                                                                     <div class="flex items-center justify-end gap-1.5 shrink-0 ml-auto">
-                                                                                        <button type="button" onclick="actionAn('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                        <button type="button" onclick="actionAn('${item.makb}', '${item.mabn}', '${safeHoTen}', '${safeSohd}')"
                                                                                                 title="Tạm ẩn bệnh nhân khỏi hàng chờ"
                                                                                                 class="px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-700 hover:text-white text-slate-600 font-bold transition cursor-pointer flex items-center gap-1 active:scale-95 shrink-0">
                                                                                             <i class="fa-solid fa-eye-slash text-[11px]"></i> Ẩn
@@ -1301,6 +1307,7 @@
                         typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">BHYT</span>`;
                     }
                     const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const safeSohd = escapeHtml(item.sohd || '').replace(/'/g, "\\'");
                     const sohdVal = item.sohd || item.maba || '';
                     const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
@@ -1321,7 +1328,7 @@
                                                                                         </button>
                                                                                     </div>
                                                                                 </div>
-                                                                                <button onclick="actionHoanTac('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                                                                <button onclick="actionHoanTac('${item.makb}', '${item.mabn}', '${safeHoTen}', '${safeSohd}')"
                                                                                         title="Đưa bệnh nhân trở lại danh sách Chờ phát"
                                                                                         class="px-3 py-1.5 bg-slate-50 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer shrink-0 active:scale-95">
                                                                                     <i class="fa-solid fa-rotate-left text-[11px]"></i> Hoàn tác
@@ -1366,6 +1373,7 @@
                         typeTag = `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">BHYT</span>`;
                     }
                     const safeHoTen = escapeHtml(item.hoTen).replace(/'/g, "\\'");
+                    const safeSohd = escapeHtml(item.sohd || '').replace(/'/g, "\\'");
                     const sohdVal = item.sohd || item.maba || '';
                     const hasMoney = (item.hasDichVu || item.hasBoth) && item.soTienStr && item.soTienStr !== '—';
 
@@ -1388,7 +1396,7 @@
                                                 ${item.ngayNhapStr ? `<span>•</span><span class="text-slate-400">Nhập: ${item.ngayNhapStr}</span>` : ''}
                                             </div>
                                         </div>
-                                        <button onclick="actionBoAn('${item.makb}', '${item.mabn}', '${safeHoTen}')"
+                                        <button onclick="actionBoAn('${item.makb}', '${item.mabn}', '${safeHoTen}', '${safeSohd}')"
                                                 title="Khôi phục lại vào danh sách chờ"
                                                 class="px-3 py-1.5 bg-blue-50 hover:bg-brand hover:text-white text-brand border border-blue-200 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0 active:scale-95">
                                             <i class="fa-solid fa-eye text-[11px]"></i> Bỏ ẩn
@@ -1445,11 +1453,11 @@
                 }
             }
 
-            async function actionKhongMua(makb, mabn, hoTen) {
+            async function actionKhongMua(makb, mabn, hoTen, sohd) {
                 try {
                     const key = (makb || mabn || '').trim();
                     if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
-                        const idx = rawChuaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        const idx = rawChuaGiaoData.findIndex(i => ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key)) && (!sohd || i.sohd === sohd));
                         if (idx !== -1) {
                             const removed = rawChuaGiaoData.splice(idx, 1)[0];
                             renderChoThuList();
@@ -1465,12 +1473,12 @@
                     }
 
                     playScanBeep(true);
-                    showUndoToast(`Đã chuyển ${hoTen} sang Lịch sử không mua`, { makb, mabn, hoTen, actionType: 'khong_mua' });
+                    showUndoToast(`Đã chuyển ${hoTen} sang Lịch sử không mua`, { makb, mabn, sohd, hoTen, actionType: 'khong_mua' });
 
                     const r = await fetch('/api/duoc-nhap/khong-mua', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ makb, mabn })
+                        body: JSON.stringify({ makb, mabn, sohd })
                     });
                     const res = await r.json();
                     if (res.success) {
@@ -1486,11 +1494,11 @@
                 }
             }
 
-            async function actionHoanTacKhongMua(makb, mabn, hoTen) {
+            async function actionHoanTacKhongMua(makb, mabn, hoTen, sohd) {
                 try {
                     const key = (makb || mabn || '').trim();
                     if (key && rawKhongMuaData && rawKhongMuaData.length > 0) {
-                        const idx = rawKhongMuaData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        const idx = rawKhongMuaData.findIndex(i => ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key)) && (!sohd || i.sohd === sohd));
                         if (idx !== -1) {
                             const removed = rawKhongMuaData.splice(idx, 1)[0];
                             renderKhongMuaList();
@@ -1513,7 +1521,7 @@
                     const r = await fetch('/api/duoc-nhap/hoan-tac', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ makb, mabn })
+                        body: JSON.stringify({ makb, mabn, sohd })
                     });
                     const res = await r.json();
                     if (res.success) {
@@ -1529,11 +1537,11 @@
                 }
             }
 
-            async function actionAn(makb, mabn, hoTen) {
+            async function actionAn(makb, mabn, hoTen, sohd) {
                 try {
                     const key = (makb || mabn || '').trim();
                     if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
-                        const idx = rawChuaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        const idx = rawChuaGiaoData.findIndex(i => ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key)) && (!sohd || i.sohd === sohd));
                         if (idx !== -1) {
                             const removed = rawChuaGiaoData.splice(idx, 1)[0];
                             renderChoThuList();
@@ -1551,12 +1559,12 @@
                     }
 
                     playScanBeep(true);
-                    showUndoToast(`Đã tạm ẩn ${hoTen}`, { makb, mabn, hoTen, actionType: 'an' });
+                    showUndoToast(`Đã tạm ẩn ${hoTen}`, { makb, mabn, sohd, hoTen, actionType: 'an' });
 
                     const r = await fetch('/api/duoc-nhap/an', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ makb, mabn })
+                        body: JSON.stringify({ makb, mabn, sohd })
                     });
                     const res = await r.json();
                     if (res.success) {
@@ -1572,11 +1580,11 @@
                 }
             }
 
-            async function actionBoAn(makb, mabn, hoTen) {
+            async function actionBoAn(makb, mabn, hoTen, sohd) {
                 try {
                     const key = (makb || mabn || '').trim();
                     if (key && rawDaAnData && rawDaAnData.length > 0) {
-                        const idx = rawDaAnData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        const idx = rawDaAnData.findIndex(i => ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key)) && (!sohd || i.sohd === sohd));
                         if (idx !== -1) {
                             const removed = rawDaAnData.splice(idx, 1)[0];
                             const countEl = $id('da-an-count');
@@ -1601,7 +1609,7 @@
                     const r = await fetch('/api/duoc-nhap/bo-an', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ makb, mabn })
+                        body: JSON.stringify({ makb, mabn, sohd })
                     });
                     const res = await r.json();
                     if (res.success) {
@@ -1617,11 +1625,11 @@
                 }
             }
 
-            async function actionPhatThuoc(makb, mabn, hoTen, khochan) {
+            async function actionPhatThuoc(makb, mabn, hoTen, khochan, sohd) {
                 try {
                     const key = (makb || mabn || '').trim();
                     if (key && rawChuaGiaoData && rawChuaGiaoData.length > 0) {
-                        const idx = rawChuaGiaoData.findIndex(i => ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key)) && (!khochan || i.khochan === khochan || khochan === 0));
+                        const idx = rawChuaGiaoData.findIndex(i => ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key)) && (!khochan || i.khochan === khochan || khochan === 0) && (!sohd || i.sohd === sohd));
                         if (idx !== -1) {
                             const removed = rawChuaGiaoData.splice(idx, 1)[0];
                             renderChoGiaoList();
@@ -1638,12 +1646,12 @@
                     }
 
                     playScanBeep(true);
-                    showUndoToast(`Đã phát thuốc cho ${hoTen}`, { makb, mabn, hoTen, actionType: 'phat_thuoc' });
+                    showUndoToast(`Đã phát thuốc cho ${hoTen}`, { makb, mabn, sohd, hoTen, actionType: 'phat_thuoc' });
 
                     const r = await fetch('/api/duoc-nhap/cap-nhat-trang-thai', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ makb, mabn, targetDagiao: 1, khochan: khochan || 0 })
+                        body: JSON.stringify({ makb, mabn, sohd, targetDagiao: 1, khochan: khochan || 0 })
                     });
                     const res = await r.json();
                     if (res.success) {
@@ -1659,11 +1667,11 @@
                 }
             }
 
-            async function actionHoanTac(makb, mabn, hoTen) {
+            async function actionHoanTac(makb, mabn, hoTen, sohd) {
                 try {
                     const key = (makb || mabn || '').trim();
                     if (key && rawDaGiaoData && rawDaGiaoData.length > 0) {
-                        const idx = rawDaGiaoData.findIndex(i => (i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key));
+                        const idx = rawDaGiaoData.findIndex(i => ((i.makb && i.makb.trim() === key) || (i.mabn && i.mabn.trim() === key)) && (!sohd || i.sohd === sohd));
                         if (idx !== -1) {
                             const removed = rawDaGiaoData.splice(idx, 1)[0];
                             renderDaGiaoList();
@@ -1686,7 +1694,7 @@
                     const r = await fetch('/api/duoc-nhap/hoan-tac', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ makb, mabn })
+                        body: JSON.stringify({ makb, mabn, sohd })
                     });
                     const res = await r.json();
                     if (res.success) {

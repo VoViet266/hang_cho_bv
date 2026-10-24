@@ -14,6 +14,7 @@
   background: #eef1f4;
   color: #152033;
   font-family: Arial, "Helvetica Neue", sans-serif;
+  touch-action: pan-x pan-y;
 }
 
 .tv-board .tv-header {

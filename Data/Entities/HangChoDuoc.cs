@@ -43,6 +43,9 @@ namespace HangChoKhamBenh.Web.Data.Entities
         [Column("maba")]
         public string? Maba { get; set; }
 
+        [Column("sohd")]
+        public string? Sohd { get; set; }
+
         [Column("dagiao")]
         public decimal Dagiao { get; set; } = 0;
 

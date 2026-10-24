@@ -111,6 +111,9 @@ namespace HangChoKhamBenh.Web.Models
         [JsonPropertyName("soTienStr")]
         public string SoTienStr { get; set; } = string.Empty;
 
+        [JsonPropertyName("sohd")]
+        public string Sohd { get; set; } = string.Empty;
+
         [JsonPropertyName("daThu")]
         public bool DaThu { get; set; }
 
@@ -189,6 +192,9 @@ namespace HangChoKhamBenh.Web.Models
         [JsonPropertyName("sohd")]
         public string? Sohd { get; set; }
 
+        [JsonIgnore]
+        public string? SelectedSohd { get; set; }
+
         [JsonPropertyName("maba")]
         public string? Maba { get; set; }
 
@@ -208,6 +214,24 @@ namespace HangChoKhamBenh.Web.Models
 
         [JsonPropertyName("thanhtien")]
         public decimal Thanhtien { get; set; }
+
+        [JsonPropertyName("toaList")]
+        public List<DuocToaHoaDonDto> ToaList { get; set; } = [];
+    }
+
+    public class DuocToaHoaDonDto
+    {
+        [JsonPropertyName("sohd")]
+        public string? Sohd { get; set; }
+
+        [JsonPropertyName("khochan")]
+        public int Khochan { get; set; }
+
+        [JsonPropertyName("thanhtien")]
+        public decimal Thanhtien { get; set; }
+
+        [JsonPropertyName("daThu")]
+        public bool DaThu { get; set; }
     }
 
     public class DuocNhapThemRequest
@@ -233,6 +257,9 @@ namespace HangChoKhamBenh.Web.Models
         [JsonPropertyName("maba")]
         public string? Maba { get; set; }
 
+        [JsonPropertyName("sohd")]
+        public string? Sohd { get; set; }
+
         [JsonPropertyName("ngayKcb")]
         public DateTime? NgayKcb { get; set; }
 
@@ -257,9 +284,6 @@ namespace HangChoKhamBenh.Web.Models
         [JsonPropertyName("khochan")]
         public int? Khochan { get; set; }
 
-        [JsonIgnore]
-        public bool? ServicePaid { get; set; }
-
         [JsonPropertyName("oCua")]
         public string? OCua { get; set; }
 
@@ -283,6 +307,9 @@ namespace HangChoKhamBenh.Web.Models
 
         [JsonPropertyName("mabn")]
         public string Mabn { get; set; } = string.Empty;
+
+        [JsonPropertyName("sohd")]
+        public string? Sohd { get; set; }
     }
 
     public class DuocBarcodeDispenseResponse
@@ -340,6 +367,9 @@ namespace HangChoKhamBenh.Web.Models
 
         [JsonPropertyName("mabn")]
         public string? Mabn { get; set; }
+
+        [JsonPropertyName("sohd")]
+        public string? Sohd { get; set; }
 
         [JsonPropertyName("targetDagiao")]
         public decimal TargetDagiao { get; set; } // 1: Đang soạn / Đã phát BHYT, 2: Đã phát Dịch vụ
@@ -481,6 +511,9 @@ namespace HangChoKhamBenh.Web.Models
 
         [JsonPropertyName("mabn")]
         public string Mabn { get; set; } = string.Empty;
+
+        [JsonPropertyName("sohd")]
+        public string? Sohd { get; set; }
     }
 
     /// <summary>
@@ -516,4 +549,3 @@ namespace HangChoKhamBenh.Web.Models
         public string OCua { get; set; } = string.Empty;
     }
 }
-
