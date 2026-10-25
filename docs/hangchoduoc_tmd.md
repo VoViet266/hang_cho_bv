@@ -8,11 +8,10 @@ Thời gian trở về cơ chế ban đầu: ứng dụng dùng múi giờ môi 
 | --- | --- |
 | `macho` | Khóa chính tự tăng của từng dòng hàng chờ. |
 | `mabn` | Mã bệnh nhân. |
-| `makb` | Mã lượt khám; một lượt khám có thể chứa nhiều toa. |
-| `khochan` | `13`: dịch vụ; `14`: BHYT. Mỗi số hóa đơn/toa và kho là một dòng chờ; `0` chỉ là mã gộp trên DTO giao diện khi cùng toa có cả hai kho. |
+| `makb` | Mã lượt khám. Dùng gom các dòng BHYT/dịch vụ cùng lượt, không gom các lượt khám khác nhau. |
+| `khochan` | `13`: dịch vụ; `14`: BHYT. Toa có cả hai được lưu hai dòng; `0` chỉ là mã gộp trên DTO giao diện. |
 | `ngaykcb` | Thời điểm khám từ nguồn lượt khám. |
 | `maba` | Mã bệnh án nếu nguồn có cung cấp. |
-| `sohd` | Mã hóa đơn/toa nguồn. Dùng nhận diện riêng từng toa trong cùng lượt khám; `NULL` cho dữ liệu cũ/chứng từ không có số hóa đơn. |
 | `ngaynhap` | Thời điểm quét tiếp nhận lần đầu; không ghi đè khi gọi, ẩn hoặc hoàn tác. |
 | `ngaytao` | Theo yêu cầu hiện tại: thời điểm gọi tên/gọi lại gần nhất. Chưa gọi thì `NULL`. |
 | `taikhoan` | Code hiện dùng chứa ô đã gọi: `5` thu tiền, `3` nhận thuốc, `NULL` chưa gọi. Không phải tên nhân viên. |
@@ -54,7 +53,7 @@ Các toa chưa gọi xếp theo giờ tiếp nhận sớm trước. Khi trùng g
 
 ## Áp dụng
 
-File `hangchoduoc_tmd.sql` mô tả đủ bảng, thêm cột `sohd` nếu chưa có, bỏ `DEFAULT now()` của `ngaytao` và thêm chú thích cột. Chạy script này trước khi triển khai phiên bản có nhận diện toa theo số hóa đơn.
+File `hangchoduoc_tmd.sql` mô tả đủ bảng, bỏ `DEFAULT now()` của `ngaytao` và thêm chú thích cột.
 Script giữ dữ liệu và index hiện có; không tự đổi các mốc lịch sử đã ghi theo ý nghĩa cũ.
 Code tiếp nhận cũng chủ động ghi `ngaytao = NULL`, nên toa chưa gọi không có giờ gọi giả.
 Nguồn chứng từ hiện chưa có giờ thanh toán trong model; `ngaythu` là giờ phát hiện, không khôi phục được giờ thanh toán trước đó.

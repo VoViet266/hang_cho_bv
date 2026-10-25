@@ -37,16 +37,11 @@ internal static class QueueChecks
         var waitingEarly = Entry("EARLY", null, 7);
         Check(Snapshot(uncalled, waitingEarly).All.WaitingList[0].Makb == "EARLY",
             "Uncalled service prescriptions retain admission order");
-        var printedReceipt = Entry("PAYABLE", null, 8);
-        printedReceipt.Sohd = "PRINTED";
-        var unpaidReceipt = Entry("PAYABLE", null, 9);
-        unpaidReceipt.Sohd = "UNPAID";
-        var payable = SnapshotWithDocuments([printedReceipt, unpaidReceipt],
+        var payable = SnapshotWithDocuments([Entry("PAYABLE", null, 8)],
             CreateDocument("PAYABLE", "PRINTED", 50000m, 1m, 0m),
             CreateDocument("PAYABLE", "UNPAID", 25000m, 0m, 0m));
-        Check(payable.Input.Count == 2 && payable.Input.Single(i => i.Sohd == "UNPAID").SoTien == 25000m
-            && payable.Input.Single(i => i.Sohd == "PRINTED").SoTien == 0m,
-            "Invoices in one exam stay separate and Dain invoices are excluded from the amount due");
+        Check(payable.Input.Single().SoTien == 25000m,
+            "The amount due excludes invoices with Dain set and includes unprinted invoices");
         var tiedFirst = Entry("TIED-FIRST", "3", 11);
         var tiedSecond = Entry("TIED-SECOND", "3", 11);
         tiedFirst.Macho = 1;
@@ -89,12 +84,11 @@ internal static class QueueChecks
             .AddInterceptors(new SuppressConnection(), admissionCommands, new SuppressSave()).Options);
         var admissionService = new DuocNhapService(admissionContext, NullLogger<DuocNhapService>.Instance,
             new DuocQueueSnapshotService(admissionContext));
-        var invoiceId = "NEW-INVOICE";
         var admission = (Task)typeof(DuocNhapService).GetMethod("UpsertHangChoAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .Invoke(admissionService, ["EXAM", "PATIENT", invoiceId, new DuocNhapThemRequest(), DateTime.Today, 13, new List<int> { 13 }, true, true])!;
+            .Invoke(admissionService, ["EXAM", "PATIENT", new DuocNhapThemRequest(), DateTime.Today, 13, new List<int> { 13 }, true, true])!;
         await admission;
         var admitted = admissionContext.ChangeTracker.Entries<HangChoDuocTmd>().Single().Entity;
-        Check(admitted.Sohd == invoiceId && admitted.Ngaynhap != null && admitted.Ngaythu != null && admitted.Ngaytao == null
+        Check(admitted.Ngaynhap != null && admitted.Ngaythu != null && admitted.Ngaytao == null
             && admitted.Ngaygiao == null && admitted.Ngayhoanthanh == null
             && admissionContext.Model.FindEntityType(typeof(HangChoDuocTmd))!.FindProperty(nameof(HangChoDuocTmd.Ngaytao))!
                 .ValueGenerated == Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never,

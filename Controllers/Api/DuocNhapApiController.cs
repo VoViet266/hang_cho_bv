@@ -243,7 +243,7 @@ namespace HangChoKhamBenh.Web.Controllers.Api
         [HttpPost("hoan-tac")]
         public async Task<IActionResult> HoanTac([FromBody] DuocHoanTacRequest req)
         {
-            var success = await _duocNhapService.HoanTacAsync(req.Makb ?? "", req.Mabn ?? "", req.Sohd);
+            var success = await _duocNhapService.HoanTacAsync(req.Makb ?? "", req.Mabn ?? "");
             if (success)
             {
                 _logger.LogInformation("Hoàn tác makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
@@ -259,7 +259,7 @@ namespace HangChoKhamBenh.Web.Controllers.Api
         [HttpPost("khong-mua")]
         public async Task<IActionResult> KhongMua([FromBody] DuocCapNhatTrangThaiRequest req)
         {
-            var success = await _duocNhapService.KhongMuaAsync(req.Makb ?? "", req.Mabn ?? "", req.Sohd);
+            var success = await _duocNhapService.KhongMuaAsync(req.Makb ?? "", req.Mabn ?? "");
             if (success)
             {
                 _logger.LogInformation("Đánh dấu không mua makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
@@ -286,7 +286,7 @@ namespace HangChoKhamBenh.Web.Controllers.Api
         [HttpPost("an")]
         public async Task<IActionResult> An([FromBody] DuocCapNhatTrangThaiRequest req)
         {
-            var success = await _duocNhapService.AnAsync(req.Makb ?? "", req.Mabn ?? "", req.Sohd);
+            var success = await _duocNhapService.AnAsync(req.Makb ?? "", req.Mabn ?? "");
             if (success)
             {
                 _logger.LogInformation("Ẩn bệnh nhân makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
@@ -302,7 +302,7 @@ namespace HangChoKhamBenh.Web.Controllers.Api
         [HttpPost("bo-an")]
         public async Task<IActionResult> BoAn([FromBody] DuocCapNhatTrangThaiRequest req)
         {
-            var success = await _duocNhapService.BoAnAsync(req.Makb ?? "", req.Mabn ?? "", req.Sohd);
+            var success = await _duocNhapService.BoAnAsync(req.Makb ?? "", req.Mabn ?? "");
             if (success)
             {
                 _logger.LogInformation("Bỏ ẩn bệnh nhân makb={Makb}, mabn={Mabn}", req.Makb, req.Mabn);
@@ -340,3 +340,4 @@ namespace HangChoKhamBenh.Web.Controllers.Api
         }
     }
 }
+

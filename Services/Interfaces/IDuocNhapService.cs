@@ -16,9 +16,10 @@ namespace HangChoKhamBenh.Web.Services
         Task<List<DuocChuaGiaoItemDto>> LayDanhSachDaAnAsync();
         Task<bool> CapNhatTrangThaiAsync(DuocCapNhatTrangThaiRequest req);
         Task<(bool Success, string HoTen, string NamSinh, string OCua)> ChiDinhOCuaAsync(DuocCapNhatTrangThaiRequest req);
-        Task<bool> HoanTacAsync(string makb, string mabn, string? sohd = null);
-        Task<bool> KhongMuaAsync(string makb, string mabn, string? sohd = null);
-        Task<bool> AnAsync(string makb, string mabn, string? sohd = null);
-        Task<bool> BoAnAsync(string makb, string mabn, string? sohd = null);
+        Task<bool> HoanTacAsync(string makb, string mabn);
+        Task<bool> KhongMuaAsync(string makb, string mabn);
+        Task<bool> AnAsync(string makb, string mabn);
+        Task<bool> BoAnAsync(string makb, string mabn);
     }
 }
+

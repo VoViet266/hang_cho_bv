@@ -26,7 +26,7 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
     internal record Patient(string Mabn, string Name, DateTime? BirthDate, decimal? Gender);
     internal record Document(string? Makh, string? Sohd, decimal? Amount, decimal? Printed, decimal? Paid);
     internal record DailyEntry(string Key, int Warehouse);
-    private record Payment(decimal Amount, bool Paid);
+    private record Payment(decimal Amount, string Invoice, bool Paid);
 
     private async Task<DuocQueueSnapshot> LoadCoreAsync()
     {
@@ -77,14 +77,11 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
     {
         var patientMap = patients.ToDictionary(p => p.Mabn, StringComparer.OrdinalIgnoreCase);
         var payments = BuildPayments(documents);
-        var groups = pending.GroupBy(h => (
-                Makb: string.IsNullOrWhiteSpace(h.Makb) ? h.Mabn.Trim() : h.Makb.Trim(),
-                Sohd: h.Sohd?.Trim() ?? ""))
+        var groups = pending.GroupBy(h => string.IsNullOrWhiteSpace(h.Makb) ? h.Mabn.Trim() : h.Makb.Trim())
             .OrderByDescending(g => g.Max(CallTime).HasValue)
             .ThenBy(g => g.Max(CallTime))
             .ThenBy(g => g.Min(h => h.Ngaynhap))
-            .ThenBy(g => g.Min(h => h.Macho))
-            .ThenBy(g => g.Key.Makb).ThenBy(g => g.Key.Sohd).ToList();
+            .ThenBy(g => g.Min(h => h.Macho)).ThenBy(g => g.Key).ToList();
 
         DuocQueuePageDto Page(string type)
         {
@@ -95,7 +92,7 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
                 var dv = group.Where(h => h.Khochan is 3 or 13).ToList();
                 if (type == "bhyt" && bhyt.Count == 0 || type == "dichvu" && dv.Count == 0) continue;
                 var first = group.OrderBy(h => h.Ngaynhap).ThenBy(h => h.Macho).First();
-                payments.TryGetValue(PaymentKey(first.Makb, first.Sohd), out var payment);
+                payments.TryGetValue(group.Key, out var payment);
                 var paid = payment?.Paid ?? dv.Any(h => h.Dathu == true);
                 // Unpaid service prescriptions appear at window 5 immediately on admission.
                 // Keep the stored call state separate so displaying a window does not advance a scan.
@@ -108,7 +105,7 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
                 items.Add(new()
                 {
                     Stt = items.Count + 1, Makb = first.Makb, Mabn = first.Mabn,
-                    TenBenhNhan = PatientName(patient, group.Key.Makb),
+                    TenBenhNhan = PatientName(patient, group.Key),
                     NamSinh = patient?.BirthDate?.ToString("yyyy") ?? "", GioiTinh = Gender(patient?.Gender),
                     Khochan = collecting ? 13 : both ? 0 : dv.Count > 0 ? 13 : 14,
                     HasBhyt = bhyt.Count > 0, HasDichVu = dv.Count > 0, HasBoth = both,
@@ -118,8 +115,7 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
                     OCua = window, Maba = first.Maba, NgayNhap = first.Ngaynhap,
                     NgayNhapStr = first.Ngaynhap?.ToString("HH:mm") ?? "",
                     SoTien = dv.Count > 0 ? payment?.Amount : null,
-                    SoTienStr = dv.Count > 0 ? Money(payment?.Amount) : "",
-                    Sohd = first.Sohd ?? ""
+                    SoTienStr = dv.Count > 0 ? Money(payment?.Amount) : ""
                 });
             }
             var total = daily.Where(d => type == "all" || type == "bhyt" && d.Warehouse is 1 or 2 or 14
@@ -144,17 +140,17 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
             if (bhyt.Count == 0 && dv.Count == 0) continue;
             var first = group.OrderBy(h => h.Ngaynhap).ThenBy(h => h.Macho).First();
             patientMap.TryGetValue(first.Mabn, out var patient);
-            payments.TryGetValue(PaymentKey(first.Makb, first.Sohd), out var payment);
+            payments.TryGetValue(group.Key, out var payment);
             var paid = payment?.Paid ?? dv.Any(h => h.Dathu == true);
             DuocChuaGiaoItemDto Item(int warehouse, bool hasBhyt, bool hasDv, bool collected, string window)
                 => new()
                 {
-                    Makb = first.Makb, Mabn = first.Mabn, HoTen = PatientName(patient, group.Key.Makb),
+                    Makb = first.Makb, Mabn = first.Mabn, HoTen = PatientName(patient, group.Key),
                     NamSinh = patient?.BirthDate?.ToString("yyyy") ?? "", GioiTinh = Gender(patient?.Gender),
                     Khochan = warehouse, HasBhyt = hasBhyt, HasDichVu = hasDv, HasBoth = hasBhyt && hasDv,
                     IsBhyt = warehouse != 13, Dagiao = 0, DaThu = collected,
                     TrangThai = collected ? DuocTrangThaiText.DangSoanThuoc : DuocTrangThaiText.ChoThuTien,
-                    OCua = window, Maba = first.Maba, Sohd = first.Sohd ?? "",
+                    OCua = window, Maba = first.Maba, Sohd = payment?.Invoice ?? "",
                     NgayNhapStr = first.Ngaynhap?.ToString("HH:mm") ?? "",
                     SoTien = hasDv ? payment?.Amount : null, SoTienStr = hasDv ? Money(payment?.Amount) : ""
                 };
@@ -172,11 +168,10 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
     {
         var payments = BuildPayments(documents);
         // Only service rows with a known source document can change payment state.
-        var service = pending.Where(h => h.Khochan is 3 or 13
-            && payments.ContainsKey(PaymentKey(h.Makb, h.Sohd))).ToList();
-        var paidIds = service.Where(h => payments[PaymentKey(h.Makb, h.Sohd)].Paid
+        var service = pending.Where(h => h.Khochan is 3 or 13 && payments.ContainsKey(h.Makb.Trim())).ToList();
+        var paidIds = service.Where(h => payments[h.Makb.Trim()].Paid
             && (h.Dathu != true || h.Ngaythu == null)).Select(h => h.Macho).ToList();
-        var unpaidIds = service.Where(h => !payments[PaymentKey(h.Makb, h.Sohd)].Paid
+        var unpaidIds = service.Where(h => !payments[h.Makb.Trim()].Paid
             && (h.Dathu == true || h.Ngaythu != null)).Select(h => h.Macho).ToList();
         var now = DateTime.Now;
         var active = _context.HangChoDuocTmd.Where(h => h.Xoa == 0 && h.An == 0 && h.Dagiao == 0);
@@ -191,15 +186,15 @@ public sealed class DuocQueueSnapshotService : IDuocQueueSnapshotService
     }
 
     private static Dictionary<string, Payment> BuildPayments(List<Document> documents)
-        => documents.GroupBy(d => PaymentKey(d.Makh, d.Sohd), StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g => new Payment(
-                g.Any(d => (d.Printed ?? 0) != 0 || (d.Paid ?? 0) != 0)
-                    ? 0 : g.First().Amount ?? 0,
-                g.Any(d => (d.Printed ?? 0) != 0 || (d.Paid ?? 0) != 0)),
-                StringComparer.OrdinalIgnoreCase);
-
-    private static string PaymentKey(string? makb, string? sohd)
-        => $"{makb?.Trim() ?? ""}\u001f{sohd?.Trim() ?? ""}";
+        => documents.GroupBy(d => d.Makh?.Trim() ?? "", StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g =>
+            {
+                var invoices = g.GroupBy(d => string.IsNullOrWhiteSpace(d.Sohd) ? g.Key : d.Sohd.Trim()).ToList();
+                return new Payment(invoices.Where(i => i.All(d => (d.Printed ?? 0) == 0))
+                        .Sum(i => i.First().Amount ?? 0),
+                    g.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.Sohd))?.Sohd ?? "",
+                    invoices.All(i => i.Any(d => (d.Printed ?? 0) != 0 || (d.Paid ?? 0) != 0)));
+            }, StringComparer.OrdinalIgnoreCase);
 
     // Admission and payment timestamps must not move an uncalled prescription above a call.
     private static DateTime? CallTime(HangChoDuocTmd row)
